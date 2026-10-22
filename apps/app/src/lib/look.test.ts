@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetMyLevelResult } from '@netprophet/db';
 import { mockLook } from '../mock/look';
-import { buySheetOf, ctaOf, eur, findTile, hasNewLook, levelBackOf, previewOf, tagOf, tileName, tilesFor, withWorn } from './look';
+import { buySheetOf, ctaOf, eur, findTile, hasNewLook, levelBackOf, markerOf, previewOf, tagOf, tileName, tilesFor, withWorn } from './look';
 
 const t = getCopy('el');
 const look = mockLook();
@@ -60,6 +60,42 @@ describe('tags', () => {
   it('formats euros with a comma', () => {
     expect(eur(1.99)).toBe('1,99');
     expect(eur(0.99)).toBe('0,99');
+  });
+});
+
+describe('strip markers', () => {
+  it('✓ on what you own, «Δωρεάν», «Κέρδισέ το», the price only on a paid item you do not own', () => {
+    expect(markerOf(tile('frame', 'frame_seven'), t)).toEqual({ kind: 'owned', text: 'Το έχεις' });
+    expect(markerOf(tile('background', 'bg_night'), t)).toEqual({ kind: 'owned', text: 'Το έχεις' });
+    expect(markerOf(tile('kit', 'kit_green'), t)).toEqual({ kind: 'free', text: 'Δωρεάν' });
+    expect(markerOf(tile('frame', 'frame_ten'), t)).toEqual({ kind: 'earn', text: 'Κέρδισέ το' });
+    expect(markerOf(tile('frame', 'frame_founding'), t)).toEqual({ kind: 'earn', text: 'Κέρδισέ το' });
+    expect(markerOf(tile('frame', 'frame_gold'), t)).toEqual({ kind: 'price', text: '1,99€' });
+    expect(markerOf(tile('kit', 'kit_clay'), t)).toEqual({ kind: 'price', text: '1,99€' });
+    expect(markerOf(tile('frame', null), t)).toBeNull();
+  });
+  it('a bought item shows ✓, never its price again', () => {
+    const gold = { ...look.items.find((i) => i.key === 'frame_gold')!, owned: true };
+    expect(markerOf({ category: 'frame', key: gold.key, item: gold }, t)).toEqual({ kind: 'owned', text: 'Το έχεις' });
+  });
+  it('an earned item never shows a price, even if one slipped onto it', () => {
+    const ten = { ...look.items.find((i) => i.key === 'frame_ten')!, price_eur: 1.99 };
+    expect(markerOf({ category: 'frame', key: ten.key, item: ten }, t)).toEqual({ kind: 'earn', text: 'Κέρδισέ το' });
+  });
+  it('every tile of every tab has one readable marker but the «Χωρίς …» one', () => {
+    for (const tab of ['frame', 'background', 'kit', 'gear', 'win_effect'] as const) {
+      for (const tl of tilesFor(look, tab)) {
+        const m = markerOf(tl, t);
+        if (tl.key === null) expect(m).toBeNull();
+        else expect(m?.text).toBeTruthy();
+      }
+    }
+  });
+  it('in English too', () => {
+    const en = getCopy('en');
+    expect(markerOf(tile('frame', 'frame_ten'), en)?.text).toBe('Earn it');
+    expect(markerOf(tile('kit', 'kit_green'), en)?.text).toBe('Free');
+    expect(markerOf(tile('frame', 'frame_gold'), en)?.text).toBe('€1,99');
   });
 });
 

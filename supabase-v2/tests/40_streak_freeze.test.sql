@@ -78,6 +78,9 @@ select throws_like($$insert into core.freezes (user_id, kind, source) values ('$
 -- u4: one free freeze every 15 votes CAST (counted when the vote is cast), held back at the cap
 -- ---------------------------------------------------------------------------
 select tests.create_user('sf-4@test.local') as u4 \gset
+-- u4 reached σερί 10 before (ΠΡ 10), so the one-off σερί 10 freeze (22 Oct) stays out of this count
+select core.ensure_game_state(:'u4'::uuid) is null as g \gset
+update core.user_game_state set streak_best = 10 where user_id = :'u4'::uuid;
 select tests.play(:'u4'::uuid, true) is not null as p from generate_series(1, 14);
 select is((select votes_since_free_freeze from tests.state(:'u4'::uuid)), 14, 'u4: 14 votes counted toward the next free freeze');
 select is(tests.unused_freezes(:'u4'::uuid), 1, 'u4: only the σερί-3 freeze so far');

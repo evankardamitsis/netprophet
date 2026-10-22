@@ -7,6 +7,7 @@ const ROWS: [LookCategory, string, string, string, LookKind, number | null, stri
   ['frame', 'frame_seven', 'Επτά', 'Seven', 'earned', null, 'Το κερδίζεις με 7 σωστές στη σειρά'],
   ['frame', 'frame_ten', 'Δέκα', 'Ten', 'earned', null, 'Το κερδίζεις με 10 σωστές στη σειρά'],
   ['frame', 'frame_week', 'Της εβδομάδας', 'Of the week', 'earned', null, 'Το κερδίζεις με την εβδομαδιαία αποστολή'],
+  ['frame', 'frame_founding', 'Πρώτη γενιά', 'Founding', 'earned', null, 'Για όσους μπήκαν Ιδρυτικά μέλη στο Pro ως τις 31/12'],
   ['frame', 'frame_gold', 'Χρυσό', 'Gold', 'buy', 1.99, null],
   ['frame', 'frame_grass', 'Γρασίδι', 'Grass', 'buy', 1.99, null],
   ['frame', 'frame_retro', 'Ρετρό', 'Retro', 'buy', 1.99, null],

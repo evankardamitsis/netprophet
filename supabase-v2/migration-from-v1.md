@@ -105,7 +105,7 @@ Rows that violate the v2 integrity triggers (mixed-gender singles, incomplete si
 | storage `athlete-photos` (open write policy) | copy objects bucket to bucket under `<player_id>/`; the v2 bucket is owner-only |
 
 ### Optional steps, off by default (need a founder decision)
-- **Founding frame**: `user_cosmetics(source='migration')` for `frame_founding` (seeded in `…000700_reference_data.sql`) for every migrated user. Flag `--grant-founding-frame`. Implementation plan 8.2 recommends it.
+- **Founding frame**: not granted on migration. Founder, 22 Oct 2026: «Πρώτη γενιά» (`frame_founding`) is for those who take Pro «Ιδρυτικό μέλος» by 31/12/2026, given by `api.apply_store_event` (`20270317000000_cosmetics_decisions.sql`). Do not use `--grant-founding-frame`.
 - **Pro time for people who paid real money for coin packs** (implementation plan 8.2): `entitlements(source='migration', status='active', ends_at=…)`. Flag `--grant-pro-for-purchasers`, input: a CSV from Stripe, because coin purchases are not migrated. This is a legal and accounting question first; coins themselves are dropped for everyone as decided.
 
 ## 2. Cutover script outline (stub, do not run)

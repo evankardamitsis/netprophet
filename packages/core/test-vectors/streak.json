@@ -1,7 +1,7 @@
 {
   "suite": "streak",
   "version": 1,
-  "notes": "fn streakSequence. Steps: cast (a vote was cast), outcome (a resolved match vote), buy_freeze. A step with repeat N is expanded N times. Events are the result of each step. fn streakMoment: the σερί moment a resolved vote's event earns: {type: milestone} for a milestone that is a new personal record or gave the first free freeze, else {type: record} on the first card of a run past the old ΠΡ (old ΠΡ at least 1), else null. State recordRun: this run already went past the ΠΡ it started from.",
+  "notes": "fn streakSequence. Steps: cast (a vote was cast), outcome (a resolved match vote), buy_freeze. A step with repeat N is expanded N times. Events are the result of each step. fn streakMoment: the σερί moment a resolved vote's event earns: {type: milestone} for a milestone that is a new personal record or gave the first free freeze, else {type: record} on the first card of a run past the old ΠΡ (old ΠΡ at least 1), else null. State recordRun: this run already went past the ΠΡ it started from. A free freeze comes at the first 3 (retried at a later 3 while both slots are full) and at the first 10 ever (ΠΡ below 10 before; with both slots full nothing extra, never retried).",
   "groups": [
     {
       "fn": "streakSequence",
@@ -724,7 +724,7 @@
           }
         },
         {
-          "name": "milestones 3, 5, 7, 10; freeze only at the first 3",
+          "name": "milestones 3, 5, 7, 10; a free freeze at the first 3 and at the first 10",
           "input": {
             "initial": {
               "current": 0,
@@ -858,7 +858,7 @@
                 "kind": "advanced",
                 "milestone": 10,
                 "newBest": true,
-                "freezeGranted": false,
+                "freezeGranted": true,
                 "record": null
               }
             ],
@@ -867,6 +867,7 @@
               "best": 10,
               "chain": 10,
               "freezes": [
+                "free",
                 "free"
               ],
               "votesSinceFreeFreeze": 0,
@@ -1333,6 +1334,146 @@
               "firstFreeGranted": false,
               "brokeAt": null,
               "recordRun": true
+            }
+          }
+        },
+        {
+          "name": "σερί 10 the first time with one slot free: a free freeze next to the frame",
+          "input": {
+            "initial": {
+              "current": 9,
+              "best": 9,
+              "chain": 9,
+              "freezes": [
+                "paid"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null,
+              "recordRun": true
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-22T09:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": 10,
+                "newBest": true,
+                "freezeGranted": true,
+                "record": null
+              }
+            ],
+            "final": {
+              "current": 10,
+              "best": 10,
+              "chain": 10,
+              "freezes": [
+                "paid",
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null,
+              "recordRun": true
+            }
+          }
+        },
+        {
+          "name": "σερί 10 the first time with both slots full: nothing extra",
+          "input": {
+            "initial": {
+              "current": 9,
+              "best": 9,
+              "chain": 9,
+              "freezes": [
+                "free",
+                "paid"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null,
+              "recordRun": true
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-22T09:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": 10,
+                "newBest": true,
+                "freezeGranted": false,
+                "record": null
+              }
+            ],
+            "final": {
+              "current": 10,
+              "best": 10,
+              "chain": 10,
+              "freezes": [
+                "free",
+                "paid"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null,
+              "recordRun": true
+            }
+          }
+        },
+        {
+          "name": "σερί 10 again after a break (ΠΡ already 10): no freeze",
+          "input": {
+            "initial": {
+              "current": 9,
+              "best": 10,
+              "chain": 9,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null,
+              "recordRun": false
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-22T09:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": 10,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              }
+            ],
+            "final": {
+              "current": 10,
+              "best": 10,
+              "chain": 10,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         }

@@ -11,6 +11,12 @@ export const MILESTONES = [3, 5, 7, 10] as const;
 export const MAX_FREEZES = 2;
 export const FREE_FREEZE_EVERY_VOTES = 15;
 export const FIRST_FREE_FREEZE_AT = 3;
+/**
+ * σερί 10 also gives one free freeze (founder, 22 Oct 2026), next to Frame «Δέκα»: only the first time the user ever
+ * reaches 10 (ΠΡ below 10 before), only into a free slot. With both slots full nothing extra is given and it is
+ * never retried later.
+ */
+export const MILESTONE_FREEZE_AT = 10;
 
 export function initialStreak(): StreakState {
   return {
@@ -110,6 +116,10 @@ export function applyOutcome(state: StreakState, correct: boolean, at: Instant):
     if (current === FIRST_FREE_FREEZE_AT && !firstFreeGranted && freezes.length < MAX_FREEZES) {
       freezes = [...freezes, 'free'];
       firstFreeGranted = true;
+      freezeGranted = true;
+    }
+    if (current === MILESTONE_FREEZE_AT && state.best < MILESTONE_FREEZE_AT && freezes.length < MAX_FREEZES) {
+      freezes = [...freezes, 'free'];
       freezeGranted = true;
     }
     const newBest = best > state.best;

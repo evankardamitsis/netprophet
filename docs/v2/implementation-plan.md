@@ -644,7 +644,7 @@ An ETL script `tools/migrate/v1-to-v2.ts` is idempotent, keeps v1 ids where poss
 
 ### 8.2 Old users' coins and bets
 **[DECIDE]** Some users paid real money for coin packs (Stripe). Recommendation:
-- **Everyone** gets a «Πρώτη γενιά» (founding) frame plus badge in v2 (`source='migration'`).
+- ~~**Everyone** gets a «Πρώτη γενιά» (founding) frame plus badge in v2 (`source='migration'`).~~ Superseded 22 Oct 2026: «Πρώτη γενιά» goes to those who take Pro «Ιδρυτικό μέλος» by 31/12/2026, not to every migrated user.
 - **Paying users** get Pro time: 1 month per 5€ spent, minimum 1 month, granted as `entitlements(source='migration')`. They also get a stated option to request a refund of the unused purchased balance within 60 days.
 - Check this with an accountant or lawyer for Greek consumer law.
 - Bets and history are not shown in v2. A one-time "your v1 stats" email (correct picks, best run) is a nice goodbye.

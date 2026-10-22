@@ -1221,6 +1221,8 @@ export const en: Copy = {
     tagFree: 'Free',
     tagEarned: 'You earned it',
     tagBought: 'Bought',
+    markerEarn: 'Earn it',
+    markerOwned: 'You have it',
     price: '€{price}',
     priceSpaced: '€{price}',
     worn: 'Wearing',

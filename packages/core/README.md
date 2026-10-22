@@ -12,7 +12,7 @@ import { resolveBatch, validateVote, recordVoteCast, evaluateUnlocks, canSee } f
 |---|---|---|
 | Points | Correct vote +10. Correct Ανατροπή call +30 (replaces the +10). +5 chain bonus on a correct vote that extends a chain. «Οι 6 της ημέρας» completed +30, once per quiz day (set changes 09:00 Athens), same for the 12-card Pro set. Money and Pro never add points. | `rules/points.ts` |
 | Ανατροπή | The winner had under 40% of the votes, with at least 10 votes cast. | `isUpset` |
-| σερί | Consecutive correct votes. A wrong vote resets to 0 unless a freeze absorbs it. Milestones 3, 5, 7, 10: a full-screen moment only the first time (a new personal record) or when it gives the first free freeze; otherwise «Νέο ρεκόρ» once a run, on the first card past the ΠΡ the run started from (old ΠΡ at least 1, state `recordRun`) (`streakMoment`). Personal record kept (`best`). | `rules/streak.ts` |
+| σερί | Consecutive correct votes. A wrong vote resets to 0 unless a freeze absorbs it. Milestones 3, 5, 7, 10: a full-screen moment only the first time (a new personal record) or when it gives the first free freeze; σερί 10 the first time also gives a free freeze into a free slot; otherwise «Νέο ρεκόρ» once a run, on the first card past the ΠΡ the run started from (old ΠΡ at least 1, state `recordRun`) (`streakMoment`). Personal record kept (`best`). | `rules/streak.ts` |
 | Freezes | Max 2 held. Free: the first at σερί 3, then one every 15 votes cast. Paid (0,99 EUR): a purchase. Free keeps the number and the chain; paid keeps the number only and restarts the chain. | `rules/streak.ts` |
 | Order | σερί advances in RESOLUTION order: `resolvedAt`, then match `startsAt`, then vote `createdAt`, then vote id. Results that come in together count in the order the matches were played (the worker resolves one pass in match order). A later correction never rewrites the σερί. | `compareResolutions` |
 | Void/cancelled | Vote closes with outcome `none`: no points, σερί, chain and freezes unchanged. Only `confirmed` matches with a result resolve; `played`, `disputed` and the rest stay pending. | `rules/resolution.ts` |
@@ -33,7 +33,7 @@ import { resolveBatch, validateVote, recordVoteCast, evaluateUnlocks, canSee } f
 | File | Covers |
 |---|---|
 | `points.json` | points per vote, upset threshold, quiz award, quiz day boundary (09:00) |
-| `streak.json` | milestones, both freeze kinds, 15-vote freeze, stacking limit, breaks |
+| `streak.json` | milestones, both freeze kinds, 15-vote freeze, the σερί 10 freeze, stacking limit, breaks |
 | `quests-time.json` | day/week/month keys and next resets, incl. DST 2026-03-29 and 2026-10-25 |
 | `quests.json` | quest progress, window resets, distinct days, invite steps |
 | `unlocks.json` | action triggers, vote backups, stickiness, existing players |
@@ -56,6 +56,8 @@ Status: **enforced in both places** means the TypeScript rules and the SQL rules
    _Enforced in both places. SQL counts in `api.cast_vote` through `core.record_vote_cast`, not at resolution._
 4. **First free freeze at σερί 3:** granted once, only if a slot is free; otherwise it is tried again the next time σερί reaches 3.
    _Enforced in both places. SQL grants it only at exactly σερί 3 and sets the flag only when a slot was free._
+   **Free freeze at σερί 10** (founder, 22 Oct 2026): next to Frame «Δέκα», one free freeze the first time the user ever reaches 10 (ΠΡ below 10 before), only into a free slot. With both slots full nothing extra is given and it is never retried (`MILESTONE_FREEZE_AT`).
+   _Enforced in both places. SQL: `core.apply_outcome` grants it as freeze source `streak10` (`milestone_freeze_at_streak` in `core.sport_rules`)._
 5. **Which freeze is spent first:** the free one (it keeps the chain), then the paid one.
    _Enforced in both places (`core.apply_outcome`: free first, then the oldest paid)._
 6. **Wrong vote at σερί 0:** no freeze is spent.
