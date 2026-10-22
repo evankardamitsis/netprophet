@@ -1,9 +1,14 @@
 -- v1 roster, tournaments, matches and results into v2 core (supabase-v2/migration-from-v1.md).
+-- NOT USED AT CUTOVER: the founder decided on 22 Oct 2026 not to import v1 tournaments, matches or results. Kept,
+-- fixed and tested (tools/migrate/test) in case that changes.
 -- Input: schema v1 staged by tools/migrate/stage_v1.py. Users, profiles and claims are not part of this run.
 -- Matches: by default only a test sample (the most recent finished ones with a result, -v sample=20); pass
 -- -v sample=0 for all of them at cutover. Tournaments follow the matches that are imported.
 -- Idempotent: rows already imported are skipped. Every match goes in on its own savepoint; a match that breaks
--- a v2 rule lands in etl.rejects with the reason instead of being forced in.
+-- a v2 rule lands in etl.rejects with the reason instead of being forced in. Things changed on the way in (a
+-- merged player, a duplicate v1 result) are listed in etl.rejects with tbl 'notes'.
+-- At cutover the local roster must first mirror the hosted one (tools/migrate/sql/mirror_hosted_players.sql), so
+-- players merged on v2 since the roster import are seen here; docs/v2/cutover-runbook.md has the order.
 \set ON_ERROR_STOP on
 \if :{?sample}
 \else
@@ -25,7 +30,7 @@ create table if not exists etl.rejects (
   row    jsonb,
   at     timestamptz not null default now()
 );
-delete from etl.rejects where tbl in ('matches', 'match_results');
+delete from etl.rejects where tbl in ('matches', 'match_results', 'notes');
 
 -- players: all visible (v1 is_hidden meant "unclaimed placeholder"), the one demo player stays out
 insert into core.players (id, first_name, surname, gender, birth_year, is_minor, hidden, source, status, created_at, updated_at)
@@ -47,11 +52,14 @@ select p.id, 'tennis',
  where exists (select 1 from core.players c where c.id = p.id)
 on conflict do nothing;
 
--- tournaments and their categories
-insert into core.tournaments (id, sport_id, name, venue, starts_on, ends_on, draw_state, active, source, external_ref, created_at, updated_at)
+-- tournaments and their categories. One that ended before today is finished (v1 left most of them 'active'), so
+-- its matches never reach the feed (get_feed skips a finished tournament)
+insert into core.tournaments (id, sport_id, name, venue, starts_on, ends_on, draw_state, active, finished, source,
+                              external_ref, created_at, updated_at)
 select t.id, 'tennis', btrim(t.name), nullif(btrim(t.location), ''), t.start_date, t.end_date,
        case t.status when 'upcoming' then 'open' when 'active' then 'drawn' else 'done' end,
-       t.status <> 'cancelled', 'import', t.id::text,
+       t.status <> 'cancelled', coalesce(t.end_date, t.start_date) < (now() at time zone 'Europe/Athens')::date,
+       'import', t.id::text,
        coalesce(t.created_at, now()), coalesce(t.updated_at, now())
   from v1.tournaments t
  where t.id in (select tournament_id from v1.matches where id in (select id from pick))
@@ -84,14 +92,36 @@ declare
   v_set    jsonb;
   v_retired boolean;
   v_round  text;
+  v_n      int;
+  v_ids    uuid[];
+  v_now    uuid[];
 begin
   for m in select * from v1.matches where id in (select id from pick) order by start_time, id loop
     continue when exists (select 1 from core.matches where source = 'import' and source_ref = 'v1:' || m.id);
 
-    select * into r from v1.match_results where match_id = m.id;
-    v_status := case m.status
-                  when 'cancelled' then 'void'
-                  when 'finished' then case when r.id is not null then 'confirmed' else 'played' end
+    -- v1 has a match with two result rows: keep the latest, say so
+    select count(*) into v_n from v1.match_results where match_id = m.id;
+    select * into r from v1.match_results where match_id = m.id
+     order by updated_at desc nulls last, created_at desc nulls last, id limit 1;
+    if v_n > 1 then
+      insert into etl.rejects (tbl, v1_id, reason, row)
+      values ('notes', m.id, 'duplicate_result: ' || v_n || ' v1 result rows, kept the latest', to_jsonb(r));
+    end if;
+
+    -- a player merged into another on v2 plays as that one (merges can chain: core.current_player)
+    v_ids := case when m.match_type::text = 'singles' then array[m.player_a_id, m.player_b_id]
+                  else array[m.player_a1_id, m.player_a2_id, m.player_b1_id, m.player_b2_id] end;
+    select array_agg(core.current_player(x) order by o) into v_now from unnest(v_ids) with ordinality u(x, o);
+    if v_now is distinct from v_ids then
+      insert into etl.rejects (tbl, v1_id, reason, row)
+      values ('notes', m.id, 'merged_player: participant moved to the player it was merged into',
+              jsonb_build_object('v1', to_jsonb(v_ids), 'v2', to_jsonb(v_now)));
+    end if;
+    -- a v1 match still 'upcoming' or 'live' whose day is long gone was never played (or never entered): void
+    v_status := case
+                  when m.status = 'cancelled' then 'void'
+                  when m.status = 'finished' then case when r.id is not null then 'confirmed' else 'played' end
+                  when m.start_time < now() - interval '2 days' then 'void'
                   else 'scheduled' end;
     v_round := case m.round::text
                  when 'Round of 64' then 'round64' when 'Round of 32' then 'round32' when 'Round of 16' then 'round16'
@@ -109,11 +139,11 @@ begin
 
       if m.match_type::text = 'singles' then
         insert into core.match_participants (match_id, side, player_id, position) values
-          (m.id, 1, m.player_a_id, 1), (m.id, 2, m.player_b_id, 1);
+          (m.id, 1, v_now[1], 1), (m.id, 2, v_now[2], 1);
       else
         insert into core.match_participants (match_id, side, player_id, position) values
-          (m.id, 1, m.player_a1_id, 1), (m.id, 1, m.player_a2_id, 2),
-          (m.id, 2, m.player_b1_id, 1), (m.id, 2, m.player_b2_id, 2);
+          (m.id, 1, v_now[1], 1), (m.id, 1, v_now[2], 2),
+          (m.id, 2, v_now[3], 1), (m.id, 2, v_now[4], 2);
       end if;
       -- sides and gender rules are a deferred check: run it now, inside this savepoint
       set constraints core.match_participants_check immediate;
@@ -140,9 +170,13 @@ begin
         for v_i in 1..5 loop
           v_score := case v_i when 1 then r.set1_score when 2 then r.set2_score when 3 then r.set3_score
                               when 4 then r.set4_score else r.set5_score end;
-          exit when v_score is null;
           v_tb := case v_i when 1 then r.set1_tiebreak_score when 2 then r.set2_tiebreak_score
                            when 3 then r.set3_tiebreak_score when 4 then r.set4_tiebreak_score else r.set5_tiebreak_score end;
+          -- v1 stores a set decided by a tie-break as the tie-break alone («7-4», side A first): a 7-6 set
+          if v_score is null and v_tb ~ '^\d+-\d+$' then
+            v_score := case when split_part(v_tb, '-', 1)::int > split_part(v_tb, '-', 2)::int then '7-6' else '6-7' end;
+          end if;
+          exit when v_score is null;
           v_a := split_part(v_score, '-', 1)::int;
           v_b := split_part(v_score, '-', 2)::int;
           v_set := case when v_win = 1 then jsonb_build_object('w', v_a, 'l', v_b) else jsonb_build_object('w', v_b, 'l', v_a) end;
@@ -179,17 +213,20 @@ end $$;
 
 commit;
 
--- report
-select 'players' as what, count(*) from core.players where source = 'import'
-union all select 'player levels (from NTRP)', count(*) from core.player_sports where initial_level is not null
-union all select 'tournaments', count(*) from core.tournaments where source = 'import'
-union all select 'tournament events', count(*) from core.tournament_events e join core.tournaments t on t.id = e.tournament_id and t.source = 'import'
-union all select 'matches', count(*) from core.matches where source = 'import'
-union all select '  confirmed with result', count(*) from core.matches m join core.match_results r on r.match_id = m.id where m.source = 'import'
-union all select '  played, no result', count(*) from core.matches where source = 'import' and status = 'played'
-union all select '  scheduled (past)', count(*) from core.matches where source = 'import' and status = 'scheduled'
-union all select '  void (cancelled)', count(*) from core.matches where source = 'import' and status = 'void'
+-- report (v1 rows only: on a mirrored roster the sheet players and tournaments are there too)
+select 'v1 players in core' as what, count(*) from core.players where id in (select id from v1.players)
+union all select '  merged on v2 (their matches go to the kept player)', count(*) from core.players where id in (select id from v1.players) and status = 'merged'
+union all select 'player levels (from NTRP)', count(*) from core.player_sports where initial_level is not null and player_id in (select id from v1.players)
+union all select 'tournaments', count(*) from core.tournaments where id in (select id from v1.tournaments)
+union all select '  finished', count(*) from core.tournaments where id in (select id from v1.tournaments) and finished
+union all select 'tournament events', count(*) from core.tournament_events where id in (select id from v1.tournament_categories)
+union all select 'matches', count(*) from core.matches where source_ref like 'v1:%'
+union all select '  confirmed with result', count(*) from core.matches m join core.match_results r on r.match_id = m.id where m.source_ref like 'v1:%'
+union all select '  played, no result', count(*) from core.matches where source_ref like 'v1:%' and status = 'played'
+union all select '  scheduled', count(*) from core.matches where source_ref like 'v1:%' and status = 'scheduled'
+union all select '  void (cancelled, or never played)', count(*) from core.matches where source_ref like 'v1:%' and status = 'void'
 union all select 'rejected matches', count(*) from etl.rejects where tbl = 'matches'
-union all select 'results kept out (no sets)', count(*) from etl.rejects where tbl = 'match_results';
+union all select 'results kept out (no sets)', count(*) from etl.rejects where tbl = 'match_results'
+union all select 'notes (merged players moved, duplicate results)', count(*) from etl.rejects where tbl = 'notes';
 
 select tbl, reason, count(*) from etl.rejects group by 1, 2 order by 3 desc;
