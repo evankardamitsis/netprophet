@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { DrawMatchRow, GetTournamentResult, TournamentDraw, TournamentMatch } from '@netprophet/db';
-import { entriesOf, entryOfMatch, identityOf, ifWinsLine, matchesOfEntry, pickEntry, runOf, summaryOf, titleOf } from './playerRun';
+import { entriesOf, entryOfMatch, identityOf, ifWinsLine, matchesOfEntry, orderEntries, pickEntry, runOf, sectionsOf, summaryOf, titleOf } from './playerRun';
+import { againstSegs, pairLine, pairSegments, segmentsOf } from './tournamentToday';
 
 /**
  * Test vectors in the shape api.get_tournament returns on the live project (read 21 Oct 2026, names invented): sheet
@@ -199,7 +200,12 @@ describe('the summary of one entry', () => {
     const entries = entriesOf(d, me, t);
     const entry = entries.find((e) => e.tab === 'MD -40')!;
     const s = summaryOf(me, matchesOfEntry(d, me, entries, entry), runOf(d, entry, t), now, t);
-    expect(s.previous).toEqual([{ matchId: 'md-r2', day: 'Σαβ 17/10', meta: null, against: 'με Ήτα & Θήτα', score: '6-3, 6-4', won: true }]);
+    expect(s.previous).toEqual([
+      {
+        matchId: 'md-r2', day: 'Σαβ 17/10', meta: null, against: 'με Ήτα & Θήτα', score: '6-3, 6-4', won: true,
+        againstSegs: [{ text: 'με ' }, { text: 'Ήτα', id: 'hta' }, { text: ' & ' }, { text: 'Θήτα', id: 'the' }],
+      },
+    ]);
     expect(s.next).toMatchObject({ matchId: null, against: 'με Αλφας & Βητας ή Εψιλος & Ζητας' });
   });
   it('singles: the next match from the schedule', () => {
@@ -210,5 +216,61 @@ describe('the summary of one entry', () => {
     const s = summaryOf(me, matchesOfEntry(d, me, entries, entry), runOf(d, entry, t), now, t);
     expect(s.previous).toEqual([]);
     expect(s.next).toMatchObject({ matchId: 'ms-r1', against: 'με Δεσύπρη', now: false });
+    expect(s.next!.againstSegs).toEqual([{ text: 'με ' }, { text: 'Δεσύπρη', id: 'des' }]);
+  });
+});
+
+describe('all of the player\'s categories in the tournament, the held one first', () => {
+  const d = tour();
+  const me = identityOf(d, 'me')!;
+  const entries = entriesOf(d, me, t);
+  const tabs = (ctx: Parameters<typeof sectionsOf>[3]) => sectionsOf(d, me, entries, ctx, now, t).map((s) => s.entry?.tab);
+
+  it('held on a doubles match: that pair first, then singles and the other pair', () => {
+    expect(tabs({ match: 'md-r2' })).toEqual(['MD -40', 'Μ 40+', 'MD MASTER']);
+  });
+  it('held on a singles match: singles first, both pairs after', () => {
+    expect(tabs({ match: 'ms-r1' })).toEqual(['Μ 40+', 'MD -40', 'MD MASTER']);
+  });
+  it('held on a slot of the draw: that category first', () => {
+    expect(tabs({ tab: 'MD MASTER', round: 1, slot: 1 })).toEqual(['MD MASTER', 'Μ 40+', 'MD -40']);
+  });
+  it('no context: the category with a match to play first, every entry once', () => {
+    const all = tabs(null);
+    expect(all).toHaveLength(3);
+    expect(new Set(all).size).toBe(3);
+    expect(all[0]).toBe('Μ 40+');
+  });
+  it('each section has its own results, next match and «Αν κερδίσει»', () => {
+    const [pair, single, master] = sectionsOf(d, me, entries, { match: 'md-r2' }, now, t);
+    expect(pair!.previous.map((p) => p.matchId)).toEqual(['md-r2']);
+    expect(pair!.wins!.line).toMatch(/^Αν κερδίσει αυτό το ματς|^Επόμενος/);
+    expect(single!.previous).toEqual([]);
+    expect(single!.next).toMatchObject({ matchId: 'ms-r1' });
+    expect(master!.run!.steps.map((s) => s.state)).toEqual(['won', 'open']);
+  });
+  it('the other entries keep the draws\' order', () => {
+    expect(orderEntries(entries, entries[2]!).map((e) => e.tab)).toEqual(['MD MASTER', 'Μ 40+', 'MD -40']);
+    expect(orderEntries(entries, null)).toBe(entries);
+  });
+  it('a player in no draw: one section with all their matches', () => {
+    const none = tour([]);
+    const sections = sectionsOf(none, me, [], { match: 'ms-r1' }, now, t);
+    expect(sections).toHaveLength(1);
+    expect(sections[0]!.entry).toBeNull();
+    expect(sections[0]!.previous.map((p) => p.matchId)).toEqual(['md-r2']);
+  });
+});
+
+describe('name pieces', () => {
+  it('a pair line as pieces reads the same as the line, with a roster id on every name', () => {
+    const m = sched('x', '2026-10-24T15:30:00Z', [ROD], [DES, HTA]);
+    const segs = pairSegments(m, t);
+    expect(segs.map((s) => s.text).join('')).toBe(pairLine(m, t));
+    expect(segs.filter((s) => s.id).map((s) => s.id)).toEqual(['rod', 'des', 'hta']);
+  });
+  it('a hole nobody fills stays text; nobody across gives no pieces', () => {
+    expect(segmentsOf('με {name} {x}', { name: [{ text: 'Α', id: 'a' }] })).toEqual([{ text: 'με ' }, { text: 'Α', id: 'a' }, { text: ' ' }, { text: '{x}' }]);
+    expect(againstSegs([], t)).toBeUndefined();
   });
 });

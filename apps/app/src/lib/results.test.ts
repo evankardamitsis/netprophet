@@ -79,7 +79,11 @@ describe('toResultItem', () => {
     expect(it1.calledIt).toBe('Το ’πες · +30');
     expect([it1.winnerSets, it1.loserSets]).toEqual(['2', '1']);
     expect(it1.score).toBe('4-6, 6-3, 7-5');
-    expect(it1.winner[0]).toEqual({ first: 'Ηλίας', surname: 'Μέμμος' });
+    expect(it1.winner[0]).toEqual({ first: 'Ηλίας', surname: 'Μέμμος', id: 'Ηλίας-Μέμμος' });
+    // the name can be held only inside a tournament: its id rides on the item (a friendly has none)
+    expect(it1.tournamentId).toBeNull();
+    expect(toResultItem(row({ tournament_id: 't1' }), t).tournamentId).toBe('t1');
+    expect(toResultItem(row({ tournament: null, tournament_id: 't1' }), t).tournamentId).toBeNull();
   });
   it('reactions and «Πες κάτι στον …»', () => {
     const r = { options: [{ key: 'bravo', label: 'Μπράβο' }, { key: 'rematch', label: 'Ρεβάνς' }], counts: { bravo: 2 }, mine: null };

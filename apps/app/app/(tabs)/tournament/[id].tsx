@@ -3,7 +3,7 @@ import { Platform, Pressable, RefreshControl, ScrollView, type LayoutChangeEvent
 import Animated from 'react-native-reanimated';
 import { YoursDot } from '../../../src/components/YoursDot';
 import { useFollowedIds } from '../../../src/lib/myPeople';
-import { HoldName, useHoldHint } from '../../../src/lib/playerHold';
+import { HoldName, HoldSegs, useHoldHint } from '../../../src/lib/playerHold';
 import { nowNext, openingDay, yoursSet, yoursToday, type CourtNowNext, type YoursRow } from '../../../src/lib/tournamentToday';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { GetTournamentResult } from '@netprophet/db';
@@ -160,6 +160,7 @@ function Body({
       {todays.length > 0 ? (
         <Reveal i={2}>
           <YoursToday
+            tournamentId={d.id}
             rows={todays}
             onPick={(matchId) => {
               const r = todays.find((x) => x.matchId === matchId);
@@ -238,21 +239,21 @@ function FollowPill({ d, onToast, onOn }: { d: GetTournamentResult; onToast: (te
 }
 
 /** «Οι δικοί σου σήμερα»: one slim line of chips, only when any of them play today; a tap goes to the match */
-function YoursToday({ rows, onPick }: { rows: YoursRow[]; onPick: (matchId: string) => void }) {
+function YoursToday({ tournamentId, rows, onPick }: { tournamentId: string; rows: YoursRow[]; onPick: (matchId: string) => void }) {
   const f = useCopy().tournaments.focus;
   return (
     <View style={styles.yours}>
       <Text style={styles.label}>{f.yoursToday}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}>
         {rows.map((r) => (
-          <YoursChip key={r.matchId} row={r} onPress={() => onPick(r.matchId)} />
+          <YoursChip key={r.matchId} row={r} tournamentId={tournamentId} onPress={() => onPick(r.matchId)} />
         ))}
       </ScrollView>
     </View>
   );
 }
 
-function YoursChip({ row, onPress }: { row: YoursRow; onPress: () => void }) {
+function YoursChip({ row, tournamentId, onPress }: { row: YoursRow; tournamentId: string; onPress: () => void }) {
   const press = usePress();
   return (
     <Pressable accessibilityRole="button" onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
@@ -260,7 +261,9 @@ function YoursChip({ row, onPress }: { row: YoursRow; onPress: () => void }) {
         <Text style={styles.yoursTime}>{row.time}</Text>
         <YoursDot />
         <Text style={styles.yoursName} numberOfLines={1}>
-          {row.name}
+          <HoldName tournamentId={tournamentId} playerId={row.playerId} ctx={{ match: row.matchId }} onTap={onPress}>
+            {row.name}
+          </HoldName>
         </Text>
         <Text style={styles.yoursAgainst} numberOfLines={1}>
           {row.against}
@@ -398,7 +401,7 @@ function Schedule({
           <ScheduleCard ref={card} width={360} name={d.name} day={dayLong(day, t)} venue={d.venue} view={view} moreLabel={view.more > 0 ? fmt(sh.more, { n: view.more }) : null} listTitle={sh.cardTitle} />
         </View>
       ) : null}
-      {courts.length > 0 ? <NowNext courts={courts} onPick={onFocus} /> : null}
+      {courts.length > 0 ? <NowNext courts={courts} tournamentId={d.id} onPick={onFocus} /> : null}
       <View key={day ?? 'none'} style={styles.list} onLayout={(e) => (at.current.list = e.nativeEvent.layout.y)}>
         {rows.map((r, i) => (
           <MatchRow
@@ -427,7 +430,7 @@ function Schedule({
 }
 
 /** «Τώρα / Μετά» by court, above today's schedule: slim, one small card per court, sideways */
-function NowNext({ courts, onPick }: { courts: CourtNowNext[]; onPick: (matchId: string) => void }) {
+function NowNext({ courts, tournamentId, onPick }: { courts: CourtNowNext[]; tournamentId: string; onPick: (matchId: string) => void }) {
   const f = useCopy().tournaments.focus;
   const one = courts.length === 1;
   return (
@@ -444,7 +447,7 @@ function NowNext({ courts, onPick }: { courts: CourtNowNext[]; onPick: (matchId:
               <Pressable accessibilityRole="button" onPress={() => onPick(c.now!.matchId)} style={styles.courtLine}>
                 <Text style={styles.courtNow}>{f.now}</Text>
                 <Text style={styles.courtPair} numberOfLines={1}>
-                  {c.now.pair}
+                  <HoldSegs tournamentId={tournamentId} segs={c.now.segs} ctx={{ match: c.now.matchId }} onTap={() => onPick(c.now!.matchId)} />
                 </Text>
               </Pressable>
             ) : null}
@@ -452,7 +455,7 @@ function NowNext({ courts, onPick }: { courts: CourtNowNext[]; onPick: (matchId:
               <Pressable accessibilityRole="button" onPress={() => onPick(c.next!.matchId)} style={styles.courtLine}>
                 <Text style={styles.courtNext}>{f.next}</Text>
                 <Text style={styles.courtPairSoft} numberOfLines={1}>
-                  {c.next.time} · {c.next.pair}
+                  {c.next.time} · <HoldSegs tournamentId={tournamentId} segs={c.next.segs} ctx={{ match: c.next.matchId }} onTap={() => onPick(c.next!.matchId)} />
                 </Text>
               </Pressable>
             ) : null}

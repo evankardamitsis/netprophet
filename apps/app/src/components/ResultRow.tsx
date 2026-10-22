@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { ResultItem, ResultName } from '../lib/results';
 import { usePopIn, useSlamIn, useStgIn } from '../lib/motion';
+import { HoldName } from '../lib/playerHold';
 import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts, motion, type } from '../theme';
 import { useCopy } from '../i18n';
@@ -47,6 +48,8 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
     return () => clearTimeout(id);
   }, [names]);
   const reveal = () => setNames((o) => !o);
+  // a result that belongs to a tournament: a hold on a name opens that player's run there, from this match
+  const hold = item.tournamentId ? { tournamentId: item.tournamentId, matchId: item.id } : null;
   const meta = [item.score, item.line].filter(Boolean).join(' · ');
   return (
     <Pressable
@@ -73,10 +76,10 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
         <View style={styles.pair}>
           <Pressable style={styles.namesCol} onPress={reveal} onLongPress={longPress} delayLongPress={450}>
             <View style={styles.winner}>
-              <Names people={item.winner} open={names} style={[styles.winName, { color: fg }]} />
+              <Names people={item.winner} open={names} onTap={reveal} hold={hold} style={[styles.winName, { color: fg }]} />
             </View>
             <View style={[styles.loser, styles.dim]}>
-              <Names people={item.loser} open={names} style={[styles.loseName, { color: fg }]} />
+              <Names people={item.loser} open={names} onTap={reveal} hold={hold} style={[styles.loseName, { color: fg }]} />
             </View>
           </Pressable>
           <View style={styles.scoresCol}>
@@ -163,7 +166,19 @@ function Pill({ text }: { text: string }) {
  * a tap anywhere on the names column shows the first names for 4s (founder, 10 Oct; the prototype had it the other way
  * round). `open` comes from the card, so both sides open together and the whole column is one 44pt+ target.
  */
-function Names({ people, open, style }: { people: ResultName[]; open: boolean; style: StyleProp<TextStyle> }) {
+function Names({
+  people,
+  open,
+  onTap,
+  hold,
+  style,
+}: {
+  people: ResultName[];
+  open: boolean;
+  onTap: () => void;
+  hold: { tournamentId: string; matchId: string } | null;
+  style: StyleProp<TextStyle>;
+}) {
   // measured as shown collapsed: «Δεσύπρης Γ. & Μέμμος Η.»
   const shown = people.map((p) => `${p.surname} ${p.first.slice(0, 1)}.`).join(' & ');
   return (
@@ -172,8 +187,10 @@ function Names({ people, open, style }: { people: ResultName[]; open: boolean; s
         {people.map((p, i) => (
           <Fragment key={`${p.first}-${p.surname}-${i}`}>
             {i > 0 ? ' & ' : ''}
-            {p.surname}{' '}
-            {open ? <Text style={styles.firstName}>{p.first}</Text> : `${p.first.slice(0, 1)}.`}
+            <HoldName tournamentId={hold?.tournamentId ?? null} playerId={p.id} ctx={hold ? { match: hold.matchId } : null} onTap={onTap}>
+              {p.surname}{' '}
+              {open ? <Text style={styles.firstName}>{p.first}</Text> : `${p.first.slice(0, 1)}.`}
+            </HoldName>
           </Fragment>
         ))}
       </FitText>

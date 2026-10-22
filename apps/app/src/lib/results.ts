@@ -13,6 +13,8 @@ import { categoryCase } from './feed';
 export interface ResultName {
   first: string;
   surname: string;
+  /** the roster id: with the tournament, the name can be held for their run */
+  id: string;
 }
 
 export interface ResultItem {
@@ -27,6 +29,8 @@ export interface ResultItem {
   calledIt: string | null;
   winner: ResultName[];
   loser: ResultName[];
+  /** the tournament the match belongs to; null for a friendly */
+  tournamentId: string | null;
   /** sets won, the big numbers; empty for a walkover */
   winnerSets: string;
   loserSets: string;
@@ -122,7 +126,7 @@ export function eventParts(
   return { title: row.tournament, category, detail: round };
 }
 
-const names = (players: FeedPlayer[]): ResultName[] => players.map((p) => ({ first: p.first_name, surname: p.surname }));
+const names = (players: FeedPlayer[]): ResultName[] => players.map((p) => ({ first: p.first_name, surname: p.surname, id: p.id }));
 const playersOf = (row: ResultRow, side: Side) => row.sides.find((s) => s.side === side)?.players ?? [];
 
 /** a result you won yourself (your claimed player on the winning side), and not a walkover: it can have a card */
@@ -165,6 +169,7 @@ export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null 
     calledIt: row.my?.outcome === 'correct' ? fmt(t.results.calledIt, { points: row.my.points }) : null,
     winner: names(playersOf(row, win)),
     loser: names(playersOf(row, lose)),
+    tournamentId: row.tournament ? row.tournament_id ?? null : null,
     winnerSets: row.walkover ? '' : String(wonSets),
     loserSets: row.walkover ? '' : String(lostSets),
     score: summary ? '' : formatWinnerSets(row.sets, { retired: row.retired, walkover: row.walkover }, t.results),

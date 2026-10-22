@@ -4,7 +4,7 @@ import type { DrawEntrantRow, DrawMatchRow, FeedPlayer, GetTournamentResult, Tou
 import { fmt } from './votes';
 import { placeLine } from './place';
 import { dayShort, ddmm, parseSets, roundName } from './tournaments';
-import { NOW_WINDOW_MS, whenLine, type NextMatch, type PathContext, type PathMatch } from './tournamentToday';
+import { NOW_WINDOW_MS, againstSegs, whenLine, type NextMatch, type PathContext, type PathMatch } from './tournamentToday';
 
 /**
  * One player's run in one tournament, by entry (founder, 21 Oct, after build 12 on real data): an entry is the player
@@ -420,6 +420,7 @@ export function summaryOf(me: Identity, matches: TournamentMatch[], run: Run | n
       day: m.starts_at ? dayShort(m.starts_at, t) : '',
       meta: null,
       against: against(m),
+      againstSegs: againstSegs(sideOf(m, sideNo(m) === 1 ? 2 : 1), t),
       score: (m.sets?.length ?? 0) > 0 || m.walkover === true ? formatWinnerSets(m.sets ?? [], { retired: m.retired === true, walkover: m.walkover === true }, t.results) : null,
       won: m.winner_side === sideNo(m),
     }));
@@ -439,6 +440,7 @@ export function summaryOf(me: Identity, matches: TournamentMatch[], run: Run | n
         when: pick.postponed === true || !pick.starts_at ? t.tournaments.detail.postponedTime : whenLine(pick.starts_at, today, t),
         place: placeLine(pick, t, true),
         against: against(pick),
+        againstSegs: againstSegs(sideOf(pick, sideNo(pick) === 1 ? 2 : 1), t),
         now: !!pick.starts_at && pick.postponed !== true && startMs(pick) <= nowMs,
       },
     };
@@ -448,4 +450,39 @@ export function summaryOf(me: Identity, matches: TournamentMatch[], run: Run | n
     ? { matchId: null, when: step.when ?? f.notYet, place: null, against: step.against ? fmt(f.against, { name: step.against }) : f.notYet, now: false }
     : null;
   return { previous, next };
+}
+
+/* ================= all of the player's categories ================= */
+
+/** the entries with the held one first, the others in the draws' order (nothing held: as they are) */
+export function orderEntries(entries: Entry[], held: Entry | null): Entry[] {
+  if (!held) return entries;
+  return [held, ...entries.filter((e) => e.key !== held.key)];
+}
+
+/** one category or pair of the player in this tournament: its run, the results so far and the match to play */
+export interface RunSection {
+  /** null only when the sheets have no draw with them: then the one section holds all their matches */
+  entry: Entry | null;
+  run: Run | null;
+  previous: PathMatch[];
+  next: NextMatch | null;
+  /** «Αν κερδίσει» */
+  wins: { line: string; when: string | null } | null;
+}
+
+/**
+ * Everything the run screen shows: one section per entry of the player in this tournament (singles and every doubles
+ * pair), the held match's entry first (the pair's results first when the hold was on a doubles match).
+ */
+export function sectionsOf(d: GetTournamentResult, me: Identity, entries: Entry[], ctx: PathContext, now: Date, t: Copy): RunSection[] {
+  if (entries.length === 0) {
+    const { previous, next } = summaryOf(me, matchesOfEntry(d, me, entries, null), null, now, t);
+    return [{ entry: null, run: null, previous, next, wins: null }];
+  }
+  return orderEntries(entries, pickEntry(d, me, entries, ctx, t)).map((entry) => {
+    const run = runOf(d, entry, t, ctx);
+    const { previous, next } = summaryOf(me, matchesOfEntry(d, me, entries, entry), run, now, t);
+    return { entry, run, previous, next, wins: ifWinsLine(run, t) };
+  });
 }
