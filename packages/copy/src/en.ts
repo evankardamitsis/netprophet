@@ -934,6 +934,7 @@ export const en: Copy = {
     unit: 'streak',
     aria: 'Celebration',
     level: { label: 'Level', title: 'You levelled up!', line: 'Keep calling them right' },
+    record: { title: 'New record!', line: 'You passed {old}. Go for more!' },
   },
   unlocks: {
     label: 'New',

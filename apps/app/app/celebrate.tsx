@@ -14,11 +14,13 @@ const SAMPLES: Record<string, CelebrationItem[]> = {
     { id: 's3', created_at: at, payload: { type: 'streak_milestone', streak: 3, match_id: 'm3', reward: { freeze: true, frame: null, gear: null } } },
   ],
   badge: [{ id: 'b', created_at: at, payload: { type: 'badge', badge: 'in_a_row', tier: 1, new: true } }],
+  // σερί 12 past a ΠΡ of 11: «Νέο ρεκόρ!»
+  record: [{ id: 'r', created_at: at, payload: { type: 'streak_record', streak: 12, match_id: 'm12' } }],
 };
 
 /**
  * Development builds only: the full-screen moments on sample data, for the founder's review.
- * `/celebrate?kind=level` (the level-up move), `streaks` (σερί 3 and 5 queued together), `badge`.
+ * `/celebrate?kind=level` (the level-up move), `streaks` (σερί 3 and 5 queued together), `badge`, `record`.
  */
 export default function CelebratePreview() {
   const { kind } = useLocalSearchParams<{ kind?: string }>();

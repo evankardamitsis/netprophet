@@ -1,7 +1,7 @@
 {
   "suite": "resolution",
   "version": 1,
-  "notes": "fn resolveBatch. Items are processed by resolvedAt, then vote createdAt, then vote id. `entries` are in processing order. Streak follows RESOLUTION time.",
+  "notes": "fn resolveBatch. Items are processed by resolvedAt, then match startsAt, then vote createdAt, then vote id. `entries` are in processing order. Streak follows RESOLUTION time; results that come in together count in the order the matches were played. An item's `startsAt` is optional (default 2026-10-09T15:00:00Z).",
   "groups": [
     {
       "fn": "resolveBatch",
@@ -16,7 +16,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -44,7 +45,8 @@
                   "kind": "advanced",
                   "milestone": null,
                   "newBest": true,
-                  "freezeGranted": false
+                  "freezeGranted": false,
+                  "record": null
                 },
                 "isUpsetCall": false
               }
@@ -56,7 +58,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -70,7 +73,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -122,7 +126,8 @@
                   "kind": "advanced",
                   "milestone": 3,
                   "newBest": true,
-                  "freezeGranted": true
+                  "freezeGranted": true,
+                  "record": 3
                 },
                 "isUpsetCall": false
               },
@@ -146,7 +151,8 @@
                   "kind": "advanced",
                   "milestone": null,
                   "newBest": true,
-                  "freezeGranted": false
+                  "freezeGranted": false,
+                  "record": null
                 },
                 "isUpsetCall": false
               }
@@ -158,7 +164,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -172,7 +179,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -234,7 +242,8 @@
                   "kind": "advanced",
                   "milestone": null,
                   "newBest": true,
-                  "freezeGranted": false
+                  "freezeGranted": false,
+                  "record": null
                 },
                 "isUpsetCall": false
               },
@@ -247,7 +256,8 @@
                   "kind": "advanced",
                   "milestone": null,
                   "newBest": true,
-                  "freezeGranted": false
+                  "freezeGranted": false,
+                  "record": null
                 },
                 "isUpsetCall": false
               }
@@ -259,7 +269,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -273,7 +284,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -313,7 +325,8 @@
                   "kind": "advanced",
                   "milestone": null,
                   "newBest": true,
-                  "freezeGranted": false
+                  "freezeGranted": false,
+                  "record": null
                 },
                 "isUpsetCall": false
               },
@@ -333,7 +346,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -349,7 +363,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -386,7 +401,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -402,7 +418,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -439,7 +456,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -453,7 +471,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -488,7 +507,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -502,7 +522,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -537,7 +558,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -551,7 +573,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -586,7 +609,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -600,7 +624,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -628,7 +653,8 @@
                   "kind": "advanced",
                   "milestone": null,
                   "newBest": true,
-                  "freezeGranted": false
+                  "freezeGranted": false,
+                  "record": null
                 },
                 "isUpsetCall": true
               }
@@ -640,7 +666,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -654,7 +681,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -682,7 +710,8 @@
                   "kind": "advanced",
                   "milestone": null,
                   "newBest": true,
-                  "freezeGranted": false
+                  "freezeGranted": false,
+                  "record": 2
                 },
                 "isUpsetCall": true
               }
@@ -694,7 +723,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -708,7 +738,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "items": [
               {
@@ -746,7 +777,117 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": "2026-10-09T13:00:00Z"
+              "brokeAt": "2026-10-09T13:00:00Z",
+              "recordRun": false
+            }
+          }
+        },
+        {
+          "name": "results that come in together count in the order the matches were played, not the order they were voted or listed",
+          "input": {
+            "streak": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null,
+              "recordRun": false
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-21T07:21:00Z",
+                "matchId": "m2030",
+                "startsAt": "2026-10-21T17:30:00Z",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-22T05:01:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              },
+              {
+                "voteId": "v2",
+                "createdAt": "2026-10-21T07:22:00Z",
+                "matchId": "m2000",
+                "startsAt": "2026-10-21T17:00:00Z",
+                "matchStatus": "confirmed",
+                "winnerSide": 1,
+                "resolvedAt": "2026-10-22T05:01:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              },
+              {
+                "voteId": "v3",
+                "createdAt": "2026-10-21T07:23:00Z",
+                "matchId": "m2100",
+                "startsAt": "2026-10-21T18:00:00Z",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-22T05:01:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v2",
+                "status": "resolved",
+                "outcome": "wrong",
+                "points": 0,
+                "streakEvent": {
+                  "kind": "broken",
+                  "lostStreak": 2
+                },
+                "isUpsetCall": false
+              },
+              {
+                "voteId": "v1",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 10,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": false,
+                  "freezeGranted": false,
+                  "record": null
+                },
+                "isUpsetCall": false
+              },
+              {
+                "voteId": "v3",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 15,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": false,
+                  "freezeGranted": false,
+                  "record": null
+                },
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": "2026-10-22T05:01:00Z",
+              "recordRun": false
             }
           }
         }

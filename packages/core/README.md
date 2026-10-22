@@ -12,9 +12,9 @@ import { resolveBatch, validateVote, recordVoteCast, evaluateUnlocks, canSee } f
 |---|---|---|
 | Points | Correct vote +10. Correct Ανατροπή call +30 (replaces the +10). +5 chain bonus on a correct vote that extends a chain. «Οι 6 της ημέρας» completed +30, once per quiz day (set changes 09:00 Athens), same for the 12-card Pro set. Money and Pro never add points. | `rules/points.ts` |
 | Ανατροπή | The winner had under 40% of the votes, with at least 10 votes cast. | `isUpset` |
-| σερί | Consecutive correct votes. A wrong vote resets to 0 unless a freeze absorbs it. Milestones 3, 5, 7, 10. Personal record kept (`best`). | `rules/streak.ts` |
+| σερί | Consecutive correct votes. A wrong vote resets to 0 unless a freeze absorbs it. Milestones 3, 5, 7, 10: a full-screen moment only the first time (a new personal record) or when it gives the first free freeze; otherwise «Νέο ρεκόρ» once a run, on the first card past the ΠΡ the run started from (old ΠΡ at least 1, state `recordRun`) (`streakMoment`). Personal record kept (`best`). | `rules/streak.ts` |
 | Freezes | Max 2 held. Free: the first at σερί 3, then one every 15 votes cast. Paid (0,99 EUR): a purchase. Free keeps the number and the chain; paid keeps the number only and restarts the chain. | `rules/streak.ts` |
-| Order | σερί advances in RESOLUTION order: `resolvedAt`, then vote `createdAt`, then vote id. A later correction never rewrites the σερί. | `compareResolutions` |
+| Order | σερί advances in RESOLUTION order: `resolvedAt`, then match `startsAt`, then vote `createdAt`, then vote id. Results that come in together count in the order the matches were played (the worker resolves one pass in match order). A later correction never rewrites the σερί. | `compareResolutions` |
 | Void/cancelled | Vote closes with outcome `none`: no points, σερί, chain and freezes unchanged. Only `confirmed` matches with a result resolve; `played`, `disputed` and the rest stay pending. | `rules/resolution.ts` |
 | Double resolution | A vote with `resolvedAt` set, or a repeated vote id in one batch, is `already_resolved`. Ledger keys (`<ref>:<reason>`) are idempotent. | `resolveVote` |
 | Vote lock | Only `announced` or `scheduled` matches, strictly before `lockAt` (default `startsAt`). A vote at exactly the lock instant is rejected. One vote per match. | `validateVote` |
@@ -62,7 +62,7 @@ Status: **enforced in both places** means the TypeScript rules and the SQL rules
    _Enforced in both places. SQL no longer spends a freeze or logs a break for a wrong vote at σερί 0._
 7. **Quiz and σερί:** quiz and dynamic card answers do not touch σερί or freezes. They count for the "vote cards" quest and the active day.
    _TS only. The database has no quiz or dynamic-card answer RPC yet; the quiz award and day key exist as `core.quiz_completion_points` and `core.quiz_day_key` and are checked by the points vectors._
-8. **Resolution order:** by resolution time, then vote time, then vote id (as the implementation plan recommends). Points land in the Athens month of the resolution time.
+8. **Resolution order:** by resolution time, then match start time, then vote time, then vote id (as the implementation plan recommends, with match time added on 22 Oct 2026: a sheet run that brings several results counts them in the order they were played, not in the sheet's row order). Points land in the Athens month of the resolution time.
    _Enforced in both places (`core.resolve_votes` sorts by resolved time, vote time, vote id; ledger month comes from the resolution time)._
 9. **Resolvable matches:** only status `confirmed` with a result. Admin-entered results must be saved as `confirmed` by the server.
    _Enforced in both places. `api.resolve_match` leaves any other status pending; void and cancelled close their votes with outcome `none`._

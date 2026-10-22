@@ -88,12 +88,15 @@ export interface BatchEntry {
 
 /**
  * Deterministic order for resolutions that arrive out of order:
- * resolvedAt ascending, then vote createdAt ascending, then vote id (binary string order).
- * The streak follows RESOLUTION time. A later correction never rewrites the streak.
+ * resolvedAt ascending, then match startsAt ascending, then vote createdAt ascending, then vote id (binary string order).
+ * The streak follows RESOLUTION time. Results that come in together (one sheet run, one worker pass) count in the
+ * order the matches were played, not in the order the source listed them. A later correction never rewrites the streak.
  */
 export function compareResolutions(a: BatchItem, b: BatchItem): number {
   const byResolved = toMs(a.resolvedAt) - toMs(b.resolvedAt);
   if (byResolved !== 0) return byResolved;
+  const byStart = toMs(a.match.startsAt) - toMs(b.match.startsAt);
+  if (byStart !== 0) return byStart;
   const byCreated = toMs(a.vote.createdAt) - toMs(b.vote.createdAt);
   if (byCreated !== 0) return byCreated;
   return a.vote.id < b.vote.id ? -1 : a.vote.id > b.vote.id ? 1 : 0;

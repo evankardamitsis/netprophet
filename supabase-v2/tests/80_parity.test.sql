@@ -3,7 +3,7 @@
 -- The fixtures are the language-neutral JSON vectors in packages/core/test-vectors/ (the same files
 -- packages/core/src/vectors.test.ts runs). They are read from disk at run time, never copied:
 --   points.json      pointsForVote, isUpset, quizCompletionPoints, quizDayKey
---   streak.json      streakSequence  (cast, outcome, buy_freeze)
+--   streak.json      streakSequence  (cast, outcome, buy_freeze), streakMoment
 --   votes.json       validateVote    (also run end to end through api.cast_vote)
 --   resolution.json  resolveBatch
 -- quests*.json run in 58_quests.test.sql; unlocks.json covers rules the database does not implement yet.
@@ -61,7 +61,8 @@ create function tests.parity_state(p_user uuid) returns jsonb language sql as $$
     'votesSinceFreeFreeze', gs.votes_since_free_freeze,
     'firstFreeGranted', gs.first_free_at3_done,
     'brokeAt', case when gs.broke_at is null then null
-               else to_char(gs.broke_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end)
+               else to_char(gs.broke_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end,
+    'recordRun', gs.record_run)
   from core.user_game_state gs where gs.user_id = p_user
 $$;
 
@@ -72,7 +73,8 @@ begin
      set streak = (p_state ->> 'current')::int, streak_best = (p_state ->> 'best')::int,
          chain = (p_state ->> 'chain')::int, votes_since_free_freeze = (p_state ->> 'votesSinceFreeFreeze')::int,
          first_free_at3_done = (p_state ->> 'firstFreeGranted')::boolean,
-         broke_at = (p_state ->> 'brokeAt')::timestamptz
+         broke_at = (p_state ->> 'brokeAt')::timestamptz,
+         record_run = coalesce((p_state ->> 'recordRun')::boolean, false)
    where user_id = p_user;
   for k, i in select e, o::int from jsonb_array_elements_text(p_state -> 'freezes') with ordinality as t(e, o) loop
     insert into core.freezes (user_id, kind, source, acquired_at)
@@ -122,6 +124,10 @@ declare
   c record; step jsonb; k int; u uuid; m uuid; vote uuid; v_events jsonb; v_res jsonb; v_fid uuid;
 begin
   for c in select * from tests.parity_cases('streak') loop
+    if c.fn = 'streakMoment' then
+      return next is(coalesce(to_jsonb(core.streak_moment(c.input)), 'null'::jsonb), c.expected, 'streak moment: ' || c.name);
+      continue;
+    end if;
     if c.fn <> 'streakSequence' then
       return next fail('streak: no SQL mapping for fn ' || c.fn || ' (' || c.name || ')');
       continue;
@@ -242,7 +248,9 @@ begin
         insert into core.match_results (match_id, winner_side, sets)
         values (m, v_winner, '[{"w":6,"l":3},{"w":6,"l":4}]'::jsonb);
       end if;
-      update core.matches set status = x ->> 'matchStatus' where id = m;
+      -- startsAt is optional in the vectors; results that come in together count in match order
+      update core.matches set status = x ->> 'matchStatus', starts_at = coalesce((x ->> 'startsAt')::timestamptz, starts_at)
+       where id = m;
 
       -- the crowd: this vote is one of totalVotes; votesForWinner of them backed the winner
       if v_winner is not null then

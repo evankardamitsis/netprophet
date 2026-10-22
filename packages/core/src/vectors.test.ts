@@ -4,6 +4,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyOutcome,
+  streakMoment,
+  type StreakEvent,
   levelDirection,
   tierFor,
   closeGroup,
@@ -85,6 +87,7 @@ run(pointsVectors, {
 });
 
 run(streakVectors, {
+  streakMoment: (i: StreakEvent) => streakMoment(i),
   streakSequence: (i: { initial: StreakState; steps: Array<Record<string, any>> }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     let state: StreakState = i.initial ?? initialStreak();
     const events: unknown[] = [];
@@ -179,7 +182,7 @@ run(resolutionVectors, {
       };
       return {
         vote,
-        match: matchOf({ id: x.matchId, status: x.matchStatus, winnerSide: x.winnerSide }),
+        match: matchOf({ id: x.matchId, status: x.matchStatus, winnerSide: x.winnerSide, startsAt: x.startsAt }),
         resolvedAt: x.resolvedAt,
         crowd: { votesForWinner: x.votesForWinner, totalVotes: x.totalVotes },
       };

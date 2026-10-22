@@ -1,69 +1,57 @@
 import { describe, expect, it } from 'vitest';
-import { NOTHING_HELD, hudNumbers, pinBatch, type PendingResult } from './hudNumbers';
+import { hudNumbers, streakAtHead, type PendingResult } from './hudNumbers';
 
-const r = (id: string, points: number, streakBefore: number): PendingResult => ({ id, points, streakBefore });
+const r = (id: string, streakBefore: number, streak = streakBefore + 1): PendingResult => ({ id, streakBefore, streak });
 
-// a launch with 14 unseen results, 170 points between them
-const POINTS = [10, 15, 15, 15, 0, 15, 15, 15, 15, 15, 15, 15, 0, 10];
-const batch = POINTS.map((p, i) => r(`c${i + 1}`, p, i + 2));
+// a launch with 14 unseen results; σερί 2 before the first, one more with each card
+const batch = Array.from({ length: 14 }, (_, i) => r(`c${i + 1}`, i + 2));
 const none = { streakShown: null };
 
-describe('hudNumbers', () => {
-  it('holds back σερί only for the first card of a batch, never all of them', () => {
-    expect(POINTS.reduce((a, b) => a + b, 0)).toBe(170);
-    const held = pinBatch(NOTHING_HELD, batch);
-    expect(hudNumbers(held, batch, new Set(), true)).toEqual({ streakShown: 2 });
+describe('hudNumbers (σερί card by card)', () => {
+  it('before the first card plays: the σερί from before it', () => {
+    expect(hudNumbers(batch, new Set(), true)).toEqual({ streakShown: 2 });
   });
 
-  it('the first card played: nothing held back', () => {
-    const held = pinBatch(NOTHING_HELD, batch);
-    expect(hudNumbers(held, batch, new Set(['c1']), true)).toEqual(none);
+  it('the card played: the σερί it left, the number the card says', () => {
+    expect(hudNumbers(batch, new Set(['c1']), true)).toEqual({ streakShown: 3 });
   });
 
-  it('the first card dismissed, 13 left: still nothing, the number never dips', () => {
+  it('cards 2..N each move it: c2 waits at 3, plays to 4', () => {
     const rest = batch.slice(1);
-    const held = pinBatch(pinBatch(NOTHING_HELD, batch), rest);
-    // the feed prunes applied to the ids still queued, so c1 has left it too
-    expect(hudNumbers(held, rest, new Set(), true)).toEqual(none);
-    // cards 2..N play: nothing moves
-    expect(hudNumbers(held, rest, new Set(['c2']), true)).toEqual(none);
-    const later = batch.slice(2);
-    expect(hudNumbers(pinBatch(held, later), later, new Set(), true)).toEqual(none);
+    expect(hudNumbers(rest, new Set(), true)).toEqual({ streakShown: 3 });
+    expect(hudNumbers(rest, new Set(['c2']), true)).toEqual({ streakShown: 4 });
+    expect(hudNumbers(batch.slice(2), new Set(), true)).toEqual({ streakShown: 4 });
+  });
+
+  it('the queue played out or taken («Πάρε τους πόντους»): get_me again', () => {
+    expect(hudNumbers([], new Set(), true)).toEqual(none);
   });
 
   it('anywhere but the feed: get_me as it is, the same σερί Εγώ shows (founder, 18 Oct)', () => {
-    const held = pinBatch(NOTHING_HELD, batch);
-    expect(hudNumbers(held, batch, new Set(), false)).toEqual(none);
+    expect(hudNumbers(batch, new Set(), false)).toEqual(none);
+    expect(hudNumbers(batch.slice(3), new Set(['c4']), false)).toEqual(none);
+  });
+});
+
+describe('streakAtHead', () => {
+  // the founder's 22 Oct 08:01 pass in match order: σερί 2, a loss, then three wins
+  const pass = [r('w', 2, 0), r('a', 0), r('b', 1), r('c', 2)];
+
+  it('the header reads what the card on screen says, before and after it plays', () => {
+    expect(streakAtHead(pass, new Set())).toBe(2);
+    expect(streakAtHead(pass, new Set(['w']))).toBe(0);
+    expect(streakAtHead(pass.slice(1), new Set())).toBe(0);
+    expect(streakAtHead(pass.slice(1), new Set(['a']))).toBe(1);
+    expect(streakAtHead(pass.slice(3), new Set(['c']))).toBe(3);
   });
 
-  it('a fresh batch on relaunch with the same 14 holds back σερί 2', () => {
-    // a session: all 14 played and dismissed
-    let held = pinBatch(NOTHING_HELD, batch);
-    for (let i = 1; i <= batch.length; i++) held = pinBatch(held, batch.slice(i));
-    expect(hudNumbers(held, [], new Set(), true)).toEqual(none);
-    // relaunch: the provider starts again from nothing held
-    const again = pinBatch(NOTHING_HELD, batch);
-    expect(hudNumbers(again, batch, new Set(), true)).toEqual({ streakShown: 2 });
+  it('a freeze keeps the number through the card', () => {
+    const frozen = [r('f', 4, 4)];
+    expect(streakAtHead(frozen, new Set())).toBe(4);
+    expect(streakAtHead(frozen, new Set(['f']))).toBe(4);
   });
 
-  it('get_feed comes back the same: the pin stays', () => {
-    const held = pinBatch(NOTHING_HELD, batch);
-    expect(pinBatch(held, batch)).toBe(held);
-    expect(pinBatch(held, batch.slice(3))).toBe(held);
-  });
-
-  it('a refetch with a new result pins the new card, not a card already counted', () => {
-    let held = pinBatch(pinBatch(NOTHING_HELD, batch), batch.slice(1));
-    const next = [...batch.slice(1), r('c15', 15, 16)];
-    held = pinBatch(held, next);
-    expect(held.first?.id).toBe('c15');
-    expect(hudNumbers(held, next, new Set(), true)).toEqual({ streakShown: 16 });
-  });
-
-  it('the feed mounts empty before get_feed answers: nothing held, then the batch pins', () => {
-    const empty = pinBatch(NOTHING_HELD, []);
-    expect(hudNumbers(empty, [], new Set(), true)).toEqual(none);
-    const held = pinBatch(empty, batch);
-    expect(hudNumbers(held, batch, new Set(), true)).toEqual({ streakShown: 2 });
+  it('nothing queued: no number of its own', () => {
+    expect(streakAtHead([], new Set())).toBeNull();
   });
 });
