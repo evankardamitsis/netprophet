@@ -131,6 +131,8 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
   - σερί 10 gives one free freeze next to Frame «Δέκα», only the first time ever (ΠΡ below 10), only into a free slot; with both slots full nothing extra and no retry (`MILESTONE_FREEZE_AT` in core, freeze source `streak10`, `milestone_freeze_at_streak` in `core.sport_rules`). The moment reads «Ασφάλεια και κορνίζα». pgTAP 150, shared vectors in `streak.json`.
   - **TODO, «Φίλοι» (`frame_friends`):** stays off (`active = false`) until invites ship. When they do: activate the `invite_friend` quest and the frame in the same migration, add the frame back to `apps/app/src/mock/look.ts`, and flip the `frame_friends` checks in pgTAP 149.
 
+- iOS App Store package (PR #292, branch `v2-appstore-package`): `docs/v2/store/` has the metadata (el, en), App Privacy answers from the code, reviewer notes, the submission checklist and 10 screenshots at 6.9" and 6.5" plus the Pro screen for the subscription review. The Pro screen got «Επαναφορά αγορών» (RevenueCat restore), the auto-renewal sentence, next to #289's «Όροι χρήσης · Απόρρητο». Σήμερα's rows keep «Σήμερα» on one line for a match without a time. The privacy policy lists Expo and RevenueCat and no longer promises a hide-profile setting.
+
 ## Waiting on the founder
 - After `scripts/v2-db-remote.sh push`: admin › Players › «Διπλοί παίκτες», «Merge all» for the sure pairs, then look through «Check these».
 - Walk the new onboarding before release (Εγώ › Ρυθμίσεις › «Δοκιμή onboarding» with the dev guest) and check the «Ποια είναι η παρέα σου;» note.
@@ -141,6 +143,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Confirm: the reaction pairs on results, the unlock backup vote counts, «Ανέβηκες level!». Greek lines in Baller are drafts.
 - Read and approve the two reaction texts in admin /v2/notifications (`reaction_one`, `reaction_many`); they send as written until edited.
 - Store approvals (Apple, Google), then EAS builds, TestFlight, push.
+- iOS submission (`docs/v2/store/checklist.md`): the RevenueCat iOS key and offering in the production build, Supabase keys in the EAS production env, the review sign-in choice (Sign in with Apple, or the password-on-one-account option), make the founding plan really renew at 69,99 once #291's wording lands (an introductory offer, not a separate 49,99 product), the age tier vs the 15+ policy, Sign in with Apple token revocation on delete. Confirm no real names in the screenshots.
 - Before launch: development builds for push, Android testing, the web consent banner, clear the demo matches (`tools/demo/clear_demo.sql`), the full v1 results import at cutover.
 
 ## Pro: real, not a fake door (decided 12 Oct 2026)

@@ -1,6 +1,7 @@
 import type { Copy } from '@netprophet/copy';
 import { PRO_PRICE_CENTS_PER_MONTH } from '@netprophet/core';
 import type { ProState } from '@netprophet/db';
+import type { RestoreResult } from './storeTypes';
 import { fmt } from './votes';
 
 /** Pro (prototype V2, the pass sheet): the price line and what the screen says about your Pro. */
@@ -64,6 +65,20 @@ export function trialLine(card: PlanCard, t: Copy, now: Date = new Date()): stri
   const d = new Date(now.getTime() + TRIAL_DAYS * 86_400_000);
   const then = t.pro.trialThen[card.productId as keyof Copy['pro']['trialThen']] ?? t.pro.trialThen.pro_monthly;
   return fmt(t.pro.trialNote, { date: `${d.getDate()}/${d.getMonth() + 1}`, then: fmt(then, { price: card.price }) });
+}
+
+/** what the Pro screen says after «Επαναφορά αγορών» */
+export function restoreLine(result: RestoreResult, t: Copy): string {
+  switch (result) {
+    case 'restored':
+      return t.pro.restored;
+    case 'none':
+      return t.pro.restoreNone;
+    case 'unavailable':
+      return t.pro.restoreUnavailable;
+    default:
+      return t.pro.failed;
+  }
 }
 
 /** the plans as the Pro screen shows them: the yearly (or founding) first, then the monthly */

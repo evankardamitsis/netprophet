@@ -27,7 +27,7 @@ Where the facts come from:
 | Is all of the user data collected by your app encrypted in transit? | Yes (HTTPS to Supabase, PostHog EU, RevenueCat, Expo push) |
 | Which of the following methods of account creation does your app support? | Username and other authentication (email one-time code), and OAuth (Sign in with Google, Sign in with Apple). No passwords. |
 | Account deletion URL | https://netprophetapp.com/delete-account |
-| Do you provide a way for users to request that some or all of their data is deleted without deleting their account? | Yes: by email to hello@monadlabs.gr (the privacy policy promises an answer within 30 days). Also in the app: unfollow, remove a reaction, hide the profile. |
+| Do you provide a way for users to request that some or all of their data is deleted without deleting their account? | Yes: by email to hello@monadlabs.gr (the privacy policy promises an answer within 30 days). Also in the app: unfollow, remove a reaction. Hiding a profile is by email (the app has no such setting). |
 | Data shared with third parties? | No. Supabase, Vercel, Resend, PostHog, RevenueCat, Google (FCM, Play Billing) and Expo act for us as service providers, which Play does not count as sharing. Google and Apple sign-in send data to us, not from us. |
 
 ## Data types collected
