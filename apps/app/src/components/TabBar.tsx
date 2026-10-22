@@ -23,6 +23,8 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
  * last visit is waiting (lime: something happened); opening the tab clears it.
  */
 const IN_BAR = ['index', 'results', 'tournaments', 'ladder'];
+/** screens opened from a tab keep that tab lit: a held name's run, its path and its draw belong to Τουρνουά */
+const LIT_BY: Record<string, string> = { 'tournament-player': 'tournaments', 'tournament-path': 'tournaments', 'tournament-draw': 'tournaments' };
 const COLOR_MS = 250;
 /**
  * The pill slides on the prototype's --spring curve. Pill and label colour are Reanimated CSS transitions on plain
@@ -44,7 +46,8 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
   const [placed, setPlaced] = useState(false);
   const reduced = useReducedMotion();
 
-  const focusedName = state.routes[state.index]?.name ?? '';
+  const openName = state.routes[state.index]?.name ?? '';
+  const focusedName = LIT_BY[openName] ?? openName;
   const focusedBox = boxes[focusedName];
   const onResults = focusedName === 'results';
   const { markSeen } = results;
@@ -79,7 +82,8 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
         <Animated.View pointerEvents="none" style={[styles.pill, pill]} />
         {state.routes.map((route, index) => {
           if (!IN_BAR.includes(route.name) || (route.name === 'ladder' && !has('ladder_friends'))) return null;
-          const focused = state.index === index;
+          const focused = route.name === focusedName;
+          const here = state.index === index;
           const label = String(descriptors[route.key]?.options.title ?? route.name);
           return (
             <TabItem
@@ -94,7 +98,7 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
               }}
               onPress={() => {
                 const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-                if (!focused && !event.defaultPrevented) {
+                if (!here && !event.defaultPrevented) {
                   Haptics.selectionAsync().catch(() => undefined);
                   navigation.navigate(route.name);
                 }

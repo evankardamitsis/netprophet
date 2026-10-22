@@ -1,24 +1,28 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { greekCaps } from '@netprophet/copy';
-import { CloseButton, EntryPills, PathView } from '../src/components/PlayerRun';
-import { useCopy } from '../src/i18n';
-import { useFadeUpIn, usePress } from '../src/lib/motion';
-import { titleOf } from '../src/lib/playerRun';
-import { carry, usePlayerRun, type PlayerParams } from '../src/lib/usePlayerRun';
-import { colors, fonts, motion, text } from '../src/theme';
+import { CloseButton, EntryPills, PathView } from '../../src/components/PlayerRun';
+import { useCopy } from '../../src/i18n';
+import { useFadeUpIn, usePress } from '../../src/lib/motion';
+import { titleOf } from '../../src/lib/playerRun';
+import { carry, usePlayerRun, type PlayerParams } from '../../src/lib/usePlayerRun';
+import { colors, fonts, motion, text } from '../../src/theme';
 
 /**
  * «Η πορεία στο ταμπλό» (founder, 21 Oct, after build 12: the draw at the bottom of the sheet "looked bad and did not
  * light up"): the player's rounds as one column built for a phone, first round on top, drawn step by step. Pills
  * switch to their other categories and pairs; «Όλο το ταμπλό ›» opens the whole draw with this path lit.
  */
+/** the tab bar keeps this screen mounted, so a new hold (other name, other point) builds it again: the params are its key */
 export default function TournamentPathScreen() {
+  const params = useLocalSearchParams<Record<string, string>>();
+  return <Content key={[params.tournament, params.player, params.match, params.slot, params.entry, params.x, params.y].join('|')} />;
+}
+
+function Content() {
   const params = useLocalSearchParams<{ tournament: string; player: string; match?: string; slot?: string; entry?: string }>();
   const p: PlayerParams = { tournament: String(params.tournament), player: String(params.player), match: params.match, slot: params.slot, entry: params.entry };
-  const insets = useSafeAreaInsets();
   const t = useCopy();
   const f = t.tournaments.focus;
   const state = usePlayerRun(p);
@@ -26,9 +30,9 @@ export default function TournamentPathScreen() {
   const head = useFadeUpIn(motion.revealDur, 0);
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(`/tournament/${p.tournament}`));
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={styles.screen}>
       <CloseButton onPress={goBack} />
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 32 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, styles.scrollEnd]} showsVerticalScrollIndicator={false}>
         {me ? (
           <Animated.View style={[styles.head, head]}>
             <Text style={styles.label}>{greekCaps(f.openPath)}</Text>
@@ -67,7 +71,8 @@ function WholeDraw({ label, onPress }: { label: string; onPress: () => void }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
-  scroll: { paddingHorizontal: 20, gap: 18 },
+  scroll: { paddingTop: 8, paddingHorizontal: 20, gap: 18 },
+  scrollEnd: { paddingBottom: 32 },
   head: { gap: 4 },
   label: { ...text.label },
   title: { ...text.title },
