@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { el, en } from './content';
-import { privacy, support } from './legal';
+import { deleteAccount, privacy, support } from './legal';
 
 /** every string on the site, flattened */
 const strings = (v: unknown): string[] =>
   typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(strings) : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
 
-const all = [...strings(el), ...strings(en), ...strings(privacy), ...strings(support)];
-const greek = [...strings(el), ...strings(privacy.el), ...strings(support.el)];
+const all = [...strings(el), ...strings(en), ...strings(privacy), ...strings(support), ...strings(deleteAccount)];
+const greek = [...strings(el), ...strings(privacy.el), ...strings(support.el), ...strings(deleteAccount.el)];
 
 describe('the site copy', () => {
   it('has no em dashes', () => {
@@ -33,6 +33,7 @@ describe('the site copy', () => {
     expect(en.faq.items).toHaveLength(el.faq.items.length);
     expect(privacy.en.sections).toHaveLength(privacy.el.sections.length);
     expect(support.en.sections).toHaveLength(support.el.sections.length);
+    expect(deleteAccount.en.sections).toHaveLength(deleteAccount.el.sections.length);
   });
   it('matches the app: Τουρνουά is the home tab, no Σήμερα tab', () => {
     expect(el.screens.tabBar).toEqual(['Τουρνουά', 'Αποτελέσματα', 'Κατάταξη', 'Εγώ']);
