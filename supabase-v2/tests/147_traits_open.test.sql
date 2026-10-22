@@ -1,4 +1,4 @@
--- 20270312000000_player_card_traits_open: «Πώς παίζει» is open to everyone signed in (no shared match needed), one
+-- 20270314000000_player_card_traits_open: «Πώς παίζει» is open to everyone signed in (no shared match needed), one
 -- vote per person per phrase per player, never on your own player, minors or hidden players, a daily cap; and the
 -- profile's «Τελευταία ματς» carries the games, the tournament and the round, without matches waiting for staff.
 begin;

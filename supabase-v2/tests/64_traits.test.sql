@@ -1,4 +1,4 @@
--- Traits: everyone signed in votes on how a player plays (open since 20270312); the profile shows the top eight; a
+-- Traits: everyone signed in votes on how a player plays (open since 20270314); the profile shows the top eight; a
 -- new phrase waits for staff; Εγώ shows your top three with counts only for Pro; never on minors.
 begin;
 select plan(12);
