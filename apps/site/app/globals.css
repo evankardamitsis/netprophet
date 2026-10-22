@@ -201,7 +201,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 .doc section { padding: 0; }
 
 @media (max-width: 900px) {
-  .hero .wrap, .question, .player, .pro { grid-template-columns: 1fr; }
+  .hero .wrap, .question, .player, .pro { grid-template-columns: minmax(0, 1fr); }
   .question.flip > div:first-child { order: 0; }
   /* on phones the next section shows the same screen: the hero keeps only the court with its hopping balls */
   .stage { height: 150px; }
