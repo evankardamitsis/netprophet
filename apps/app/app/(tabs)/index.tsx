@@ -5,9 +5,6 @@ import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
-import { ForYouSheet } from '../../src/components/DailyFold';
-import { useForYouDaily } from '../../src/lib/forYouDaily';
-import { QuizStrip } from '../../src/components/QuizStrip';
 import { ResultsDeck } from '../../src/components/ResultsDeck';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
@@ -38,7 +35,6 @@ import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { isUnlock, nextGroup } from '../../src/lib/celebrate';
 import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
-import { dailyFold } from '../../src/lib/dailyFold';
 import { feedbackAfterVote } from '../../src/lib/quests';
 import { quizStaleIn } from '../../src/lib/quiz';
 import type { Side } from '../../src/lib/votes';
@@ -267,16 +263,15 @@ export default function HomeScreen() {
   const group = results.length === 0 ? nextGroup(celebrations) : [];
   const groupKey = group.map((c) => c.id).join();
   const [celebrating, setCelebrating] = useState<CelebrationItem[] | undefined>(undefined);
-  const [forYouOpen, setForYouOpen] = useState(false);
   const { claim, pick, acted } = moments;
   // the first-visit tour: no moment covers it, and it starts only on a calm Σήμερα (below)
   const tour = useTour();
   const touring = tour.active;
   useEffect(() => {
-    if (celebrating || !groupKey || forYouOpen || !acted || !focused || touring) return;
+    if (celebrating || !groupKey || !acted || !focused || touring) return;
     if (claim('celebration')) setCelebrating(group);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupKey, celebrating, forYouOpen, acted, focused, touring, claim]);
+  }, [groupKey, celebrating, acted, focused, touring, claim]);
   // a step that opens quietly has no moment: mark it seen without showing anything
   const quiet = celebrations.filter((c) => isUnlock(c) && !hasMoment(c.payload.key)).map((c) => c.id).join();
   useEffect(() => {
@@ -306,37 +301,9 @@ export default function HomeScreen() {
   const scroller = useRef<ScrollView>(null);
   // a tap on Τουρνουά while on it (or two) scrolls back to the top
   useTabScrollTop(scroller);
-  const daily = dailyFold(unlocks.has('daily_quiz') ? quiz.quiz : null, confirmations.items.length, t);
-  const forYouDaily = useForYouDaily();
-  const { markShown } = forYouDaily;
-  const forYouItems = (
-    <>
-      {unlocks.has('daily_quiz') && quiz.quiz && quiz.quiz.cards.length > 0 ? (
-        <QuizStrip
-          quiz={quiz.quiz}
-          onPress={() => {
-            setForYouOpen(false);
-            router.push('/quiz');
-          }}
-        />
-      ) : null}
-      {confirmations.items.slice(0, 1).map((item) => (
-        <ConfirmCard
-          key={item.match_id}
-          item={item}
-          onAnswer={(a) => {
-            void confirmations.answer(item.match_id, a).then((o) => {
-              if (o !== 'failed') momentsAct();
-              toast(o === 'failed' ? t.confirm.failed : t.confirm.done[o]);
-            });
-          }}
-        />
-      ))}
-    </>
-  );
-  // players from before Baller had a name meet it once, full screen; «Για σένα» rises once a day when it holds
-  // something to do. Neither comes on load (founder, 18 Oct): only after a vote, in a calm beat with no scrolling,
-  // and only if this visit has not had its moment (moments.ts: a celebration first, then Baller, then «Για σένα»).
+  // players from before Baller had a name meet it once, full screen. «Για σένα» no longer rises: the quiz and the
+  // matches to confirm sit on the home itself (mockup D). Neither comes on load (founder, 18 Oct): only after a vote, in a calm beat with no scrolling,
+  // and only if this visit has not had its moment (moments.ts: a celebration first, then Baller).
   const baller = useBaller();
   /** this device already offered Baller: undefined while reading */
   const [ballerOffered, setBallerOffered] = useState<string | null | undefined>(undefined);
@@ -358,13 +325,11 @@ export default function HomeScreen() {
     return () => clearTimeout(id);
   }, [calmFrom]);
   const ballerReady = ballerOffered !== undefined && shouldOfferBaller(baller.met, ballerOffered);
-  const forYouReady = forYouDaily.may === true && daily.show && daily.count > 0;
   useEffect(() => {
-    if (!calm || !focused || loading || deckOpen || celebrating || forYouOpen || touring) return;
+    if (!calm || !focused || loading || deckOpen || celebrating || touring) return;
     const ready: MomentKind[] = [];
     if (groupKey) ready.push('celebration');
     if (ballerReady) ready.push('baller');
-    if (forYouReady) ready.push('forYou');
     const next = pick(ready);
     // a waiting celebration plays on its own (above); otherwise this calm beat is used up
     if (next === 'celebration') return;
@@ -374,14 +339,11 @@ export default function HomeScreen() {
       setBallerOffered('1');
       AsyncStorage.setItem(BALLER_OFFERED_KEY, '1').catch(() => undefined);
       router.push('/baller?first=1');
-    } else if (next === 'forYou' && claim('forYou')) {
-      setForYouOpen(true);
-      markShown();
     }
-  }, [calm, focused, loading, deckOpen, celebrating, forYouOpen, touring, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
+  }, [calm, focused, loading, deckOpen, celebrating, touring, groupKey, ballerReady, pick, claim]);
   // the tour starts once the feed has loaded and nothing else is in front (results waiting behind their card do not
   // count, only the open deck); it scrolls the home to the top first
-  const tourReady = focused && !loading && !error && !deckOpen && !celebrating && !forYouOpen && safety === null;
+  const tourReady = focused && !loading && !error && !deckOpen && !celebrating && safety === null;
   const { setHome } = tour;
   useEffect(() => {
     setHome(tourReady, () => scroller.current?.scrollTo({ y: 0, animated: false }));
@@ -501,9 +463,6 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
       {note?.item.kind === 'toast' ? <Toast key={note.n} text={note.item.text} /> : null}
-      <ForYouSheet visible={forYouOpen} onClose={() => setForYouOpen(false)}>
-        {forYouItems}
-      </ForYouSheet>
       <SafetySheet
         target={safety}
         onClose={(msg) => {

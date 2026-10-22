@@ -91,7 +91,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
       <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS} accessibilityLabel={small || undefined}>
         <View style={styles.row}>
           <View style={styles.time}>
-            <Text style={styles.timeText}>{rowTime(match, t)}</Text>
+            {match.startsAt ? <Text style={styles.timeText}>{rowTime(match, t)}</Text> : <Text style={[styles.small, styles.center]}>{t.home.vote.noTime}</Text>}
             {match.later ? <Text style={styles.small}>{t.match.tomorrow}</Text> : null}
           </View>
           <View style={styles.body}>
@@ -254,6 +254,7 @@ const styles = StyleSheet.create({
   timeText: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 19, color: colors.ink },
   body: { flex: 1, minWidth: 0, gap: 6 },
   small: { ...text.meta, fontSize: 13, lineHeight: 17 },
+  center: { textAlign: 'center' },
   name: {
     minHeight: 46,
     overflow: 'hidden',

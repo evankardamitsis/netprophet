@@ -107,7 +107,9 @@ export function YoursRow({ row, onPress }: { row: YoursNow; onPress?: () => void
   const t = useCopy();
   const body = (
     <View style={styles.yoursRow}>
-      <View style={styles.timeCol}>{row.now ? <LiveTag /> : <Text style={styles.timeText}>{row.time ?? '·'}</Text>}</View>
+      <View style={styles.timeCol}>
+        {row.now ? <LiveTag /> : row.time ? <Text style={styles.timeText}>{row.time}</Text> : <Text style={[styles.small, styles.center]}>{t.home.vote.noTime}</Text>}
+      </View>
       <View style={styles.flex}>
         <Text numberOfLines={1} style={styles.rowTitle}>
           {row.name}
@@ -279,6 +281,7 @@ export function AddMatchPill() {
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0, gap: 2 },
   small: { ...text.meta, fontSize: 13, lineHeight: 17 },
+  center: { textAlign: 'center' },
   chev: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.inkSoft },
   // results
   results: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: colors.ink },
