@@ -1,11 +1,36 @@
 /** Vote validation and result resolution. Pure and idempotent. */
-import { toMs, type Instant } from '../time';
+import { athensInstant, dayKey, localParts, toMs, type Instant } from '../time';
 import type { Match, StreakState, Vote } from '../types';
 import { isUpset, pointsForVote, totalPoints, type CrowdSplit, type PointsPart } from './points';
 import { applyOutcome, type StreakEvent } from './streak';
 
+/**
+ * A match with no start time takes votes until this Athens time on its day (founder, 22 Oct 2026). Each tournament
+ * can set its own (core.tournaments.untimed_lock_time).
+ */
+export const DEFAULT_UNTIMED_LOCK_TIME = '14:00';
+
+/**
+ * Whether a start means «the day is known, the time is not»: the import stores a row with no time at 00:00 Athens on
+ * its day, and no real match starts at midnight.
+ */
+export function isUntimedStart(startsAt: Instant): boolean {
+  const p = localParts(startsAt);
+  return p.hour === 0 && p.minute === 0 && p.second === 0 && toMs(startsAt) % 1000 === 0;
+}
+
+/**
+ * When voting closes: a staff lock when set; else, for a start with no time, that Athens day at `untimedLockTime`;
+ * else the start. The SQL twin is core.lock_instant.
+ */
+export function voteLockInstant(startsAt: Instant, lockAt: Instant | null, untimedLockTime: string | null = DEFAULT_UNTIMED_LOCK_TIME): Instant {
+  if (lockAt !== null) return lockAt;
+  if (!isUntimedStart(startsAt)) return startsAt;
+  return athensInstant(dayKey(startsAt), untimedLockTime ?? DEFAULT_UNTIMED_LOCK_TIME);
+}
+
 export function lockInstant(match: Match): Instant {
-  return match.lockAt ?? match.startsAt;
+  return voteLockInstant(match.startsAt, match.lockAt, match.untimedLockTime ?? null);
 }
 
 export type VoteRejection = 'not_open' | 'locked' | 'invalid_option' | 'already_voted';

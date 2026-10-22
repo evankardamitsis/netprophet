@@ -28,6 +28,7 @@ import {
   recordVoteCast,
   resolveBatch,
   validateVote,
+  voteLockInstant,
   windowKeyFor,
   type Match,
   type MatchStatus,
@@ -140,7 +141,7 @@ run(unlockVectors, {
     evaluateUnlocks(i.counters, i.previouslyUnlocked, { existingPlayer: i.existingPlayer }),
 });
 
-function matchOf(args: { id?: string; status: MatchStatus; startsAt?: string; lockAt?: string | null; winnerSide?: 0 | 1 | null }): Match {
+function matchOf(args: { id?: string; status: MatchStatus; startsAt?: string; lockAt?: string | null; untimedLockTime?: string | null; winnerSide?: 0 | 1 | null }): Match {
   return {
     id: args.id ?? 'm1',
     sport: 'tennis',
@@ -149,6 +150,7 @@ function matchOf(args: { id?: string; status: MatchStatus; startsAt?: string; lo
     status: args.status,
     startsAt: args.startsAt ?? '2026-10-09T15:00:00Z',
     lockAt: args.lockAt ?? null,
+    untimedLockTime: args.untimedLockTime ?? null,
     tournamentId: null,
     result: args.winnerSide === undefined || args.winnerSide === null ? null : { winnerSide: args.winnerSide, score: null },
   };
@@ -158,6 +160,15 @@ run(voteVectors, {
   validateVote: (i) =>
     validateVote({
       match: matchOf({ status: i.matchStatus, startsAt: i.startsAt, lockAt: i.lockAt }),
+      optionIndex: i.optionIndex,
+      castAt: i.castAt,
+      alreadyVoted: i.alreadyVoted,
+    }),
+  lockInstant: (i: { startsAt: string; lockAt: string | null; untimedLockTime: string | null }) =>
+    new Date(voteLockInstant(i.startsAt, i.lockAt, i.untimedLockTime)).toISOString(),
+  validateVoteUntimed: (i) =>
+    validateVote({
+      match: matchOf({ status: i.matchStatus, startsAt: i.startsAt, lockAt: i.lockAt, untimedLockTime: i.untimedLockTime }),
       optionIndex: i.optionIndex,
       castAt: i.castAt,
       alreadyVoted: i.alreadyVoted,

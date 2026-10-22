@@ -72,6 +72,11 @@ export interface Match {
   startsAt: Instant;
   /** Votes close at this instant (inclusive of the instant itself: a vote at lockAt is rejected). Null means `startsAt`. */
   lockAt: Instant | null;
+  /**
+   * Athens time (`HH:MM`) at which voting closes on the match's day when its start has no time (00:00 Athens): the
+   * tournament's setting. Absent or null means DEFAULT_UNTIMED_LOCK_TIME.
+   */
+  untimedLockTime?: string | null;
   tournamentId: string | null;
   result: MatchResult | null;
 }

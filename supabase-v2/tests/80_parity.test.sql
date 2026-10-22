@@ -4,7 +4,7 @@
 -- packages/core/src/vectors.test.ts runs). They are read from disk at run time, never copied:
 --   points.json      pointsForVote, isUpset, quizCompletionPoints, quizDayKey
 --   streak.json      streakSequence  (cast, outcome, buy_freeze), streakMoment
---   votes.json       validateVote    (also run end to end through api.cast_vote)
+--   votes.json       validateVote    (also run end to end through api.cast_vote), lockInstant, validateVoteUntimed
 --   resolution.json  resolveBatch
 -- quests*.json run in 58_quests.test.sql; unlocks.json covers rules the database does not implement yet.
 --
@@ -166,6 +166,25 @@ declare
   v_shift interval; m uuid; v_side int; v_code text; v_want text; v_reason text;
 begin
   for c in select * from tests.parity_cases('votes') loop
+    -- the lock instant: core.lock_instant (a match with no start time closes at the tournament's time on its day)
+    if c.fn = 'lockInstant' then
+      return next is(core.lock_instant((c.input ->> 'startsAt')::timestamptz, (c.input ->> 'lockAt')::timestamptz,
+                                       (c.input ->> 'untimedLockTime')::time),
+                     (c.expected #>> '{}')::timestamptz, 'votes lock instant: ' || c.name);
+      continue;
+    end if;
+    -- the gate on a match with no start time (no end to end run: shifting the clock would move it off 00:00 Athens;
+    -- 144_untimed_vote_lock.test.sql runs api.cast_vote on such matches)
+    if c.fn = 'validateVoteUntimed' then
+      v_gate := core.vote_gate(c.input ->> 'matchStatus', (c.input ->> 'startsAt')::timestamptz,
+                               core.lock_instant((c.input ->> 'startsAt')::timestamptz, (c.input ->> 'lockAt')::timestamptz,
+                                                 (c.input ->> 'untimedLockTime')::time),
+                               (c.input ->> 'optionIndex')::int + 1, (c.input ->> 'castAt')::timestamptz,
+                               (c.input ->> 'alreadyVoted')::boolean);
+      v_actual := case when v_gate = 'ok' then jsonb_build_object('ok', true) else jsonb_build_object('ok', false, 'reason', v_gate) end;
+      return next is(v_actual, c.expected, 'votes gate, no start time: ' || c.name);
+      continue;
+    end if;
     if c.fn <> 'validateVote' then
       return next fail('votes: no SQL mapping for fn ' || c.fn || ' (' || c.name || ')');
       return next fail('votes: no SQL mapping for fn ' || c.fn || ' (' || c.name || ') end to end');

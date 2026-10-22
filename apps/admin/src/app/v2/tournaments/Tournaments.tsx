@@ -8,6 +8,7 @@ import { createTournament, deleteTournament, loadClubs, writeRecordsNow, loadRev
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
 import { candidateContext, pairOptions, rankCandidates, reviewAnswers, reviewQuestions, twinQuestions, type ReviewCandidate } from '@/lib/v2/ingestRows';
 import type { RecordsResult } from '@/lib/v2/records';
+import { DEFAULT_UNTIMED_LOCK, validLockTime } from '@/lib/v2/lockTime';
 import { LogoEditor, LogoMark } from './LogoEditor';
 
 /**
@@ -432,6 +433,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
   const [drawUrl, setDrawUrl] = useState(t.draw_url ?? '');
   const [entryDeadline, setEntryDeadline] = useState(t.entry_deadline ?? '');
   const [entryLink, setEntryLink] = useState(t.entry_link ?? '');
+  const [untimedLock, setUntimedLock] = useState(t.untimed_lock_time ?? DEFAULT_UNTIMED_LOCK);
   const [note, setNote] = useState<{ tone: Tone; title: string; detail?: string } | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
   const [, start] = useTransition();
@@ -496,7 +498,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
 
   const save = () =>
     run('save', async () => {
-      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_url: drawUrl, entry_deadline: entryDeadline, entry_link: entryLink });
+      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_url: drawUrl, entry_deadline: entryDeadline, entry_link: entryLink, untimed_lock_time: untimedLock });
       setNote(r.ok ? null : { tone: 'problem', title: 'Could not save', detail: r.message });
       if (r.ok) {
         notify('Saved');
@@ -617,8 +619,12 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             Entry link (optional)
             <input className="v2-input" value={entryLink} placeholder="Where players sign up: https://..." onChange={(e) => setEntryLink(e.target.value)} />
           </label>
+          <label className="v2-field">
+            Matches with no start time close for votes at (Athens time, on their day)
+            <input className="v2-input" type="time" step={60} value={untimedLock} onChange={(e) => setUntimedLock(e.target.value)} />
+          </label>
           <div className="v2-row">
-            <Secondary small busy={busy === 'save'} disabled={!idle || name.trim() === '' || (t.ongoing && url.trim() === '' && drawUrl.trim() === '')} onClick={save}>
+            <Secondary small busy={busy === 'save'} disabled={!idle || name.trim() === '' || !validLockTime(untimedLock) || (t.ongoing && url.trim() === '' && drawUrl.trim() === '')} onClick={save}>
               {busy === 'save' ? 'Saving…' : 'Save'}
             </Secondary>
             <Ghost onClick={() => setEditing(false)} disabled={!idle}>

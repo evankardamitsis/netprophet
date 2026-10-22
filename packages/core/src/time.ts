@@ -128,6 +128,18 @@ export function nextMonthReset(at: Instant): Instant {
   return midnightOfKey(dateKey(y, m, 1));
 }
 
+/**
+ * The instant of an Athens wall clock time (`HH:MM` or `HH:MM:SS`) on the Athens day with this key, DST included
+ * (14:00 is 11:00Z in summer, 12:00Z in winter). Times inside the spring-forward gap (03:00 to 04:00) are not used.
+ */
+export function athensInstant(key: string, time: string): Instant {
+  const { year, month, day } = parseKey(key);
+  const [h, mi, se] = time.split(':').map(Number);
+  const guess = Date.UTC(year, month - 1, day, h ?? 0, mi ?? 0, se ?? 0);
+  const first = guess - offsetMs(guess);
+  return toInstant(guess - offsetMs(first));
+}
+
 /** Start (00:00 Athens) of the Athens day with this key. */
 export function startOfDay(key: string): Instant {
   return midnightOfKey(key);

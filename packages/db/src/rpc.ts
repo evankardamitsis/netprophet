@@ -107,6 +107,11 @@ export interface FeedMatchCard {
   my_vote: Side | null;
   /** started (or locked) and waiting for its result: shown without voting */
   closed?: boolean;
+  /**
+   * when voting closes (core.match_lock_at): the start, a staff lock, or for a start with no time (00:00 Athens) that
+   * day at the tournament's lock time (14:00 by default)
+   */
+  lock_at?: string | null;
   /** after the user voted, and on a closed match */
   split: VoteSplit | null;
   /** the old starts_at, when the match moved to a new day in the last 3 days */

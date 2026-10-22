@@ -1,7 +1,7 @@
 {
   "suite": "votes",
   "version": 1,
-  "notes": "fn validateVote. A vote at exactly the lock instant is rejected.",
+  "notes": "fn validateVote. A vote at exactly the lock instant is rejected. fn lockInstant: when voting closes (a staff lock, else for a start at 00:00 Athens, which means no time is known, that Athens day at untimedLockTime, default 14:00, else the start); expected is the instant. fn validateVoteUntimed: validateVote on a match with no start time, with the tournament's untimedLockTime (SQL: vote_gate with core.lock_instant).",
   "groups": [
     {
       "fn": "validateVote",
@@ -167,6 +167,279 @@
           "expected": {
             "ok": false,
             "reason": "already_voted"
+          }
+        }
+      ]
+    },
+    {
+      "fn": "lockInstant",
+      "cases": [
+        {
+          "name": "a start with a time closes at the start",
+          "input": {
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-10-09T15:00:00.000Z"
+        },
+        {
+          "name": "a staff lock wins over the untimed rule",
+          "input": {
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": "2026-10-22T06:00:00Z",
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-10-22T06:00:00.000Z"
+        },
+        {
+          "name": "no time (00:00 Athens, summer): 14:00 Athens that day",
+          "input": {
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-10-22T11:00:00.000Z"
+        },
+        {
+          "name": "no time, the day before the clocks go back",
+          "input": {
+            "startsAt": "2026-10-23T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-10-24T11:00:00.000Z"
+        },
+        {
+          "name": "no time on the day the clocks go back: 14:00 winter time, not start + 14h",
+          "input": {
+            "startsAt": "2026-10-24T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-10-25T12:00:00.000Z"
+        },
+        {
+          "name": "no time on the day the clocks go forward: 14:00 summer time",
+          "input": {
+            "startsAt": "2027-03-27T22:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2027-03-28T11:00:00.000Z"
+        },
+        {
+          "name": "no time, winter",
+          "input": {
+            "startsAt": "2026-11-30T22:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-12-01T12:00:00.000Z"
+        },
+        {
+          "name": "the tournament's own time, earlier",
+          "input": {
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "11:00"
+          },
+          "expected": "2026-10-22T08:00:00.000Z"
+        },
+        {
+          "name": "the tournament's own time, later, winter",
+          "input": {
+            "startsAt": "2026-11-30T22:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "18:30"
+          },
+          "expected": "2026-12-01T16:30:00.000Z"
+        },
+        {
+          "name": "no tournament setting: the default 14:00",
+          "input": {
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": null
+          },
+          "expected": "2026-10-22T11:00:00.000Z"
+        },
+        {
+          "name": "00:00 UTC is 03:00 Athens, a real time",
+          "input": {
+            "startsAt": "2026-10-22T00:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-10-22T00:00:00.000Z"
+        },
+        {
+          "name": "00:01 Athens is a real time",
+          "input": {
+            "startsAt": "2026-10-21T21:01:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00"
+          },
+          "expected": "2026-10-21T21:01:00.000Z"
+        }
+      ]
+    },
+    {
+      "fn": "validateVoteUntimed",
+      "cases": [
+        {
+          "name": "no time: open in the morning of its day",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-22T04:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "no time: open at 13:59:59 Athens",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-22T10:59:59Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "no time: closed at 14:00 Athens",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-22T11:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "no time: closed the day after",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-23T05:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "no time, clocks go back that day: open at 13:00 Athens (start + 14h would have closed it)",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-24T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-25T11:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "no time, clocks go back that day: open at 13:59:59 Athens",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-24T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-25T11:59:59Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "no time, clocks go back that day: closed at 14:00 Athens",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-24T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-25T12:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "no time, the tournament closes at 11:00: closed at 11:00",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "11:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-22T08:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "no time, the tournament closes at 11:00: open at 10:59:59",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": null,
+            "untimedLockTime": "11:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-22T07:59:59Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "no time, a staff lock at 09:00 Athens closes it then",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-21T21:00:00Z",
+            "lockAt": "2026-10-22T06:00:00Z",
+            "untimedLockTime": "14:00",
+            "optionIndex": 0,
+            "castAt": "2026-10-22T06:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
           }
         }
       ]

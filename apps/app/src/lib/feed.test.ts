@@ -92,6 +92,13 @@ describe('fromFeedCard', () => {
     expect(c.myVote).toBeUndefined();
   });
 
+  it('carries when voting closes: a match with no time stays open on its day until the lock', () => {
+    const untimed = fromFeedCard(card({ starts_at: '2026-10-08T21:00:00Z', lock_at: '2026-10-09T11:00:00Z' }), areas, t, NOW);
+    expect(untimed.lockAt).toBe('2026-10-09T11:00:00Z');
+    expect(untimed.closed).toBeUndefined();
+    expect(fromFeedCard(card(), areas, t, NOW).lockAt).toBeUndefined();
+  });
+
   it('carries the tournament logo to its group head', () => {
     const c = fromFeedCard(card({ tournament: { id: 't1', name: 'Open Γλυφάδας', logo: 'tournaments/t1/k1.png' } }), areas, t, NOW);
     expect(c.group?.logo).toBe('tournaments/t1/k1.png');
