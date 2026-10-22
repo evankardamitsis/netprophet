@@ -1,7 +1,7 @@
 import { colors } from '@netprophet/tokens';
 import { BallPerson } from './BallPerson';
 import { content, type Lang } from './content';
-import { FeedScreen, OpponentScreen, ResultsScreen, TodayScreen } from './Screens';
+import { HomeScreen, ResultsScreen, ScoutScreen, TournamentScreen } from './Screens';
 import { Shell } from './Shell';
 import { StoreBadges } from './StoreBadges';
 
@@ -13,7 +13,7 @@ const BALLS = [
   { left: '92%', size: 34, color: colors.paper, delay: '1.05s', dur: '1.6s' },
 ];
 
-const SCREENS = { today: TodayScreen, results: ResultsScreen, opponent: OpponentScreen } as const;
+const SCREENS = { today: HomeScreen, results: ResultsScreen, opponent: ScoutScreen } as const;
 
 export function Home({ lang }: { lang: Lang }) {
   const c = content(lang);
@@ -51,10 +51,10 @@ export function Home({ lang }: { lang: Lang }) {
                 <ResultsScreen s={c.screens} live={false} />
               </div>
               <div className="fan-r">
-                <OpponentScreen s={c.screens} live={false} />
+                <ScoutScreen s={c.screens} live={false} />
               </div>
               <div className="fan-c">
-                <TodayScreen s={c.screens} live={false} />
+                <HomeScreen s={c.screens} live={false} />
               </div>
             </div>
           </div>
@@ -88,20 +88,20 @@ export function Home({ lang }: { lang: Lang }) {
         );
       })}
 
-      <section id={c.feed.id} className="dark">
+      <section id={c.tournament.id} className="dark">
         <div className="wrap question flip">
           <div>
-            <p className="eyebrow">{c.feed.eyebrow}</p>
-            <h2 className="display">{c.feed.title}</h2>
-            <p className="lead">{c.feed.line}</p>
+            <p className="eyebrow">{c.tournament.eyebrow}</p>
+            <h2 className="display">{c.tournament.title}</h2>
+            <p className="lead">{c.tournament.line}</p>
             <ul className="ticks">
-              {c.feed.points.map((p) => (
+              {c.tournament.points.map((p) => (
                 <li key={p}>{p}</li>
               ))}
             </ul>
           </div>
           <div className="shot">
-            <FeedScreen s={c.screens} />
+            <TournamentScreen s={c.screens} />
             <span className="try">{c.screens.tapHint}</span>
           </div>
         </div>

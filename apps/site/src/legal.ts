@@ -153,7 +153,7 @@ export const support: Record<Lang, Doc> = {
       },
       {
         heading: 'Ειδοποιήσεις',
-        paragraphs: ['Τις ανοίγεις και τις κλείνεις από τις Ρυθμίσεις του κινητού σου. Οι υπενθυμίσεις για τα ματς σου είναι μέρος του Pro.'],
+        paragraphs: ['Τις ανοίγεις και τις κλείνεις από τις Ρυθμίσεις του κινητού σου. Οι ειδοποιήσεις για κληρώσεις και ώρες ματς είναι μέρος του Pro. Τα τουρνουά που ακολουθείς σε ενημερώνουν δωρεάν.'],
       },
       {
         heading: 'Pro και αγορές',
@@ -180,7 +180,7 @@ export const support: Record<Lang, Doc> = {
       },
       {
         heading: 'Notifications',
-        paragraphs: ['Turn them on or off in your phone’s Settings. Reminders for your matches are part of Pro.'],
+        paragraphs: ['Turn them on or off in your phone’s Settings. Alerts for draws and match times are part of Pro. Tournaments you follow tell you for free.'],
       },
       {
         heading: 'Pro and purchases',
