@@ -85,3 +85,18 @@ Alerts for your tournaments, draws and matches, a reminder before your match, th
 - Report and block on user content (guideline 1.2): in the app since M2.
 - Subscription terms on the Pro screen (price, period, auto-renewal, links to terms and privacy) once the payment
   provider is chosen.
+
+## Updates of 22 Oct 2026 (founder decisions, apply to the App Store too)
+
+- Version **1.0.0** (build numbers stay with EAS).
+- Terms of use: https://netprophetapp.com/terms (English /en/terms). Put it in the App Store description footer and in
+  App Store Connect › App Information › License Agreement (custom EULA link), or keep Apple's standard EULA and still
+  link ours on the Pro screen (it is linked there, next to the privacy policy).
+- Countries and regions: all.
+- Age rating: answer Apple's questionnaire for the real content (infrequent user-generated content, no gambling, no
+  real-money contests, no unrestricted web access). Not 4+. The app only lets in people of 15 and over; do not pick the
+  Kids category.
+- Ads: the app shows in-app sponsored banners (our own, no ad SDK, no tracking). In App Privacy nothing changes. If
+  the questionnaire asks about third-party advertising, the answer is no.
+- Subscription terms on the Pro screen: price, period, auto-renewal, the 7-day trial, the founding plan (49,99€ the
+  first year, then 69,99€ a year, until 31/12/2026) and links to the terms and the privacy policy are now in place.

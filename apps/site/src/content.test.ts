@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { el, en } from './content';
-import { deleteAccount, privacy, support } from './legal';
+import { deleteAccount, privacy, support, terms } from './legal';
 
 /** every string on the site, flattened */
 const strings = (v: unknown): string[] =>
   typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(strings) : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
 
-const all = [...strings(el), ...strings(en), ...strings(privacy), ...strings(support), ...strings(deleteAccount)];
-const greek = [...strings(el), ...strings(privacy.el), ...strings(support.el), ...strings(deleteAccount.el)];
+const all = [...strings(el), ...strings(en), ...strings(privacy), ...strings(support), ...strings(deleteAccount), ...strings(terms)];
+const greek = [...strings(el), ...strings(privacy.el), ...strings(support.el), ...strings(deleteAccount.el), ...strings(terms.el)];
 
 describe('the site copy', () => {
   it('has no em dashes', () => {
@@ -34,6 +34,7 @@ describe('the site copy', () => {
     expect(privacy.en.sections).toHaveLength(privacy.el.sections.length);
     expect(support.en.sections).toHaveLength(support.el.sections.length);
     expect(deleteAccount.en.sections).toHaveLength(deleteAccount.el.sections.length);
+    expect(terms.en.sections).toHaveLength(terms.el.sections.length);
   });
   it('matches the app: Τουρνουά is the home tab, no Σήμερα tab', () => {
     expect(el.screens.tabBar).toEqual(['Τουρνουά', 'Αποτελέσματα', 'Κατάταξη', 'Εγώ']);
@@ -66,6 +67,38 @@ describe('the site copy', () => {
     const enText = strings(en).join(' ');
     expect(enText).toContain('€69.99');
     expect(enText).toContain('€49.99');
+  });
+  it('has terms that say what NetProphet is, the age rule, the publisher and the Pro terms', () => {
+    const el = strings(terms.el).join(' ');
+    const en = strings(terms.en).join(' ');
+    for (const [text, street, first, then] of [
+      [el, 'Αμφικτυόνων 28', '49,99€', '69,99€'],
+      [en, 'Amfiktyonon 28', '€49.99', '€69.99'],
+    ] as const) {
+      expect(text).toContain('MONAD LABS');
+      expect(text).toContain(street);
+      expect(text).toContain('hello@monadlabs.gr');
+      expect(text).toContain(first);
+      expect(text).toContain(then);
+      expect(text).toContain('31');
+      expect(text).toMatch(/15/);
+      expect(text).toMatch(/24/);
+    }
+    expect(el).toMatch(/Αθηνών/);
+    expect(en).toMatch(/Athens/);
+    expect(el).toMatch(/δεν αγοράζονται/);
+    expect(en).toMatch(/cannot be bought/);
+  });
+  it('links every site page to the terms, and names RevenueCat and sponsored banners in the privacy text', () => {
+    expect(el.nav.terms).toBe('Όροι χρήσης');
+    expect(en.nav.terms).toBe('Terms of use');
+    for (const l of ['el', 'en'] as const) {
+      const text = strings(privacy[l]).join(' ');
+      expect(text).toContain('RevenueCat');
+      expect(text).toMatch(/SDK/);
+    }
+    expect(strings(support.el).join(' ')).toContain('netprophetapp.com/terms');
+    expect(strings(support.en).join(' ')).toContain('netprophetapp.com/en/terms');
   });
   it('has dropped what the app no longer has', () => {
     const gone = /Για σένα|«For you»|Αναίρεση|\bUndo\b|lock-in|locked in/;

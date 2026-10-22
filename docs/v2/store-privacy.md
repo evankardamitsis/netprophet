@@ -51,3 +51,12 @@ photos or videos, audio, device ID for advertising.
   report and block exist.
 - Users can interact: yes (follow, kudos, see each other's names and points).
 - Shares location: no. Digital purchases: yes, once Pro is sold.
+
+## Updates of 22 Oct 2026
+
+- RevenueCat processes purchase status (product, store, expiry) and our user id for managing purchases; added to the
+  privacy policy. App Privacy: Purchases, linked to the user, App Functionality (see the Android `data-safety.md` for
+  the matching Play answers, which are the reference).
+- Sponsored banners: our own picture and link, no ad SDK, no IDFA (no App Tracking Transparency prompt), nothing sent
+  to the sponsor. No change to the labels.
+- Terms of use: https://netprophetapp.com/terms.

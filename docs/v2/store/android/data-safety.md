@@ -64,12 +64,14 @@ other app performance data.
    events stay under the old random id. The delete page promises to erase them on request by email, within 30 days,
    which matches the privacy policy. Automating that (a PostHog person delete when the account goes) is a small
    follow-up, not a blocker.
-3. **Ads.** If the sponsored card ships (see `policy-forms.md`), nothing here changes: it is our own server sending a
-   picture and a link, with no ad SDK and no data sent to the sponsor.
+3. **Ads: Yes** (founder, 22 Oct 2026; see `policy-forms.md`). Nothing here changes: the sponsored banner is our own
+   server sending a picture and a link, with no ad SDK, no advertising ID, no impression or click tracking and no
+   data sent to the sponsor. So no extra data type is declared for ads, and «Data shared with third parties» stays
+   «No».
 
 ## Privacy policy alignment
 
-`https://netprophetapp.com/privacy` (`apps/site/src/legal.ts`) already lists the account, profile, activity, push
-key and PostHog usage data, the processors, 15 and over, and the rights. It does not yet name RevenueCat among the
-processors (it says «Apple and Google (notifications and store purchases)»). Add RevenueCat before production; that
-is a privacy text change for the founder to approve, so it is not made in this PR.
+`https://netprophetapp.com/privacy` (`apps/site/src/legal.ts`) lists the account, profile, activity, purchases, push
+key and PostHog usage data, the processors (RevenueCat added 22 Oct 2026, for managing purchases and subscriptions:
+the account id goes out, the purchase status comes back), the sponsored banners (no ad SDK, no advertising ID, nothing
+given to sponsors), 15 and over, and the rights. The terms of use are at `https://netprophetapp.com/terms`.

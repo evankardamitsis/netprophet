@@ -3,9 +3,17 @@
 Drafted 22 Oct 2026 from the code on `v2`. Play Console › App content (Policy and programs › App content). Answers
 the founder pastes or ticks; each says why, so a reviewer question can be answered from here.
 
-## Privacy policy
+## Privacy policy and terms
 
-https://netprophetapp.com/privacy (Greek; English at /en/privacy).
+Privacy policy: https://netprophetapp.com/privacy (Greek; English at /en/privacy).
+Terms of use: https://netprophetapp.com/terms (Greek; English at /en/terms). Play has no field for it; it goes in
+the description footer if wanted, and Apple asks for it (see the iOS notes).
+
+## Countries and version
+
+Countries and regions: **all** (founder, 22 Oct 2026: no limit, worldwide). Prices are set in EUR and Play converts
+the rest (check the converted prices once). Version for the first production release: **1.0.0** on both stores
+(`apps/app/app.json` `expo.version`; the version code and the iOS build number stay managed by EAS).
 
 ## App access
 
@@ -31,15 +39,19 @@ the reviewer cannot read the inbox.
 
 ## Ads
 
-Does your app contain ads? **Founder decides; the code says the feed can show one.**
+Does your app contain ads? **Yes** (founder, 22 Oct 2026: in-app sponsored banners are allowed).
 
 `SponsoredCard` (`apps/app/src/components/SponsoredCard.tsx`) shows one «Χορηγούμενο · {sponsor}» banner on Σήμερα
 when `core.sponsored_cards` has an active row (staff add them in admin; the demo rows are seeded by
-`core.seed_demo_sponsored` and cleared before launch). Play counts any third-party promotion as an ad, ad SDK or not.
-- If any sponsor card will run in the first months: **Yes**. The listing then shows «Contains ads». Nothing else
-  changes (no ad SDK, no advertising ID, no data to the sponsor).
-- If not: **No** now, and switch it to Yes before the first real sponsor card goes live (Play checks this).
-- Either way, make sure no demo sponsored row is active in production (`tools/demo/clear_demo.sql`).
+`core.seed_demo_sponsored` and cleared before launch). Play counts any third-party promotion as an ad, ad SDK or not,
+so the listing shows «Contains ads». Facts to answer questions with, all checked in the code on 22 Oct:
+- No ad SDK (no AdMob or mediation), no advertising ID (`AD_ID` is not in the manifest), no tracking for ads, no
+  impressions or click events sent to us or to the sponsor. The banner is a picture, a line and a link that opens in
+  the browser (`safeOpen`, https only).
+- Always labelled «Χορηγούμενο». It never changes points, results or the Ladder.
+- Not shown to anyone as personalised: every player sees the same running banner.
+- Make sure no demo sponsored row is active in production (`tools/demo/clear_demo.sql`) before launch; real rows are
+  added in admin.
 
 ## Content rating (IARC questionnaire)
 
@@ -68,15 +80,21 @@ That matches Apple 12+ only loosely: Apple asks differently, so do not try to fo
 
 | Question | Answer | Why |
 |---|---|---|
-| Target age groups | 16 to 17, and 18 and over. Founder decides on 13 to 15 (see below). | Sign-up asks to tick «15 και πάνω» (`AgeCheck` in `apps/app/app/onboarding.tsx`; the privacy policy says 15 and over, the Greek age of digital consent). |
+| Target age groups | **13 to 15, 16 to 17, and 18 and over.** No upper limit (founder, 22 Oct 2026: do not restrict ages). Not under 13. | The app itself lets in people of 15 and over: sign-up asks to tick «15 και πάνω» (`AgeCheck` in `apps/app/app/onboarding.tsx`; the terms and the privacy policy say 15 and over, the Greek age of digital consent). Play's bands are 13 to 15, 16 to 17 and 18+, so 13 to 15 is the band that holds a 15-year-old. |
 | Could the app unintentionally appeal to children? | No | Amateur tennis results; the Baller is a cartoon ball but the app is about adult tournaments. |
 | Ads to children (only asked if under-13 groups are picked) | Not asked | No group under 13. |
 
-13 to 15: a 15-year-old can sign up, so strictly the 13 to 15 group applies. Picking it adds Play's teen
-expectations (no personalised ads, which we have none of, careful with UGC, which has report and block). Leaving it
-out is common for apps with a 15+ gate, but then the store and the policy say different things. Recommendation: pick
-13 to 15 as well; it costs nothing we do today. Players marked as minors in the roster are never shown
-(`is_minor` / hidden on every public surface), which reviewers sometimes ask about for sports apps.
+Why not under 13: a store target group under 13 puts the app under Play's Families policy (and Apple's Kids category
+and COPPA-style rules): certified ad SDKs only, no sponsored content a child cannot tell from the game, strict data
+limits. We do not follow those rules, and the app is not built for children. So the target stays 13 and up, which
+fits the sign-up rule (15 and over) with a margin, and the store targeting must not be widened to under-13 groups
+later without a separate review.
+
+13 to 15 is picked because a 15-year-old can sign up. Play's teen expectations are met today: no personalised ads
+(we have none), UGC with report and block. Players marked as minors in the roster are never shown (`is_minor` /
+hidden on every public surface), which reviewers sometimes ask about for sports apps. Apple's age rating is a
+separate questionnaire; answer it for the real content (infrequent user-generated content, no gambling) and expect
+12+ or 13+, not 4+.
 
 ## User-generated content
 
@@ -86,8 +104,9 @@ Reviewed under the UGC policy because users see each other's names and activity:
   pushes stop both ways.
 - Hide the profile: in Ρυθμίσεις.
 - Free text: only names (profile, Baller), checked against `core.blocked_words`, and staff can reset a Baller name.
-- Terms of use: none published yet (see `checklist.md`). Play's UGC policy expects terms that forbid abuse; this is
-  the one real gap here.
+- Terms of use: https://netprophetapp.com/terms (English: /en/terms), written 22 Oct 2026 (draft for the founder's
+  and a lawyer's review). They forbid abuse, say how reports and takedown work, and are linked from the Pro screen
+  and Εγώ › Ρυθμίσεις.
 
 ## Other declarations
 
@@ -100,8 +119,8 @@ Reviewed under the UGC policy because users see each other's names and activity:
 | COVID-19 contact tracing or status | No |
 | Data safety | See `data-safety.md` |
 | Advertising ID | No, the app does not use it (no `com.google.android.gms.permission.AD_ID` in the merged manifest; target SDK 36 means Play requires this answer) |
-| Families policy | Not in the program (no under-13 target group) |
+| Families policy | Not in the program (no under-13 target group, see «Target audience») |
 | Photo and video permissions | Not requested (no `READ_MEDIA_*`) |
 | Full-screen intent, exact alarms, foreground services | None declared in the manifest |
 | Account deletion | In the app: Εγώ › Ρυθμίσεις › «Διαγραφή λογαριασμού» (deletes at once). On the web: https://netprophetapp.com/delete-account |
-| Subscriptions | Pro: monthly, yearly, founding; each with a 7-day free trial. The Pro screen states price, the trial end date and the price after it, and «Ακύρωσε πριν και δεν χρεώνεσαι» before buying. |
+| Subscriptions | Pro: monthly, yearly, founding (49,99 € the first year, then 69,99 € a year; until 31/12/2026); each with a 7-day free trial. The Pro screen states price, the trial end date and the price after it, and «Ακύρωσε πριν και δεν χρεώνεσαι» before buying, with links to the terms and the privacy policy under the buttons. |

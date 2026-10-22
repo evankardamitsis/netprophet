@@ -679,6 +679,9 @@ export const el = {
     settings: 'Ρυθμίσεις',
     /** Ρυθμίσεις: an email to us, so every «γράψε μας» (claims, new players) has somewhere to go */
     contact: 'Γράψε μας',
+    /** Ρυθμίσεις: the two legal pages on the site (links only) */
+    terms: 'Όροι χρήσης',
+    privacy: 'Απόρρητο',
     /** Baller's sounds (founder, 17 Oct) */
     sounds: 'Ήχοι',
     soundsLine: 'Μικροί ήχοι από τον Baller σου. Σωπαίνουν όταν το κινητό είναι στο αθόρυβο.',
@@ -703,6 +706,9 @@ export const el = {
     features: ['Τα τουρνουά σου, με ειδοποίηση', 'Η κλήρωση, μόλις βγει', 'Τα ματς σου: μέρα, ώρα, αλλαγές', 'Ο αντίπαλος πριν το ματς', 'Τα στατιστικά σου'],
     join: 'Γίνε μέλος',
     notNow: 'Όχι τώρα',
+    /** the two links under the plans (Apple wants both on the subscription screen) */
+    terms: 'Όροι χρήσης',
+    privacy: 'Απόρρητο',
     close: 'Κλείσιμο',
     listed: '✓ Είσαι στη λίστα',
     listedNote: 'Σου λέμε μόλις ανοίξει.',

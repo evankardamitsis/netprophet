@@ -16,7 +16,7 @@ const nextConfig = {
     return [
       { source: '/el', destination: '/', permanent: true },
       { source: '/el/:path*', destination: '/', permanent: true },
-      { source: '/en/:path((?!privacy|support).+)', destination: '/en', permanent: true },
+      { source: '/en/:path((?!privacy|terms|support|delete-account).+)', destination: '/en', permanent: true },
     ];
   },
 };

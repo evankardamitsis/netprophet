@@ -25,6 +25,11 @@ price or promotion in the title, so the section heads below are in sentence case
 | Website | https://netprophetapp.com |
 | Phone | leave empty (optional on Play) |
 | Privacy policy | https://netprophetapp.com/privacy |
+| Terms of use | https://netprophetapp.com/terms (English /en/terms); add one line with it at the end of the full description |
+| Version | 1.0.0 |
+| Countries | All countries and regions |
+| Contains ads | Yes (in-app sponsored banners, no ad SDK) |
+| Target age | 13 and over (sign-up requires 15 and over) |
 | Account deletion (Data safety) | https://netprophetapp.com/delete-account (new in this PR) |
 | Developer name shown | Monad Labs |
 
@@ -104,9 +109,13 @@ An app by Monad Labs. Questions: hello@monadlabs.gr
 ```
 
 Before pasting: if the founding plan (49,99€ until 31/12) is live on Play at launch, add one line after the prices:
-«Μέχρι 31/12, το ιδρυτικό πακέτο: 49,99€ τον πρώτο χρόνο.» / «Until 31 December, the founding plan: €49.99 for the
-first year.» The website says «49,99€ τον χρόνο» without «πρώτο»; the founder's plan (17 Oct) says it renews at
-69,99€. One of the two needs to change so the site, the stores and the Play offer say the same.
+«Μέχρι 31/12, το ιδρυτικό πακέτο: 49,99€ τον πρώτο χρόνο, μετά 69,99€ τον χρόνο.» / «Until 31 December, the founding
+plan: €49.99 for the first year, then €69.99 a year.» (Founder, 22 Oct 2026: it renews at 69,99€; the terms say so.
+The website text «49,99€ τον χρόνο» must say «τον πρώτο χρόνο» too: the paywall and site copy are being aligned in a
+separate change.)
+
+Add as the last line of both descriptions: «Όροι χρήσης: netprophetapp.com/terms» / «Terms of use:
+netprophetapp.com/en/terms». The listing shows «Contains ads» automatically once the Ads answer is Yes.
 
 ## Graphics
 

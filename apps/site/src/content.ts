@@ -21,7 +21,7 @@ export interface Feature {
 export interface Content {
   lang: Lang;
   meta: { title: string; description: string };
-  nav: { privacy: string; support: string; other: string; otherHref: string };
+  nav: { privacy: string; terms: string; support: string; other: string; otherHref: string };
   hero: { eyebrow: string; questions: [string, string, string]; line: string; cta: string; soon: string };
   questions: [Question, Question, Question];
   tournament: Question;
@@ -70,7 +70,7 @@ export const el: Content = {
     description:
       'Ποιος παίζει σήμερα, ποιος κέρδισε χθες, ποιος είναι ο αντίπαλός σου. Όλα τα ματς, τα αποτελέσματα και οι παίκτες των τουρνουά, στο κινητό σου.',
   },
-  nav: { privacy: 'Πολιτική Απορρήτου', support: 'Βοήθεια', other: 'English', otherHref: '/en' },
+  nav: { privacy: 'Πολιτική Απορρήτου', terms: 'Όροι χρήσης', support: 'Βοήθεια', other: 'English', otherHref: '/en' },
   hero: {
     eyebrow: 'ΤΑ ΠΑΝΤΑ ΓΙΑ ΤΟ ΕΡΑΣΙΤΕΧΝΙΚΟ ΤΕΝΙΣ',
     questions: ['Ποιος παίζει σήμερα;', 'Ποιος κέρδισε χθες;', 'Ποιος είναι ο αντίπαλός σου;'],
@@ -273,7 +273,7 @@ export const en: Content = {
     description:
       'Who plays today, who won yesterday, who your opponent is. Every tournament match, result and player, on your phone.',
   },
-  nav: { privacy: 'Privacy Policy', support: 'Help', other: 'Ελληνικά', otherHref: '/' },
+  nav: { privacy: 'Privacy Policy', terms: 'Terms of use', support: 'Help', other: 'Ελληνικά', otherHref: '/' },
   hero: {
     eyebrow: 'EVERYTHING ABOUT AMATEUR TENNIS',
     questions: ['Who plays today?', 'Who won yesterday?', 'Who is your opponent?'],
