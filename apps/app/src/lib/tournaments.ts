@@ -183,18 +183,28 @@ export function scheduleWindow<T extends Pick<GetTournamentResult, 'days' | 'sta
   return days.length === d.days.length ? d : { ...d, days };
 }
 
-export type Segment = 'schedule' | 'bracket';
+export type Segment = 'today' | 'schedule' | 'bracket';
 
-/** which segments have data */
-export function segmentsOf(d: Pick<GetTournamentResult, 'days' | 'draws'>): Segment[] {
-  return [d.days.length > 0 ? ('schedule' as const) : null, d.draws.length > 0 ? ('bracket' as const) : null].filter((s): s is Segment => s !== null);
+/** the tournament has a match on this Athens day */
+export const playsToday = (d: Pick<GetTournamentResult, 'days'>, today: string): boolean => d.days.some((x) => x.date === today && x.matches.length > 0);
+
+/**
+ * Which segments have data (mockup D): Σήμερα first, only when it plays today (a finished tournament has no days, so
+ * no Σήμερα), then Πρόγραμμα and Ταμπλό. Without `today` there is no Σήμερα.
+ */
+export function segmentsOf(d: Pick<GetTournamentResult, 'days' | 'draws'>, today?: string): Segment[] {
+  return [
+    today !== undefined && playsToday(d, today) ? ('today' as const) : null,
+    d.days.length > 0 ? ('schedule' as const) : null,
+    d.draws.length > 0 ? ('bracket' as const) : null,
+  ].filter((s): s is Segment => s !== null);
 }
 
-/** Πρόγραμμα when there are matches today, else Ταμπλό (else whichever has data) */
+/** Σήμερα when it plays today, else Ταμπλό (else whichever has data) */
 export function defaultSegment(d: Pick<GetTournamentResult, 'days' | 'draws'>, today: string): Segment {
-  const have = segmentsOf(d);
+  const have = segmentsOf(d, today);
   if (have.length === 0) return 'schedule';
-  if (d.days.some((x) => x.date === today && x.matches.length > 0) && have.includes('schedule')) return 'schedule';
+  if (have.includes('today')) return 'today';
   return have.includes('bracket') ? 'bracket' : 'schedule';
 }
 

@@ -1627,8 +1627,11 @@ export const el = {
       unfollowedToast: 'Δεν ακολουθείς πια',
       followFailed: 'Δεν έγινε. Δοκίμασε ξανά.',
       followTooMany: 'Ακολουθείς ήδη 100 τουρνουά. Άφησε κάποιο πρώτα.',
+      today: 'Σήμερα',
       schedule: 'Πρόγραμμα',
       bracket: 'Ταμπλό',
+      /** a row of Σήμερα that no longer takes a vote and has no result yet */
+      todayClosed: 'Έκλεισε',
       postponed: 'Αναβλήθηκε',
       postponedTime: 'Αναβολή',
       movedFrom: 'από {when}',

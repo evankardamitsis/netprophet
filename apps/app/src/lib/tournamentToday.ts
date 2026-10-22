@@ -1,7 +1,9 @@
 import { dayKey } from '@netprophet/core';
 import { accusativeWord, nameGender, type Copy } from '@netprophet/copy';
 import type { FeedPlayer, GetTournamentResult, TournamentMatch } from '@netprophet/db';
-import { fmt } from './votes';
+import { fmt, type Side } from './votes';
+import { fromTournamentMatch, overlayFeed, toUiSide, type CardMatch } from './feed';
+import type { MyMatchView } from './myMatch';
 import { dayLabel, daysBetween, dayShort, hasTime, timeOf } from './tournaments';
 
 /**
@@ -160,11 +162,13 @@ export interface YoursRow {
 }
 
 /** one row per match of the day where one of yours plays (the first of them on it), by time */
-export function yoursToday(matches: TournamentMatch[], yours: Set<string>, t: Copy): YoursRow[] {
+export function yoursToday(matches: TournamentMatch[], yours: Set<string>, t: Copy, skip?: string | null): YoursRow[] {
   // these are today's matches: one with no time says «Σήμερα» (never «χωρίς ώρα»)
   const today = dayKey(new Date().toISOString());
   const out: (YoursRow & { at: number })[] = [];
   for (const m of matches) {
+    // «Ο αγώνας σου» has its own row: not also a chip
+    if (skip && m.match_id === skip) continue;
     for (const n of [1, 2] as const) {
       const p = sideOf(m, n).find((x) => yours.has(x.id));
       if (!p) continue;
@@ -223,3 +227,81 @@ export function whenLine(iso: string, today: string, t: Copy): string {
 
 /** where the sheet was opened: a schedule match (Πρόγραμμα, Σήμερα) or a draw slot (Ταμπλό); null: no match */
 export type PathContext = { match: string } | { tab: string; round: number; slot: number } | null;
+
+
+/* ================= Σήμερα: your match and the day's votes ================= */
+
+/**
+ * «Ο αγώνας σου»: the match of the day where your own player plays (the earliest when there are two), as the home's row
+ * reads it. Null when you have no player or yours is not playing today.
+ */
+export function mineToday(matches: TournamentMatch[], me: string | null, t: Copy): (MyMatchView & { playerId: string }) | null {
+  if (!me) return null;
+  const mine = matches
+    .filter((m) => m.postponed !== true && !resolved(m) && [1, 2].some((n) => sideOf(m, n as 1 | 2).some((p) => p.id === me)))
+    .sort((a, b) => (Number.isNaN(startMs(a)) ? Infinity : startMs(a)) - (Number.isNaN(startMs(b)) ? Infinity : startMs(b)))[0];
+  if (!mine) return null;
+  const n = sideOf(mine, 1).some((p) => p.id === me) ? 1 : 2;
+  const other = sideOf(mine, n === 1 ? 2 : 1);
+  const who = fmt(t.tournaments.focus.against, { name: surnamesAcc(other) || t.tournaments.detail.tbd });
+  const category = mine.level ?? null;
+  const when = hasTime(mine.starts_at) ? timeOf(mine.starts_at!) : t.match.today;
+  return {
+    matchId: mine.match_id,
+    playerId: me,
+    line: [when, who, category].filter(Boolean).join(' · '),
+    when,
+    who,
+    category,
+    today: true,
+    startsAt: mine.starts_at ?? '',
+  };
+}
+
+export interface TodayRow {
+  match: CardMatch;
+  /** played: who won, and what your call brought when the result is still in your inbox */
+  result?: { winner: Side; points: number | null };
+  /** a closed row with no result says why in a word: «Έκλεισε», «Αναβολή» */
+  note?: string;
+}
+
+export interface TodayGroup {
+  /** the category, «Μ 40+»; '' for matches with none */
+  key: string;
+  rows: TodayRow[];
+}
+
+/** the order inside a day: timed matches by time, the ones with no time after them (in the sheet's order) */
+function byTime(a: TodayRow, b: TodayRow): number {
+  const x = hasTime(a.match.startsAt) ? Date.parse(a.match.startsAt!) : Infinity;
+  const y = hasTime(b.match.startsAt) ? Date.parse(b.match.startsAt!) : Infinity;
+  return x === y ? 0 : x < y ? -1 : 1;
+}
+
+/**
+ * The day's matches as vote rows, grouped by category (founder, 22 Oct: small headers), each group by time, the groups
+ * in the order of their first match. `fed` is the feed's cards by match id (your vote, the split); a match the feed does
+ * not hold is still a row, open or closed by the clock. `points` is what each result is worth to you, by match id.
+ */
+export function todayGroups(
+  matches: TournamentMatch[],
+  tournamentId: string,
+  fed: ReadonlyMap<string, CardMatch>,
+  points: ReadonlyMap<string, number>,
+  now: Date,
+  t: Copy,
+): TodayGroup[] {
+  const groups = new Map<string, TodayRow[]>();
+  for (const m of matches) {
+    const match = overlayFeed(fromTournamentMatch(m, tournamentId, t, now), fed.get(m.match_id));
+    const row: TodayRow = { match };
+    if (m.winner_side !== null) row.result = { winner: toUiSide(m.winner_side), points: points.get(m.match_id) ?? null };
+    else if (m.postponed === true) row.note = t.tournaments.detail.postponedTime;
+    else if (match.closed) row.note = t.tournaments.detail.todayClosed;
+    const key = match.category ?? '';
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+  const out = [...groups.entries()].map(([key, rows]): TodayGroup => ({ key, rows: [...rows].sort(byTime) }));
+  return out.sort((x, y) => byTime(x.rows[0]!, y.rows[0]!) || x.key.localeCompare(y.key, 'el'));
+}

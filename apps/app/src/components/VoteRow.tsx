@@ -46,6 +46,8 @@ interface Props {
   where?: string;
   /** a played match: who won and what your call brought */
   result?: { winner: Side; points: number | null };
+  /** a closed row with no result yet, in a word under the names: «Έκλεισε» */
+  note?: string;
   /** its place in the list, for the stagger */
   index?: number;
 }
@@ -62,7 +64,7 @@ function startState(match: CardMatch): RowState {
   return match.myVote ? { phase: 'voted', side: match.myVote, split: match.split ?? null } : { phase: 'idle' };
 }
 
-export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where, result, index = 0 }: Props) {
+export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where, result, note, index = 0 }: Props) {
   const t = useCopy();
   const [state, setState] = useState<RowState>(() => startState(match));
   const picked = state.phase === 'idle' ? null : state.side;
@@ -134,6 +136,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
               />
             ))}
             {result && picked === result.winner ? <Called points={result.points} /> : null}
+            {note && !result ? <Text style={styles.small}>{note}</Text> : null}
           </View>
         </View>
       </Pressable>

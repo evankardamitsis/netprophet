@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { TournamentMatch } from '@netprophet/db';
-import { nowNext, openingDay, yoursSet, yoursToday } from './tournamentToday';
+import { mineToday, nowNext, openingDay, todayGroups, yoursSet, yoursToday } from './tournamentToday';
 
 const t = getCopy('el');
 
@@ -86,4 +86,88 @@ describe('δικοί σου', () => {
     expect(rows[1]).toMatchObject({ playerId: 'nik', against: 'με Πράτσα' });
   });
   it('nobody of yours: no rows', () => expect(yoursToday([match('a', '2026-10-21T07:00:00Z')], new Set(['x']), t)).toEqual([]));
+});
+
+describe('Σήμερα', () => {
+  const now = new Date('2026-10-22T06:00:00Z'); // 09:00 Athens
+  const at = (hhmm: string) => `2026-10-22T${hhmm}:00Z`;
+  const fedCard = (id: string, over: Record<string, unknown> = {}) => ({ id, kind: 'match', myVote: 'a', split: { pctA: 60, pctB: 40 }, ...over }) as never;
+
+  it('«Ο αγώνας σου»: the earliest match of the day where your player plays, with whom', () => {
+    const ms = [match('late', at('12:00'), NIK, PAV), match('early', at('07:30'), GIO, NIK), match('other', at('07:00'), ALE, PAV)];
+    const mine = mineToday(ms, 'nik', t)!;
+    expect(mine.matchId).toBe('early');
+    expect(mine.playerId).toBe('nik');
+    expect(mine.today).toBe(true);
+    expect(mine.when).toBe('10:30');
+    expect(mine.who).toBe('με Δεσύπρη');
+    expect(mine.category).toBe('Μ 40+');
+    expect(mine.startsAt).toBe(at('07:30'));
+  });
+  it('«Ο αγώνας σου» is null without a player, when yours is played or put off, or is not on', () => {
+    const ms = [match('a', at('07:30'), NIK, GIO, { winner_side: 1 }), match('b', at('08:30'), NIK, GIO, { postponed: true })];
+    expect(mineToday(ms, 'nik', t)).toBeNull();
+    expect(mineToday(ms, null, t)).toBeNull();
+    expect(mineToday([match('c', at('08:30'), ALE, PAV)], 'nik', t)).toBeNull();
+  });
+  it('a match with no time reads «Σήμερα»', () => {
+    expect(mineToday([match('u', '2026-10-21T21:00:00Z', NIK, GIO)], 'nik', t)!.when).toBe('Σήμερα');
+  });
+  it('yours skips the match that has its own row', () => {
+    const ms = [match('a', at('07:30'), NIK, GIO), match('b', at('08:30'), GIO, PAV)];
+    const yours = yoursSet('nik', ['gio']);
+    expect(yoursToday(ms, yours, t).map((r) => r.matchId)).toEqual(['a', 'b']);
+    expect(yoursToday(ms, yours, t, 'a').map((r) => r.matchId)).toEqual(['b']);
+  });
+  it('groups by category, each by time, untimed last, groups by their first match', () => {
+    const ms = [
+      match('w2', at('09:00'), NIK, GIO, { level: 'Γ 35+', discipline: 'WS' }),
+      match('m-untimed', '2026-10-21T21:00:00Z', ALE, PAV),
+      match('m2', at('08:00'), ALE, PAV),
+      match('m1', at('07:00'), NIK, GIO),
+      match('w1', at('06:30'), NIK, GIO, { level: 'Γ 35+', discipline: 'WS' }),
+    ];
+    const groups = todayGroups(ms, 'tour', new Map(), new Map(), now, t);
+    expect(groups.map((g) => g.key)).toEqual(['Γ 35+ · Γυναικών', 'Μ 40+']);
+    expect(groups[0]!.rows.map((r) => r.match.id)).toEqual(['w1', 'w2']);
+    expect(groups[1]!.rows.map((r) => r.match.id)).toEqual(['m1', 'm2', 'm-untimed']);
+  });
+  it('a row is open before its lock, closed after, and every row carries its tournament for the hold', () => {
+    const ms = [match('soon', at('10:00')), match('gone', at('05:00')), match('untimed-open', '2026-10-21T21:00:00Z')];
+    const rows = todayGroups(ms, 'tour', new Map(), new Map(), now, t)[0]!.rows;
+    const by = (id: string) => rows.find((r) => r.match.id === id)!;
+    expect(by('soon').match.closed).toBeUndefined();
+    expect(by('soon').note).toBeUndefined();
+    expect(by('gone').match.closed).toBe(true);
+    expect(by('gone').note).toBe('Έκλεισε');
+    // 09:00 Athens: an untimed match takes votes until 14:00
+    expect(by('untimed-open').match.closed).toBeUndefined();
+    expect(rows.every((r) => r.match.tournamentId === 'tour')).toBe(true);
+    // 14:30 Athens: it closed
+    const late = todayGroups([match('untimed-open', '2026-10-21T21:00:00Z')], 'tour', new Map(), new Map(), new Date('2026-10-22T11:30:00Z'), t)[0]!.rows[0]!;
+    expect(late.match.closed).toBe(true);
+  });
+  it('the feed lays your vote, the split and its lock over the row', () => {
+    const lock = at('07:55');
+    const rows = todayGroups([match('a', at('08:00'))], 'tour', new Map([['a', fedCard('a', { lockAt: lock })]]), new Map(), now, t)[0]!.rows;
+    expect(rows[0]!.match.myVote).toBe('a');
+    expect(rows[0]!.match.split).toEqual({ pctA: 60, pctB: 40 });
+    expect(rows[0]!.match.lockAt).toBe(lock);
+    expect(rows[0]!.match.closed).toBeUndefined();
+    // the feed saying closed closes it
+    const closed = todayGroups([match('a', at('10:00'))], 'tour', new Map([['a', fedCard('a', { closed: true })]]), new Map(), now, t)[0]!.rows[0]!;
+    expect(closed.match.closed).toBe(true);
+  });
+  it('a played match shows its winner and the points your call brought', () => {
+    const ms = [match('p', at('05:00'), NIK, GIO, { winner_side: 2 })];
+    const row = todayGroups(ms, 'tour', new Map(), new Map([['p', 10]]), now, t)[0]!.rows[0]!;
+    expect(row.result).toEqual({ winner: 'b', points: 10 });
+    expect(row.note).toBeUndefined();
+    expect(todayGroups(ms, 'tour', new Map(), new Map(), now, t)[0]!.rows[0]!.result!.points).toBeNull();
+  });
+  it('a match put off is closed and says «Αναβολή»', () => {
+    const row = todayGroups([match('x', at('10:00'), NIK, GIO, { postponed: true })], 'tour', new Map(), new Map(), now, t)[0]!.rows[0]!;
+    expect(row.match.closed).toBe(true);
+    expect(row.note).toBe('Αναβολή');
+  });
 });

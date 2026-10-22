@@ -1,6 +1,6 @@
-import { dayKey, localParts } from '@netprophet/core';
+import { dayKey, localParts, toMs, voteLockInstant } from '@netprophet/core';
 import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy, levelNumber } from '@netprophet/copy';
-import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
+import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type TournamentMatch, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
 import { placeLine } from './place';
 import { dayShort, dayTimeShort, hasTime } from './tournaments';
@@ -321,6 +321,38 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
       : undefined,
     club: club ?? undefined,
   };
+}
+
+/**
+ * A match of a tournament's day (api.get_tournament) as a vote row. That page's matches carry no vote or split, so the
+ * row starts open or closed by the clock (and by a result); `overlayFeed` lays the feed's own state over it. Names carry
+ * their roster id, so a hold on one opens the player's run.
+ */
+export function fromTournamentMatch(m: TournamentMatch, tournamentId: string, t: Copy, now = new Date()): CardMatch {
+  const players = (s: DbSide) => m.sides.find((x) => x.side === s)?.players ?? [];
+  const who = t.match.categoryWho[m.discipline ?? ''] ?? t.match.categoryWho[m.format] ?? null;
+  const category = categoryCase([m.level, who].filter(Boolean).join(' · ')) || undefined;
+  const lockMs = m.starts_at ? toMs(voteLockInstant(m.starts_at, null)) : Infinity;
+  return {
+    kind: 'match',
+    id: m.match_id,
+    meta: roundLabel(m.round, t) ?? '',
+    learn: '',
+    doubles: m.format !== 'singles',
+    a: side(players(1), {}, t),
+    b: side(players(2), {}, t),
+    closed: m.winner_side !== null || m.postponed === true || now.getTime() >= lockMs ? true : undefined,
+    startsAt: m.starts_at ?? undefined,
+    category,
+    tournamentId,
+  };
+}
+
+/** the feed's card for the same match says what the tournament page cannot: your vote, the split, and the real lock */
+export function overlayFeed(card: CardMatch, fed: CardMatch | undefined): CardMatch {
+  if (!fed) return card;
+  const closed = card.closed || fed.closed;
+  return { ...card, myVote: fed.myVote, split: fed.split, lockAt: fed.lockAt, closed: closed ? true : undefined };
 }
 
 /** from 23:00 (Athens) the evening is over: Σήμερα already shows tomorrow's matches (founder, 18 Oct) */
