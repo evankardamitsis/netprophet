@@ -108,7 +108,7 @@ export function YoursRow({ row, onPress }: { row: YoursNow; onPress?: () => void
   const body = (
     <View style={styles.yoursRow}>
       <View style={styles.timeCol}>
-        {row.now ? <LiveTag /> : row.time ? <Text style={styles.timeText}>{row.time}</Text> : <Text style={[styles.small, styles.center]}>{t.home.vote.noTime}</Text>}
+        {row.now ? <LiveTag /> : row.time ? <Text style={[styles.timeText, styles.center]}>{row.time}</Text> : null}
       </View>
       <View style={styles.flex}>
         <Text numberOfLines={1} style={styles.rowTitle}>

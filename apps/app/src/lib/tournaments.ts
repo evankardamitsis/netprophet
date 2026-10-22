@@ -189,6 +189,17 @@ export function dayShort(iso: string, t: Copy): string {
   return `${t.tournaments.weekdaysShort[weekdayOf(day)]} ${ddmm(day)}`;
 }
 
+/**
+ * A match with no start time shows its day in the time's place (founder, 22 Oct: never «χωρίς ώρα»): «Σήμερα»,
+ * «Αύριο», else «Πεμ 23/10». `day` and `today` are Athens day keys.
+ */
+export function dayLabel(day: string, today: string, t: Copy): string {
+  const n = daysBetween(today, day);
+  if (n === 0) return t.match.today;
+  if (n === 1) return t.match.tomorrow;
+  return `${t.tournaments.weekdaysShort[weekdayOf(day)]} ${ddmm(day)}`;
+}
+
 /** «Σάββατο 25/10», the full weekday and the date of a day key */
 export function dayLong(day: string, t: Copy): string {
   return `${t.tournaments.weekdaysOn[weekdayOf(day)]} ${ddmm(day)}`;

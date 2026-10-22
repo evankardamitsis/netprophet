@@ -273,7 +273,6 @@ export const en: Copy = {
       undo: 'Undo',
       a11yVote: 'Vote: {name}',
       called: 'You called it ✓',
-      noTime: 'no time',
       empty: 'No matches to vote on yet.',
     },
     pro: {
@@ -1284,7 +1283,6 @@ export const en: Copy = {
       now: 'Now',
       next: 'Next',
       pair: '{a} v {b}',
-      noTime: 'no time yet',
       after: 'after {match}',
       yoursToday: 'Your people today',
       against: 'v {name}',

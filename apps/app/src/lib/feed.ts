@@ -69,6 +69,8 @@ export interface CardMatch {
   startsAt?: string;
   /** «40+», «Μ 50+ · Γυναικών», «Μικτό»: shown as its own tag, bigger than the meta line */
   category?: string;
+  /** its Athens day when known without a start time (sample data): shown in the time's place */
+  day?: string;
 }
 
 /** A match put off: compact, not votable, muted. */
@@ -592,6 +594,7 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     startsAt: soonAt ? soonAt.toISOString() : undefined,
     category: m.category ? categoryCase(m.category) : undefined,
     tournamentId: m.tournamentId,
+    day: dayKey(new Date(now.getTime() + (m.day === 'today' ? 0 : 86_400_000)).toISOString()),
   };
 }
 

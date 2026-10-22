@@ -58,10 +58,10 @@ describe('nowNext', () => {
   it('put-off and finished matches are left out', () => {
     expect(nowNext([match('p', '2026-10-21T11:00:00Z', NIK, GIO, { postponed: true })], now, t)).toEqual([]);
   });
-  it('a match without a time: «μετά το …» with an order, else «χωρίς ώρα ακόμα»', () => {
+  it('a match without a time: «μετά το …» with an order, else its day («Σήμερα»)', () => {
     const ordered = nowNext([{ ...match('first', '2026-10-21T09:30:00Z'), order: 1 }, { ...match('then', null, ALE, PAV), order: 2 }], now, t);
     expect(ordered[0]!.next).toMatchObject({ matchId: 'then', time: 'μετά το Ροδίτης με Δεσύπρη' });
-    expect(nowNext([match('x', null)], now, t)[0]!.next!.time).toBe('χωρίς ώρα ακόμα');
+    expect(nowNext([match('x', null)], now, t)[0]!.next!.time).toBe('Σήμερα');
   });
   it('no court named: one row for the day', () => {
     const rows = nowNext([match('a', '2026-10-21T11:00:00Z', NIK, GIO, { court: null, club: null })], now, t);

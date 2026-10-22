@@ -313,7 +313,6 @@ export const el = {
       a11yVote: 'Ψήφος: {name}',
       /** after the result: «Το είχες ✓» */
       called: 'Το είχες ✓',
-      noTime: 'χωρίς ώρα',
       empty: 'Κανένα ματς για ψήφο ακόμα.',
     },
     pro: {
@@ -1480,8 +1479,6 @@ export const el = {
       next: 'Μετά',
       /** «Ροδίτης με Δεσύπρη»: who plays who, surnames only */
       pair: '{a} με {b}',
-      /** a match with no time in the order of play */
-      noTime: 'χωρίς ώρα ακόμα',
       /** a match with no time that follows another on the same court */
       after: 'μετά το {match}',
       /** the row at the top when your people play today */

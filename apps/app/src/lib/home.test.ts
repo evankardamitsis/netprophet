@@ -2,7 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetQuizResult, TournamentItem } from '@netprophet/db';
 import type { CardMatch, CardResult, FeedCard } from './feed';
-import { homeTournaments, quizCard, resultsLine, sideLabel, tagLabel, voteList, yoursNow } from './home';
+import { homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, voteList, yoursNow } from './home';
+
+describe('rowTime: a day, never «χωρίς ώρα»', () => {
+  const now = new Date('2026-10-22T15:00:00Z');
+  const tt = getCopy('el');
+  it('the time when there is one', () => expect(rowTime({ startsAt: '2026-10-22T15:00:00Z' }, tt, now)).toBe('18:00'));
+  it('no time: the day, today and tomorrow by name, else weekday and date', () => {
+    expect(rowTime({ day: '2026-10-22' }, tt, now)).toBe('Σήμερα');
+    expect(rowTime({ day: '2026-10-23' }, tt, now)).toBe('Αύριο');
+    expect(rowTime({ day: '2026-10-25' }, tt, now)).toBe('Κυρ 25/10');
+  });
+  it('neither: nothing', () => expect(rowTime({}, tt, now)).toBe(''));
+});
 
 const t = getCopy('el');
 const NOW = new Date('2026-10-22T15:00:00Z'); // 18:00 Athens

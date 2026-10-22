@@ -4,7 +4,7 @@ import { accusativeWord, nameGender } from '@netprophet/copy';
 import { splitToday, type CardMatch, type CardPerson, type CardResult, type FeedCard } from './feed';
 import { summaryCounts } from './resultsSummary';
 import { NOW_WINDOW_MS } from './tournamentToday';
-import { timeOf } from './tournaments';
+import { dayLabel, timeOf, todayKey } from './tournaments';
 import { fmt } from './votes';
 
 /**
@@ -84,9 +84,13 @@ export function sideLabel(people: readonly CardPerson[]): string {
   return people.map((p) => p.surname).join(' & ');
 }
 
-/** «18:00», or «χωρίς ώρα» */
-export function rowTime(m: Pick<CardMatch, 'startsAt'>, t: Copy): string {
-  return m.startsAt ? timeOf(m.startsAt) : t.home.vote.noTime;
+/**
+ * «18:00»; a match with no start time shows its day instead («Σήμερα», «Πεμ 23/10»; founder, 22 Oct: never «χωρίς
+ * ώρα»), and nothing when the day is not known either (get_feed sends no date for a match without a time).
+ */
+export function rowTime(m: Pick<CardMatch, 'startsAt' | 'day'>, t: Copy, now: Date = new Date()): string {
+  if (m.startsAt) return timeOf(m.startsAt);
+  return m.day ? dayLabel(m.day, todayKey(now), t) : '';
 }
 
 /* ================= «Οι δικοί σου» ================= */
@@ -98,7 +102,7 @@ export interface YoursNow {
   name: string;
   /** «με Παππά · Open Γλυφάδας» */
   line: string;
-  /** «18:30», or null while it plays (then «Τώρα») */
+  /** «18:30» (or the day when it has no time), or null while it plays (then «Τώρα») */
   time: string | null;
   now: boolean;
 }
@@ -129,7 +133,7 @@ export function yoursNow(cards: readonly FeedCard[], yours: ReadonlySet<string>,
       tournamentId: c.tournamentId ?? null,
       name: sideLabel(mine.people),
       line: c.group ? fmt(t.home.yours.line, { against, tournament: c.group.title }) : against,
-      time: playing ? null : c.startsAt ? timeOf(c.startsAt) : null,
+      time: playing ? null : rowTime(c, t, now) || null,
       now: playing,
       at: Number.isFinite(at) ? at : Infinity,
     });
