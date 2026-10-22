@@ -1,4 +1,4 @@
--- 20270313000000_pro_scout_full: the Pro scout shows at least what the free player card shows, and much more
+-- 20270315000000_pro_scout_full: the Pro scout shows at least what the free player card shows, and much more
 -- (history, singles and doubles numbers, form, every meeting, this tournament so far, traits); a free account still
 -- gets nothing; minors and hidden players are never named.
 begin;
