@@ -10,7 +10,7 @@ import { tagLabel } from '../lib/home';
 import type { MyMatchView } from '../lib/myMatch';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
 import { useOfferShown, useProOffer } from '../lib/purchase';
-import { timeOf } from '../lib/tournaments';
+import { hasTime, timeOf } from '../lib/tournaments';
 import { fmt } from '../lib/votes';
 import { cardSurface, colors, fonts, motion, text } from '../theme';
 import { Logo } from './Logo';
@@ -87,8 +87,14 @@ export function MyMatchRow({ match, onPress }: { match: MyMatchView; onPress: ()
     <Tap onPress={onPress} label={`${t.home.yours.myMatch}. ${match.line}`}>
       <View style={styles.yoursRow}>
         <View style={styles.timeCol}>
-          <Text style={styles.timeText}>{timeOf(match.startsAt)}</Text>
-          {match.today ? null : <Text style={styles.small}>{t.match.tomorrow}</Text>}
+          {hasTime(match.startsAt) ? (
+            <>
+              <Text style={styles.timeText}>{timeOf(match.startsAt)}</Text>
+              {match.today ? null : <Text style={styles.small}>{t.match.tomorrow}</Text>}
+            </>
+          ) : (
+            <Text style={[styles.timeText, styles.center]}>{match.today ? t.match.today : t.match.tomorrow}</Text>
+          )}
         </View>
         <View style={styles.flex}>
           <Text style={styles.rowTitle}>{t.home.yours.myMatch}</Text>
@@ -193,7 +199,13 @@ export function ProCard({ pro, myMatch }: { pro: boolean; myMatch: MyMatchView |
     }
   }, [canSell, moment, shown]);
   if (!pro && !canSell) return null;
-  const title = myMatch ? fmt(myMatch.today ? p.opponentToday : p.opponentTomorrow, { time: timeOf(myMatch.startsAt) }) : p.statsTitle;
+  const title = !myMatch
+    ? p.statsTitle
+    : hasTime(myMatch.startsAt)
+      ? fmt(myMatch.today ? p.opponentToday : p.opponentTomorrow, { time: timeOf(myMatch.startsAt) })
+      : myMatch.today
+        ? p.opponentTodayNoTime
+        : p.opponentTomorrowNoTime;
   const line = myMatch ? p.opponentLine : p.statsLine;
   const cta = myMatch ? (pro ? p.opponentOpen : p.opponentBuy) : pro ? p.statsOpen : p.statsBuy;
   const open = () => {

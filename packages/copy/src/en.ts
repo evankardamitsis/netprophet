@@ -280,6 +280,8 @@ export const en: Copy = {
       trial: '7 days free',
       opponentToday: 'Your opponent at {time}',
       opponentTomorrow: 'Your opponent tomorrow at {time}',
+      opponentTodayNoTime: 'Your opponent today',
+      opponentTomorrowNoTime: 'Your opponent tomorrow',
       opponentLine: 'How they played this year, who they beat, on which surface.',
       opponentBuy: 'See them with Pro ›',
       opponentOpen: 'See your opponent ›',

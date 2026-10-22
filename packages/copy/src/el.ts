@@ -321,6 +321,9 @@ export const el = {
       /** your match is near (ProNudge before_match) */
       opponentToday: 'Ο αντίπαλός σου στις {time}',
       opponentTomorrow: 'Ο αντίπαλός σου αύριο στις {time}',
+      /** the match has a day but no time yet */
+      opponentTodayNoTime: 'Ο αντίπαλός σου σήμερα',
+      opponentTomorrowNoTime: 'Ο αντίπαλός σου αύριο',
       opponentLine: 'Πώς έπαιξε φέτος, ποιους κέρδισε, σε ποια επιφάνεια.',
       opponentBuy: 'Δες τον με Pro ›',
       opponentOpen: 'Δες τον αντίπαλο ›',

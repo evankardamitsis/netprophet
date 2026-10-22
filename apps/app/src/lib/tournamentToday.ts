@@ -173,12 +173,12 @@ export interface NextMatch {
   now: boolean;
 }
 
-/** «Σήμερα 18:30», «Αύριο 10:00», «Σαβ 24/10 10:00» */
+/** «Σήμερα 18:30», «Αύριο 10:00», «Σαβ 24/10 10:00»; the day alone when the start has no time */
 export function whenLine(iso: string, today: string, t: Copy): string {
   const day = dayKey(iso);
   const n = daysBetween(today, day);
   const label = n === 0 ? t.match.today : n === 1 ? t.match.tomorrow : dayShort(iso, t);
-  return fmt(t.tournaments.focus.when, { day: label, time: timeOf(iso) });
+  return hasTime(iso) ? fmt(t.tournaments.focus.when, { day: label, time: timeOf(iso) }) : label;
 }
 
 /** where the sheet was opened: a schedule match (Πρόγραμμα, Σήμερα) or a draw slot (Ταμπλό); null: no match */

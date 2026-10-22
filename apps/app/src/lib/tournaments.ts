@@ -149,7 +149,8 @@ export function mineRows(mine: NonNullable<GetTournamentsResult['mine']>, t: Cop
       const day = dayKey(m.starts_at!);
       return {
         key: m.match_id,
-        when: `${c.weekdaysShort[weekdayOf(day)]} ${ddmm(day)} · ${timeOf(m.starts_at!)}`,
+        // a start with no time (the import's 00:00) says only its day
+        when: hasTime(m.starts_at) ? `${c.weekdaysShort[weekdayOf(day)]} ${ddmm(day)} · ${timeOf(m.starts_at!)}` : `${c.weekdaysShort[weekdayOf(day)]} ${ddmm(day)}`,
         what: m.level ? fmt(c.mineWhat, { tournament: m.tournament, level: m.level }) : m.tournament,
       };
     });
@@ -163,7 +164,7 @@ export function mineHeadline(mine: NonNullable<GetTournamentsResult['mine']>, to
   const day = dayKey(first.starts_at!);
   const n = daysBetween(today, day);
   const word = n <= 0 ? c.playingToday : n === 1 ? c.playingTomorrow : c.weekdaysOn[weekdayOf(day)]!;
-  return fmt(c.playing, { when: `${word} ${timeOf(first.starts_at!)}` });
+  return fmt(c.playing, { when: hasTime(first.starts_at) ? `${word} ${timeOf(first.starts_at!)}` : word });
 }
 
 /* ================= one tournament: Πρόγραμμα ================= */
@@ -215,9 +216,9 @@ export function dayLong(day: string, t: Copy): string {
   return `${t.tournaments.weekdaysOn[weekdayOf(day)]} ${ddmm(day)}`;
 }
 
-/** «Τρι 13/10 18:30» */
+/** «Τρι 13/10 18:30»; «Τρι 13/10» when the start has no time */
 export function dayTimeShort(iso: string, t: Copy): string {
-  return `${dayShort(iso, t)} ${timeOf(iso)}`;
+  return hasTime(iso) ? `${dayShort(iso, t)} ${timeOf(iso)}` : dayShort(iso, t);
 }
 
 export interface DayChip {
@@ -287,7 +288,8 @@ export function scheduleRows(matches: TournamentMatch[], me: string | null, t: C
       const hasResult = m.winner_side !== null && ((m.sets?.length ?? 0) > 0 || m.walkover === true);
       return {
         id: m.match_id,
-        time: m.postponed === true ? t.tournaments.detail.postponedTime : m.starts_at ? timeOf(m.starts_at) : '',
+        // no time (the import's 00:00): the day in its place, never «00:00»
+        time: m.postponed === true ? t.tournaments.detail.postponedTime : !m.starts_at ? '' : hasTime(m.starts_at) ? timeOf(m.starts_at) : dayLabel(dayKey(m.starts_at), todayKey(), t),
         meta: categoryLabel(m.level, m.discipline, t) ?? '',
         sides,
         score: hasResult ? formatWinnerSets(m.sets ?? [], { retired: m.retired === true, walkover: m.walkover === true }, t.results) : null,
