@@ -37,7 +37,7 @@ export function Header({ me }: { me: MeSummary | null }) {
   const insets = useSafeAreaInsets();
   const hud = useHudNumbers();
   const { targets } = useHudActions();
-  const points = me ? me.points - hud.pointsOffset : undefined;
+  const points = me ? Math.max(0, me.points - hud.pointsOffset) : undefined;
   const streak = me ? hud.streakShown ?? me.streak : undefined;
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
