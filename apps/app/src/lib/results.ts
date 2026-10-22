@@ -30,7 +30,7 @@ export interface ResultItem {
   /** sets won, the big numbers; empty for a walkover */
   winnerSets: string;
   loserSets: string;
-  /** «6-4, 3-6, 7-5» winner first, «απ.» / «w/o» */
+  /** «6-4, 3-6, 7-5» winner first, «ret» / «w/o» */
   score: string;
   /** the two chips; null when the server sent none */
   reactions: Reactions | null;

@@ -353,7 +353,7 @@ export const en: Copy = {
     inReview: 'In review',
     calledIt: 'Called it · +{points}',
     line: '{pct}% said {name}',
-    retired: 'ret.',
+    retired: 'ret',
     walkover: 'w/o',
     empty: 'No results yet. When a match ends, you will see it here.',
     error: 'Did not load. Pull down to try again.',
