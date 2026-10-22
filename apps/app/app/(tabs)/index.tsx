@@ -20,13 +20,14 @@ import {
   ResultsCard,
   Reveal,
   TournamentCard,
+  VoteGroupHeading,
   YoursBlock,
   YoursRow,
 } from '../../src/components/HomeCards';
 import { useCopy } from '../../src/i18n';
 import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, useTournaments, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import { openToVote, type CardResult } from '../../src/lib/feed';
-import { homeTournaments, quizCard, resultsLine, todayHeading, voteList, yoursNow } from '../../src/lib/home';
+import { homeTournaments, quizCard, resultsLine, todayHeading, topVotes, tournamentRanks, VOTE_TOP, voteList, voteRows, yoursNow } from '../../src/lib/home';
 import { useFollowedIds } from '../../src/lib/myPeople';
 import { yoursSet } from '../../src/lib/tournamentToday';
 import { useToastQueue } from '../../src/lib/toastQueue';
@@ -37,7 +38,7 @@ import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { feedbackAfterVote } from '../../src/lib/quests';
 import { quizStaleIn } from '../../src/lib/quiz';
-import type { Side } from '../../src/lib/votes';
+import { fmt, type Side } from '../../src/lib/votes';
 import { useHudActions } from '../../src/lib/hud';
 import { useTour, useTourTarget } from '../../src/lib/tour';
 import { useTabScrollTop } from '../../src/lib/scrollTop';
@@ -360,7 +361,9 @@ export default function HomeScreen() {
   const now = new Date();
   const meNow = currentMe();
   const yours = yoursSet(meNow?.player?.id ?? null, followed);
-  const votes = voteList(cards, yours);
+  const votes = voteList(cards, tournamentRanks(tournaments.data?.items ?? [], meNow?.profile.area_ids ?? []));
+  const voteTotal = voteRows(votes.groups);
+  const shownVotes = moreVotes ? votes.groups : topVotes(votes.groups);
   const resultsView = resultsLine(results, t, now);
   const mine = myMatch.match;
   const people = yoursNow(cards, yours, now, t, mine?.matchId);
@@ -450,13 +453,21 @@ export default function HomeScreen() {
             <Text style={styles.h2}>{votes.mode === 'tomorrow' ? t.home.vote.tomorrow : t.home.vote.title}</Text>
           </View>
         </Reveal>
-        {votes.top.map((m, i) => (
-          <View key={m.id} ref={i === 0 ? tourCard : undefined} collapsable={false}>
-            <VoteRow match={m} onVote={onVote} onLongPress={onCardLongPress} index={i} />
+        {shownVotes.map((g, gi) => (
+          <View key={g.key} style={styles.voteGroup}>
+            <VoteGroupHeading
+              title={g.title ?? t.home.vote.friendlies}
+              count={fmt(g.count === 1 ? t.home.vote.count.one : t.home.vote.count.many, { n: g.count })}
+              onPress={g.tournamentId ? () => router.push(`/tournament/${g.tournamentId}`) : undefined}
+            />
+            {g.rows.map((m, i) => (
+              <View key={m.id} ref={gi === 0 && i === 0 ? tourCard : undefined} collapsable={false}>
+                <VoteRow match={m} where={m.category ?? ''} onVote={onVote} onLongPress={onCardLongPress} index={i} />
+              </View>
+            ))}
           </View>
         ))}
-        {moreVotes ? votes.rest.map((m, i) => <VoteRow key={m.id} match={m} onVote={onVote} onLongPress={onCardLongPress} index={i} />) : null}
-        {votes.rest.length > 0 ? <QuietLink label={moreVotes ? t.home.vote.less : t.home.vote.more} onPress={() => setMoreVotes((v) => !v)} /> : null}
+        {voteTotal > VOTE_TOP ? <QuietLink label={moreVotes ? t.home.vote.less : t.home.vote.more} onPress={() => setMoreVotes((v) => !v)} /> : null}
         {votes.mode === 'none' && !loading ? error && empty ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
 
         {showPro ? <ProCard pro={!!proState?.pro} myMatch={mine} /> : null}
@@ -498,6 +509,7 @@ const styles = StyleSheet.create({
   h2: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, paddingTop: 10, marginTop: -6, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   h2Row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   h2Flex: { flex: 1 },
+  voteGroup: { gap: 8 },
   links: { gap: 0 },
   end: { ...text.meta, paddingHorizontal: 4 },
 });

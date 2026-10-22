@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetQuizResult, TournamentItem } from '@netprophet/db';
 import type { CardMatch, CardResult, FeedCard } from './feed';
-import { homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, todayHeading, voteList, yoursNow } from './home';
+import { groupVotes, homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, todayHeading, topVotes, tournamentRanks, voteList, voteRows, yoursNow } from './home';
 
 describe('rowTime: a day, never «χωρίς ώρα»', () => {
   const now = new Date('2026-10-22T15:00:00Z');
@@ -65,35 +65,98 @@ describe('todayHeading', () => {
   it('Athens day near midnight', () => expect(todayHeading(new Date('2026-10-22T21:30:00Z'), t)).toBe('Παρασκευή 23 Οκτ'));
 });
 
+const gp = (id: string, title = id) => ({ tournamentId: id, group: { key: id, title, logo: null, sub: null, club: null } });
+const ids = (g: { rows: CardMatch[] }[]) => g.map((x) => x.rows.map((m) => m.id));
+
 describe('voteList', () => {
-  it('today: open first (your people ahead), voted after, three on top', () => {
+  it('today: open and voted together, grouped by tournament, rows by time', () => {
     const cards: FeedCard[] = [
-      match('1', at('2026-10-22T14:00:00Z')),
-      match('2', { ...at('2026-10-22T15:00:00Z'), myVote: 'a' }),
-      match('3', at('2026-10-22T16:00:00Z')),
-      match('4', { ...at('2026-10-22T17:00:00Z'), a: side(person('friend', 'Άννα', 'Μάνου')) }),
-      match('5', { ...at('2026-10-22T13:00:00Z'), closed: true }),
+      match('1', { ...at('2026-10-22T14:00:00Z'), ...gp('A') }),
+      match('2', { ...at('2026-10-22T15:00:00Z'), myVote: 'a', ...gp('A') }),
+      match('3', { ...at('2026-10-22T13:00:00Z'), ...gp('B') }),
+      match('5', { ...at('2026-10-22T13:00:00Z'), closed: true, ...gp('A') }),
     ];
-    const l = voteList(cards, new Set(['friend']));
+    const l = voteList(cards);
     expect(l.mode).toBe('today');
-    expect(l.top.map((m) => m.id)).toEqual(['4', '1', '3']);
-    expect(l.rest.map((m) => m.id)).toEqual(['2']);
+    expect(ids(l.groups)).toEqual([['3'], ['1', '2']]);
   });
-  it('nothing to vote today: tomorrow\'s first three', () => {
+  it("nothing to vote today: tomorrow's", () => {
     const cards: FeedCard[] = [
       match('1', { ...at('2026-10-22T14:00:00Z'), myVote: 'a' }),
-      ...['a', 'b', 'c', 'd'].map((k, i) => match(`t${k}`, { ...at(`2026-10-23T1${i}:00:00Z`), later: true })),
+      ...['a', 'b'].map((k, i) => match(`t${k}`, { ...at(`2026-10-23T1${i}:00:00Z`), later: true })),
     ];
     const l = voteList(cards);
     expect(l.mode).toBe('tomorrow');
-    expect(l.top.map((m) => m.id)).toEqual(['ta', 'tb', 'tc']);
-    expect(l.rest.map((m) => m.id)).toEqual(['td']);
+    expect(ids(l.groups)).toEqual([['ta', 'tb']]);
   });
-  it('everything voted and nothing later: today\'s votes stay to show the split', () => {
+  it("everything voted and nothing later: today's votes stay to show the split", () => {
     const l = voteList([match('1', { myVote: 'b' })]);
-    expect(l).toMatchObject({ mode: 'today', top: [{ id: '1' }] });
+    expect(l).toMatchObject({ mode: 'today', groups: [{ rows: [{ id: '1' }] }] });
   });
   it('an empty feed', () => expect(voteList([]).mode).toBe('none'));
+});
+
+describe('groupVotes', () => {
+  const items = [
+    { id: 'rest', in_it: false, followed: false, area_id: null },
+    { id: 'near', in_it: false, followed: false, area_id: 'ar1' },
+    { id: 'follow', in_it: false, followed: true, area_id: null },
+    { id: 'mine', in_it: true, followed: false, area_id: null },
+  ] as unknown as TournamentItem[];
+  const m = (id: string, tid: string | undefined, iso: string, over: Partial<CardMatch> = {}) =>
+    match(id, { startsAt: iso, ...(tid ? gp(tid) : {}), ...over });
+
+  it('orders Παίζεις > Ακολουθείς > Κοντά σου > the rest, friendlies last', () => {
+    const ranks = tournamentRanks(items, ['ar1']);
+    const g = groupVotes(
+      [
+        m('f', undefined, '2026-10-22T10:00:00Z'),
+        m('r', 'rest', '2026-10-22T10:00:00Z'),
+        m('n', 'near', '2026-10-22T11:00:00Z'),
+        m('fo', 'follow', '2026-10-22T12:00:00Z'),
+        m('mi', 'mine', '2026-10-22T13:00:00Z'),
+      ],
+      ranks,
+    );
+    expect(g.map((x) => x.key)).toEqual(['mine', 'follow', 'near', 'rest', 'friendlies']);
+    expect(g[4]).toMatchObject({ tournamentId: null, title: null });
+    expect(g[0]).toMatchObject({ tournamentId: 'mine', title: 'mine', count: 1 });
+  });
+  it('a tournament outside the list comes after the listed ones, the earlier first', () => {
+    const g = groupVotes([m('x', 'X', '2026-10-22T12:00:00Z'), m('y', 'Y', '2026-10-22T11:00:00Z'), m('r', 'rest', '2026-10-22T18:00:00Z')], tournamentRanks(items));
+    expect(g.map((x) => x.key)).toEqual(['rest', 'Y', 'X']);
+  });
+  it('rows by time; an untimed one shows at the end of its day, before the next day', () => {
+    const g = groupVotes([
+      m('late', 'A', '2026-10-22T16:00:00Z'),
+      m('untimed', 'A', '2026-10-21T21:00:00Z'), // 22/10 00:00 Athens: no time
+      m('early', 'A', '2026-10-22T08:00:00Z'),
+      m('nextday', 'A', '2026-10-23T08:00:00Z'),
+    ]);
+    expect(ids(g)).toEqual([['early', 'late', 'untimed', 'nextday']]);
+  });
+  it('a match with only a day sorts by that day', () => {
+    const g = groupVotes([match('b', { ...gp('A'), day: '2026-10-24' }), m('a', 'A', '2026-10-23T08:00:00Z')]);
+    expect(ids(g)).toEqual([['a', 'b']]);
+  });
+});
+
+describe('topVotes', () => {
+  const grp = (key: string, n: number) => ({ key, tournamentId: key, title: key, count: n, rows: Array.from({ length: n }, (_, i) => match(`${key}${i}`)) });
+  it('cuts at the limit and never leaves a heading without a row', () => {
+    const out = topVotes([grp('A', 2), grp('B', 2), grp('C', 1)], 3);
+    expect(ids(out)).toEqual([['A0', 'A1'], ['B0']]);
+    expect(out[1]!.count).toBe(2);
+  });
+  it('a first group longer than the limit is cut inside', () => {
+    expect(ids(topVotes([grp('A', 5), grp('B', 1)], 3))).toEqual([['A0', 'A1', 'A2']]);
+  });
+  it('exactly the limit ends with no next heading', () => {
+    expect(ids(topVotes([grp('A', 1), grp('B', 2), grp('C', 1)], 3))).toEqual([['A0'], ['B0', 'B1']]);
+  });
+  it('counts the rows', () => {
+    expect(voteRows([grp('A', 1), grp('B', 2)])).toBe(3);
+  });
 });
 
 describe('sideLabel', () => {

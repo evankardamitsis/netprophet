@@ -317,6 +317,10 @@ export const el = {
       tomorrow: 'Τα επόμενα ματς αύριο',
       more: 'Περισσότερα ›',
       less: 'Λιγότερα ↑',
+      /** under a tournament's name in the vote list */
+      count: { one: '1 ματς', many: '{n} ματς' },
+      /** the last group: matches outside a tournament */
+      friendlies: 'Φιλικά',
       /** for screen readers, on each name */
       a11yVote: 'Ψήφος: {name}',
       /** after the result: «Το είχες ✓» */

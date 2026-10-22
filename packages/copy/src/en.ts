@@ -279,6 +279,8 @@ export const en: Copy = {
       tomorrow: 'Next matches tomorrow',
       more: 'More ›',
       less: 'Less ↑',
+      count: { one: '1 match', many: '{n} matches' },
+      friendlies: 'Friendlies',
       a11yVote: 'Vote: {name}',
       called: 'You called it ✓',
       empty: 'No matches to vote on yet.',
