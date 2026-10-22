@@ -73,6 +73,7 @@ function problemOf(t: SourceTournament): string | null {
 
 /** the card's badge: what state the automatic updates are in */
 function statusBadge(t: SourceTournament, problem: boolean): { tone: 'done' | 'attention' | 'neutral'; text: string } {
+  if (t.finished) return { tone: 'neutral', text: 'Finished' };
   if (!t.ongoing) return { tone: 'neutral', text: 'Paused' };
   if (problem) return { tone: 'attention', text: 'Needs a look' };
   if (!t.last_run) return { tone: 'neutral', text: 'Not updated yet' };
@@ -424,7 +425,7 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
 
 /* ---------- one tournament ---------- */
 
-type Busy = null | 'update' | 'save' | 'rain' | 'callOff' | 'pause' | 'delete';
+type Busy = null | 'update' | 'save' | 'rain' | 'callOff' | 'pause' | 'finish' | 'delete';
 
 function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChanged: () => Promise<void>; notify: (text: string) => void }) {
   const [editing, setEditing] = useState(false);
@@ -565,6 +566,14 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
       if (r.ok) await onChanged();
     });
 
+  const finish = () =>
+    run('finish', async () => {
+      const r = await saveSource(t.id, { finished: !t.finished });
+      if (r.ok) notify(t.finished ? 'Reopened: the schedule is back in the app' : 'Marked finished: the app shows only its draws');
+      else setNote({ tone: 'problem', title: 'Could not change it', detail: r.message });
+      if (r.ok) await onChanged();
+    });
+
   const working = busy === 'update' || busy === 'delete' || busy === 'callOff' || busy === 'save';
   const idle = busy === null;
   return (
@@ -648,6 +657,9 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
           </Ghost>
           <Ghost disabled={!idle} onClick={toggle}>
             {busy === 'pause' ? (t.ongoing ? 'Pausing…' : 'Resuming…') : t.ongoing ? 'Pause' : 'Resume'}
+          </Ghost>
+          <Ghost disabled={!idle} onClick={finish}>
+            {busy === 'finish' ? 'Saving…' : t.finished ? 'Reopen' : 'Mark finished'}
           </Ghost>
           <Ghost disabled={!idle} onClick={() => setDeleting(true)}>
             Delete…

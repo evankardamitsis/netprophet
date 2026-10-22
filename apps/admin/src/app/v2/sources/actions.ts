@@ -44,6 +44,8 @@ export interface SourcePatch {
   source_url?: string;
   draw_url?: string;
   ongoing?: boolean;
+  /** the tournament is over: the app shows only its draws */
+  finished?: boolean;
   season_start_year?: number | null;
   /** yyyy-mm-dd, or '' to clear */
   entry_deadline?: string;
