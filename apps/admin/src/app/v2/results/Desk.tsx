@@ -23,8 +23,11 @@ export interface DeskItem {
   /** put off (rain or a moved day), and by whom: the 15:00 rule ('auto') or staff */
   postponed?: boolean;
   postponed_by?: 'auto' | 'staff' | null;
-  /** a sheet match with no result two days on: a person decides (founder, 14 Oct) */
+  /** a sheet match with no result two days on, still on the sheet: a person decides (founder, 14 Oct) */
   overdue?: boolean;
+  /** the sheet stopped listing it (two reads in a row): no result will come from it (22 Oct) */
+  off_sheet?: boolean;
+  off_sheet_since?: string | null;
 }
 
 type Notice = { tone: Tone; title: string; detail?: string };
@@ -49,16 +52,19 @@ const when = (iso: string) => {
 const sideName = (item: DeskItem, side: Side) =>
   (item.sides.find((s) => s.side === side)?.players ?? []).map((p) => `${p.first_name} ${p.surname}`).join(' / ') || 'Unknown';
 
-type Tab = 'you' | 'sheets' | 'upcoming' | 'done';
+type Tab = 'you' | 'sheets' | 'gone' | 'upcoming' | 'done';
 
 export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const { toast, notify } = useToast();
 
   const waiting = items.filter((i) => i.bucket_name === 'to_score');
+  // a match the sheet no longer lists waits for nobody: it is shown apart, never as overdue (founder, 22 Oct)
+  const offSheet = waiting.filter((i) => i.off_sheet);
+  const stillListed = waiting.filter((i) => !i.off_sheet);
   // sheet matches still empty two days on come to you; staff-postponed ones wait for the sheet's new day
-  const fromSheets = waiting.filter((i) => i.tournament && !i.overdue && i.postponed_by !== 'staff');
-  const fromYou = waiting.filter((i) => !i.tournament || i.overdue);
+  const fromSheets = stillListed.filter((i) => i.tournament && !i.overdue && i.postponed_by !== 'staff');
+  const fromYou = stillListed.filter((i) => !i.tournament || i.overdue);
   const upcoming = items.filter((i) => i.bucket_name === 'upcoming');
   const done = items.filter((i) => i.bucket_name === 'done');
   const [tab, setTab] = useState<Tab>(fromYou.length > 0 || fromSheets.length === 0 ? 'you' : 'sheets');
@@ -66,7 +72,7 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
   const [q, setQ] = useState('');
   // only the matches players added themselves, outside any tournament (founder, 19 Oct: find and remove them)
   const [playersOnly, setPlayersOnly] = useState(false);
-  const inTab = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : tab === 'upcoming' ? upcoming : done;
+  const inTab = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : tab === 'gone' ? offSheet : tab === 'upcoming' ? upcoming : done;
   const all = playersOnly ? inTab.filter((i) => !i.tournament) : inTab;
   const needle = fold(q);
   const list = needle ? all.filter((i) => fold(`${sideName(i, 1)} ${sideName(i, 2)} ${i.tournament ?? ''} ${i.venue ?? ''}`).includes(needle)) : all;
@@ -92,7 +98,17 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
       />
       {notice ? <Banner {...notice} /> : null}
       <Section
-        title={tab === 'you' ? 'Need a result from you' : tab === 'sheets' ? 'From tournament sheets' : tab === 'upcoming' ? 'Coming up' : 'Finished'}
+        title={
+          tab === 'you'
+            ? 'Need a result from you'
+            : tab === 'sheets'
+              ? 'From tournament sheets'
+              : tab === 'gone'
+                ? 'No longer on the sheet'
+                : tab === 'upcoming'
+                  ? 'Coming up'
+                  : 'Finished'
+        }
         aside={
           <Tabs
             value={tab}
@@ -103,6 +119,7 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
             items={[
               { value: 'you', label: 'Need you', count: fromYou.length },
               { value: 'sheets', label: 'From sheets', count: fromSheets.length },
+              ...(offSheet.length > 0 ? [{ value: 'gone' as const, label: 'Off the sheet', count: offSheet.length }] : []),
               { value: 'upcoming', label: 'Coming up', count: upcoming.length },
               { value: 'done', label: 'Finished', count: done.length },
             ]}
@@ -114,7 +131,9 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
             ? 'Friendly matches, and sheet matches that still have no result 2 days on. Pick who won, then the score, or say what happened.'
             : tab === 'sheets'
               ? 'These fill in by themselves when the organiser’s sheet has the score. Enter one only if the sheet never will.'
-              : tab === 'upcoming'
+              : tab === 'gone'
+                ? 'The organiser took these off the sheet, so no result will come from it. They wait as put off for 3 weeks, then cancel by themselves. If you know it did not happen, remove it now; if you know the score, enter it.'
+                : tab === 'upcoming'
                 ? 'Matches in the next 30 days. Remove one that will not happen or should not be in the app.'
                 : 'Results from the last 30 days. Count the votes now if a result came in and votes are still open. An admin can remove a match; its points come back off.'}
         </span>
@@ -241,6 +260,7 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
         </span>
         <span className="v2-row" style={{ gap: 6 }}>
           {item.overdue ? <Badge tone="attention">No result for 2 days</Badge> : null}
+          {item.off_sheet ? <Badge tone="ink">{item.off_sheet_since ? `Off the sheet since ${when(item.off_sheet_since)}` : 'Off the sheet'}</Badge> : null}
           {item.postponed_by === 'auto' ? <Badge tone="ink">Rained off by the 15:00 rule</Badge> : null}
           <Badge>{plural(item.votes, 'vote')}</Badge>
         </span>

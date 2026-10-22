@@ -151,10 +151,39 @@ export type ReviewDecision =
   | { winner_side: 1 | 2 }
   | { dismiss: true };
 
-export async function resolveReview(id: string, decision: ReviewDecision): Promise<ActionResult> {
+/**
+ * Read the tournament's sheet again before a decision is saved (founder, 22 Oct: decisions must follow the latest
+ * sheet). The read closes a card the sheet no longer supports; then nothing is saved from it. A sheet that cannot be
+ * read does not block the decision.
+ */
+async function recheckCard(rpc: Rpc, id: string, tournamentId: string): Promise<{ closed: boolean; readError: string | null }> {
   try {
-    await call(await staffRpc(), 'admin_resolve_ingest_review', { p_id: id, p: decision });
-    return { ok: true, message: 'Done' };
+    const t = ((await call(rpc, 'admin_tournaments', {})) as SourceTournament[]).find((x) => x.id === tournamentId);
+    if (!t?.source_url) return { closed: false, readError: null };
+    const rows = await rowsForTournament(t);
+    await call(rpc, 'admin_ingest_run', { p_tournament_id: tournamentId, p_rows: rows, p_dry: false });
+    const open = (await call(rpc, 'admin_ingest_reviews', { p_tournament_id: tournamentId })) as ReviewItem[];
+    return { closed: !open.some((r) => r.id === id), readError: null };
+  } catch (e) {
+    return { closed: false, readError: e instanceof Error ? e.message : 'the sheet could not be read' };
+  }
+}
+
+const CARD_CLOSED_BY_SHEET =
+  'The sheet changed since this card was made. We read it again: this row is gone or already sorted, so the card is closed and nothing was saved from it.';
+
+export async function resolveReview(id: string, decision: ReviewDecision, tournamentId?: string): Promise<ActionResult<{ closedBySheet?: boolean }>> {
+  try {
+    const rpc = await staffRpc();
+    let note = 'Done';
+    // skipping needs no sheet; an answer is checked against the latest one first
+    if (tournamentId && !('dismiss' in decision)) {
+      const check = await recheckCard(rpc, id, tournamentId);
+      if (check.closed) return { ok: false, message: CARD_CLOSED_BY_SHEET, data: { closedBySheet: true } };
+      if (check.readError) note = `Done. The sheet could not be read to double-check (${check.readError}).`;
+    }
+    await call(rpc, 'admin_resolve_ingest_review', { p_id: id, p: decision });
+    return { ok: true, message: note };
   } catch (e) {
     if (e instanceof Error && e.message.includes('same_player_twice')) {
       return { ok: false, message: 'The same player is picked twice on this match. Give each person their own answer.' };
