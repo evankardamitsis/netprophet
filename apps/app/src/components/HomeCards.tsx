@@ -278,7 +278,7 @@ export function QuietLink({ label, onPress }: { label: string; onPress: () => vo
   );
 }
 
-/** «+ Ματς»: log a match you played; an ink pill (blue is the results' action) */
+/** «+ Ματς»: log a match you played; a lime pill (blue is the results' action) */
 export function AddMatchPill() {
   const t = useCopy();
   const press = usePress();
@@ -337,13 +337,13 @@ const styles = StyleSheet.create({
   tName: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   tNameText: { ...text.heading, fontSize: 22, lineHeight: 24, flexShrink: 1 },
   tag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: colors.sand },
-  tagInk: { backgroundColor: colors.ink },
+  tagInk: { backgroundColor: colors.lime },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: colors.inkSoft },
-  tagTextInk: { color: colors.paper },
+  tagTextInk: { color: colors.ink },
   tLive: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tLiveText: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.ink },
   quietHit: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   quiet: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  add: { flexShrink: 0, minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
+  add: { flexShrink: 0, minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
+  addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
 });

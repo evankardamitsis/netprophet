@@ -375,7 +375,10 @@ export default function HomeScreen() {
     if (!mine) return;
     const card = cards.find((c) => c.kind === 'match' && c.id === mine.matchId);
     const tid = (card?.kind === 'match' ? card.tournamentId : undefined) ?? tournaments.data?.mine?.find((m) => m.match_id === mine.matchId)?.tournament_id;
-    if (tid) router.push(`/tournament/${tid}`);
+    const me = meNow?.player?.id;
+    // your own match opens your run in that tournament, from this match (not the day's schedule)
+    if (tid && me) router.push({ pathname: '/tournament-player', params: { tournament: tid, player: me, match: mine.matchId } });
+    else if (tid) router.push(`/tournament/${tid}`);
     else router.push(proState?.pro ? `/scout/${mine.matchId}` : '/pro?from=scout');
   };
   let n = 0;
@@ -421,7 +424,11 @@ export default function HomeScreen() {
                 />
               ))}
               {people.map((r) => (
-                <YoursRow key={r.matchId} row={r} onPress={r.tournamentId ? () => router.push(`/tournament/${r.tournamentId}`) : undefined} />
+                <YoursRow key={r.matchId} row={r} onPress={
+                    r.tournamentId
+                      ? () => router.push(r.playerId ? { pathname: '/tournament-player', params: { tournament: r.tournamentId!, player: r.playerId, match: r.matchId } } : `/tournament/${r.tournamentId}`)
+                      : undefined
+                  } />
               ))}
             </YoursBlock>
           </Reveal>

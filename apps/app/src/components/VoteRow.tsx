@@ -173,9 +173,9 @@ function NameButton({
 
   const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: jpop.value }] }));
 
-  const bg = won === true ? colors.lime : won === false ? colors.white : picked ? colors.ink : other ? colors.white : colors.paper;
-  const border = won === true ? colors.lime : picked ? colors.ink : colors.mist;
-  const fg = won === false || (other && won === null) ? colors.slate : picked && won === null ? colors.paper : colors.ink;
+  const bg = won === true ? colors.lime : won === false ? colors.white : picked ? colors.lime : other ? colors.white : colors.paper;
+  const border = won === true || picked ? colors.lime : colors.mist;
+  const fg = won === false || (other && won === null) ? colors.slate : colors.ink;
   const face: CSSTransitionProperties & Pick<ViewStyle, 'backgroundColor' | 'borderColor'> = {
     backgroundColor: bg,
     borderColor: border,
