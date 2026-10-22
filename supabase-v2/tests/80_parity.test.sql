@@ -3,7 +3,7 @@
 -- The fixtures are the language-neutral JSON vectors in packages/core/test-vectors/ (the same files
 -- packages/core/src/vectors.test.ts runs). They are read from disk at run time, never copied:
 --   points.json      pointsForVote, isUpset, quizCompletionPoints, quizDayKey
---   streak.json      streakSequence  (cast, outcome, buy_freeze)
+--   streak.json      streakSequence  (cast, outcome, buy_freeze), streakMoment
 --   votes.json       validateVote    (also run end to end through api.cast_vote)
 --   resolution.json  resolveBatch
 -- quests*.json run in 58_quests.test.sql; unlocks.json covers rules the database does not implement yet.
@@ -122,6 +122,10 @@ declare
   c record; step jsonb; k int; u uuid; m uuid; vote uuid; v_events jsonb; v_res jsonb; v_fid uuid;
 begin
   for c in select * from tests.parity_cases('streak') loop
+    if c.fn = 'streakMoment' then
+      return next is(coalesce(to_jsonb(core.streak_moment(c.input)), 'null'::jsonb), c.expected, 'streak moment: ' || c.name);
+      continue;
+    end if;
     if c.fn <> 'streakSequence' then
       return next fail('streak: no SQL mapping for fn ' || c.fn || ' (' || c.name || ')');
       continue;

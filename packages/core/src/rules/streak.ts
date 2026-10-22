@@ -72,6 +72,17 @@ function isMilestone(n: number): n is 3 | 5 | 7 | 10 {
   return (MILESTONES as readonly number[]).includes(n);
 }
 
+/**
+ * The σερί moment (full-screen celebration) a resolved vote earns, or null. A milestone celebrates only when it is a
+ * new personal record, which is the first time the user ever reaches it (ΠΡ is the highest σερί ever reached), or
+ * when it actually gives something: the first free freeze, retried at a later 3 while both slots were full.
+ * Coming back to 3, 5, 7 or 10 after a reset is not a moment (founder, 22 Oct 2026).
+ */
+export function streakMoment(event: StreakEvent): 3 | 5 | 7 | 10 | null {
+  if (event.kind !== 'advanced' || event.milestone === null) return null;
+  return event.newBest || event.freezeGranted ? event.milestone : null;
+}
+
 /** Apply one resolved match vote with outcome correct or wrong. Void/cancelled matches never reach here. */
 export function applyOutcome(state: StreakState, correct: boolean, at: Instant): OutcomeResult {
   const chainBefore = state.chain;

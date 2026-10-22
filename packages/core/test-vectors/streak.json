@@ -1,7 +1,7 @@
 {
   "suite": "streak",
   "version": 1,
-  "notes": "fn streakSequence. Steps: cast (a vote was cast), outcome (a resolved match vote), buy_freeze. A step with repeat N is expanded N times. Events are the result of each step.",
+  "notes": "fn streakSequence. Steps: cast (a vote was cast), outcome (a resolved match vote), buy_freeze. A step with repeat N is expanded N times. Events are the result of each step. fn streakMoment: the σερί moment a resolved vote's event earns (a milestone that is a new personal record, or that gave the first free freeze), else null.",
   "groups": [
     {
       "fn": "streakSequence",
@@ -993,6 +993,104 @@
               "brokeAt": null
             }
           }
+        }
+      ]
+    },
+    {
+      "fn": "streakMoment",
+      "cases": [
+        {
+          "name": "first time at 3: a new record",
+          "input": {
+            "kind": "advanced",
+            "milestone": 3,
+            "newBest": true,
+            "freezeGranted": false
+          },
+          "expected": 3
+        },
+        {
+          "name": "first time at 10",
+          "input": {
+            "kind": "advanced",
+            "milestone": 10,
+            "newBest": true,
+            "freezeGranted": false
+          },
+          "expected": 10
+        },
+        {
+          "name": "back at 3 after a reset (best 11): no moment",
+          "input": {
+            "kind": "advanced",
+            "milestone": 3,
+            "newBest": false,
+            "freezeGranted": false
+          },
+          "expected": null
+        },
+        {
+          "name": "back at 5 after a reset: no moment",
+          "input": {
+            "kind": "advanced",
+            "milestone": 5,
+            "newBest": false,
+            "freezeGranted": false
+          },
+          "expected": null
+        },
+        {
+          "name": "back at 10, best 11: no moment",
+          "input": {
+            "kind": "advanced",
+            "milestone": 10,
+            "newBest": false,
+            "freezeGranted": false
+          },
+          "expected": null
+        },
+        {
+          "name": "back at 3 and the first free freeze comes now (slots were full before): a moment",
+          "input": {
+            "kind": "advanced",
+            "milestone": 3,
+            "newBest": false,
+            "freezeGranted": true
+          },
+          "expected": 3
+        },
+        {
+          "name": "a new record off the milestones (11): no milestone moment",
+          "input": {
+            "kind": "advanced",
+            "milestone": null,
+            "newBest": true,
+            "freezeGranted": false
+          },
+          "expected": null
+        },
+        {
+          "name": "a freeze saved the σερί",
+          "input": {
+            "kind": "frozen",
+            "freezeUsed": "free"
+          },
+          "expected": null
+        },
+        {
+          "name": "the σερί broke",
+          "input": {
+            "kind": "broken",
+            "lostStreak": 4
+          },
+          "expected": null
+        },
+        {
+          "name": "a wrong call at 0",
+          "input": {
+            "kind": "idle"
+          },
+          "expected": null
         }
       ]
     }

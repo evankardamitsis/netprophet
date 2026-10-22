@@ -1,8 +1,9 @@
 -- Founder, 22 Oct: «the σερί is strange». A sheet run queues its results in the sheet's row order, and the worker
 -- resolved them in that order, so inside one pass the σερί went by the sheet, not by the courts (his 20:30 win
--- counted before his 20:00 loss). The worker now resolves one pass in the order the matches started.
+-- counted before his 20:00 loss). The worker now resolves one pass in the order the matches started. A σερί
+-- milestone is a moment only the first time it is reached (a new record), not on every return after a reset.
 begin;
-select plan(8);
+select plan(11);
 
 select tests.create_user('so-u@test.local') as u \gset
 select tests.mk_match_fresh(timestamptz '2026-10-21 17:00:00+00') as m2000 \gset
@@ -47,6 +48,23 @@ select tests.login(:'u'::uuid);
 select is((select string_agg(i -> 'payload' ->> 'streak', ',' order by n)
              from jsonb_array_elements(api.get_feed(30) -> 'items') with ordinality x(i, n) where i ->> 'kind' = 'result'),
           '0,1,2', 'the result cards come as σερί 0, 1, 2');
+
+-- σερί moments only the first time (founder, 22 Oct): 3 once, then a reset, back to 3 (no moment), on to 5 (new)
+select tests.logout();
+select tests.create_user('so-m@test.local') as w \gset
+select tests.play(:'w'::uuid, c) is not null as p from unnest(array[true, true, true]) c;     -- σερί 3, first freeze
+select tests.play(:'w'::uuid, c) is not null as p from unnest(array[false, false]) c;        -- frozen, then broken
+select tests.play(:'w'::uuid, c) is not null as p from unnest(array[true, true, true]) c;     -- back at 3
+select is((select string_agg(payload ->> 'streak', ',' order by created_at) from core.feed_inbox
+            where user_id = :'w'::uuid and kind = 'celebration' and payload ->> 'type' = 'streak_milestone'),
+          '3', 'back at σερί 3 after a reset: no second «Τρία στη σειρά»');
+select tests.play(:'w'::uuid, c) is not null as p from unnest(array[true, true]) c;           -- 5, a new record
+select is((select string_agg(payload ->> 'streak', ',' order by created_at) from core.feed_inbox
+            where user_id = :'w'::uuid and kind = 'celebration' and payload ->> 'type' = 'streak_milestone'),
+          '3,5', 'σερί 5 for the first time is a moment');
+select is((select payload #>> '{reward,gear}' from core.feed_inbox
+            where user_id = :'w'::uuid and kind = 'celebration' and payload ->> 'streak' = '5'),
+          'gear_headband', 'and it still brings its reward');
 
 select * from finish();
 rollback;

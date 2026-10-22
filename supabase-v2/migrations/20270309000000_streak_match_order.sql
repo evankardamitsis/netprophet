@@ -12,10 +12,28 @@
 --      clock_timestamp() as resolved_at, so resolution time now follows match time inside one pass.
 --   2. core.resolve_votes orders a batch by resolved_at, then match starts_at, then vote created_at, then vote id:
 --      the same order as core's compareResolutions (shared vector in packages/core/test-vectors/resolution.json,
---      pgTAP 80 and 143). Body otherwise as in 20261102000000_m1_result_cards.sql.
+--      pgTAP 80 and 143). It also queues a σερί moment only as core's streakMoment says (3 below). Body otherwise as
+--      in 20261102000000_m1_result_cards.sql.
+--   3. core.streak_moment(event): a milestone (3, 5, 7, 10) is a full-screen moment only when it is a new personal
+--      record, which is the first time the user ever reaches it, or when it gives the first free freeze (retried at
+--      a later 3 while both slots were full). Coming back to 3 or 5 after a reset is not a moment (founder, 22 Oct).
+--      The rewards (freeze, Frame Επτά, Frame Δέκα, the lime headband) were already one-off; they ride on the same
+--      first moment. Shared vectors: packages/core/test-vectors/streak.json (streakMoment), pgTAP 80 and 143.
 --
--- No backfill. Replaying the past in match order would change which freezes were spent and which +5 chain bonuses
--- were paid, and the README's rule 15 keeps a σερί the player has seen. The order holds from the next pass on.
+-- No backfill (founder, 22 Oct). Replaying the past in match order would change which freezes were spent and which
+-- +5 chain bonuses were paid, and the README's rule 15 keeps a σερί the player has seen. The order holds from the
+-- next pass on.
+
+-- 3 ---------------------------------------------------------------------------------------------------------
+create or replace function core.streak_moment(p_event jsonb)
+returns int language sql immutable set search_path = ''
+as $$
+  select case
+    when p_event ->> 'kind' = 'advanced' and p_event ->> 'milestone' is not null
+         and (coalesce((p_event ->> 'newBest')::boolean, false) or coalesce((p_event ->> 'freezeGranted')::boolean, false))
+      then (p_event ->> 'milestone')::int
+  end
+$$;
 
 -- 2 ---------------------------------------------------------------------------------------------------------
 create or replace function core.resolve_votes(p_items jsonb)
@@ -101,10 +119,11 @@ begin
                                          it.resolved_at);
     end loop;
 
-    if v_ev ->> 'kind' = 'advanced' and v_ev ->> 'milestone' is not null then
+    -- a milestone is a moment only the first time (a new record) or when it gives the first free freeze
+    if core.streak_moment(v_ev) is not null then
       insert into core.feed_inbox (user_id, kind, ref, payload)
       values (v.user_id, 'celebration', 'streak:' || v.id,
-              jsonb_build_object('type', 'streak_milestone', 'streak', (v_ev ->> 'milestone')::int, 'match_id', m.id))
+              jsonb_build_object('type', 'streak_milestone', 'streak', core.streak_moment(v_ev), 'match_id', m.id))
       on conflict do nothing;
     end if;
 
