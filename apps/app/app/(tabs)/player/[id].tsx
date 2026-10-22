@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import { PlayerTraits } from '../../../src/components/PlayerTraits';
 import { FitText } from '../../../src/components/FitText';
+import { LastMatchRow } from '../../../src/components/LastMatchRow';
 import { FormDots } from '../../../src/components/PlayerListRow';
 import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
@@ -19,7 +20,7 @@ import { colors, fonts } from '../../../src/theme';
 /**
  * A player's profile (prototype V2, the `over` view): dark hero card with level, follow, name,
  * area · direction, this year's record and the last five; then the next match and the last matches.
- * then «Πώς παίζει» (traits, voted by people who played them). The header and tab bar stay; no tab is highlighted.
+ * then «Πώς παίζει» (traits, anyone signed in votes). The header and tab bar stay; no tab is highlighted.
  * Head-to-head and gifts come later.
  */
 const JPOP_MS = 400;
@@ -165,14 +166,7 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
         {p.last.length === 0 ? (
           <Text style={styles.lastText}>{t.players.noMatches}</Text>
         ) : (
-          p.last.map((m, i) => (
-            <View key={i} style={styles.lastRow}>
-              <Text style={styles.lastText}>
-                <Text style={styles.bold}>{m.result}</Text> {m.against}
-              </Text>
-              <Text style={styles.when}>{m.when}</Text>
-            </View>
-          ))
+          p.last.map((m, i) => <LastMatchRow key={m.key} m={m} first={i === 0} />)
         )}
       </Animated.View>
 
@@ -269,9 +263,6 @@ const styles = StyleSheet.create({
   next: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.lime, gap: 4 },
   cardHead: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.ink },
   nextText: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 34, paddingBottom: 6, marginBottom: -6, color: colors.ink },
-  last: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, gap: 8 },
-  lastRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  last: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, gap: 4 },
   lastText: { flexShrink: 1, fontFamily: fonts.body, fontSize: 15, lineHeight: 20, color: colors.ink },
-  bold: { fontFamily: fonts.bodyBold },
-  when: { fontFamily: fonts.body, fontSize: 15, lineHeight: 20, color: colors.inkSoft },
 });

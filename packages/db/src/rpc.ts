@@ -535,6 +535,10 @@ export interface PlayerMatchLine {
   level?: string | null;
   /** MS, WS, MD, WD, XD */
   discipline?: string | null;
+  /** the tournament's name; null for a friendly */
+  tournament?: string | null;
+  /** «QF», «SF», «F» or the organiser's words */
+  round?: string | null;
   partner: PlayerRef[];
   opponents: PlayerRef[];
 }
@@ -547,7 +551,15 @@ export interface PlayerProfile extends PlayerCard {
   /** «Φέτος»: this Athens year */
   record_year: { w: number; l: number };
   /** «Τελευταία ματς», newest first, at most 5 */
-  last_matches: (PlayerMatchLine & { won: boolean; score: string | null; retired: boolean; walkover: boolean })[];
+  last_matches: (PlayerMatchLine & {
+    won: boolean;
+    /** sets only, winner first («2-1») */
+    score: string | null;
+    /** the games, winner first; empty when only the sets are known */
+    sets?: SetScore[];
+    retired: boolean;
+    walkover: boolean;
+  })[];
   next_match: PlayerMatchLine | null;
 }
 

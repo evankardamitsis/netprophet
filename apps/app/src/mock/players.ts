@@ -68,16 +68,22 @@ export function mockPlayer(id: string, now: Date): PlayerProfile | null {
     // every other sample player has an account, so «Δεν είμαι εγώ;» shows in the preview
     claimed: true,
     record_year: { w: s.record[0], l: s.record[1] },
+    // newest first, as the database sends them: a three-setter in a tournament, a doubles, a sets-only friendly
     last_matches: [1, 2, 4].map((ago, i) => ({
       match_id: `${id}-m${i}`,
       starts_at: day(ago),
-      format: 'singles',
+      format: i === 1 ? 'doubles' : 'singles',
       won: s.form[s.form.length - 1 - i] === 'Ν',
-      score: i === 1 ? '2-1' : '2-0',
+      score: i === 0 ? '2-1' : '2-0',
+      sets: i === 0 ? [{ w: 6, l: 4 }, { w: 3, l: 6 }, { w: 10, l: 8, stb: true }] : i === 1 ? [{ w: 7, l: 6, tb: [7, 4] as [number, number] }, { w: 6, l: 3 }] : [],
+      tournament: i === 2 ? null : 'Open Γλυφάδας',
+      round: i === 0 ? 'quarter' : null,
+      level: i === 2 ? null : 'Μ 40+',
+      discipline: i === 1 ? 'MD' : null,
       retired: false,
       walkover: false,
-      partner: [],
-      opponents: [ref(others[i % others.length]!.id)],
+      partner: i === 1 ? [ref(others[3 % others.length]!.id)] : [],
+      opponents: i === 1 ? [ref(others[1]!.id), ref(others[2]!.id)] : [ref(others[i % others.length]!.id)],
     })),
     next_match: {
       match_id: `${id}-next`,

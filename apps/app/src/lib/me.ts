@@ -128,7 +128,8 @@ export function toMeView(
       win: x.won,
       format: x.format === 'singles' ? 'singles' : 'doubles',
       startsAt: x.starts_at,
-      score: x.walkover ? t.results.walkover : x.score ?? '',
+      // from my side («4-6, 3-6» for a loss), as the profile shows it
+      score: profile?.last[i]?.score ?? (x.walkover ? t.results.walkover : x.score ?? ''),
       when: profile?.last[i]?.when ?? '',
       // two lines, never cut (founder, 20 Oct: the opponents' names were truncated): who with, then who against
       with: x.partner.length > 0 ? fmt(t.me.matches.with, { name: x.partner.map(fullName).join(' & ') }) : null,

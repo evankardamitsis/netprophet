@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatSets, formatWinnerSets, parseTennisScore, toWinnerFirst } from './sports/tennisScore';
+import { formatSets, formatSideSets, formatWinnerSets, parseTennisScore, toWinnerFirst } from './sports/tennisScore';
 
 const ok = (raw: string) => {
   const r = parseTennisScore(raw);
@@ -95,5 +95,25 @@ describe('formatWinnerSets', () => {
   it('marks a retirement and a walkover', () => {
     expect(formatWinnerSets([{ w: 6, l: 3 }, { w: 2, l: 1 }], { retired: true }, words)).toBe('6-3, 2-1 ret.');
     expect(formatWinnerSets([], { walkover: true }, words)).toBe('w/o');
+  });
+});
+
+describe('formatSideSets: a result from one player\'s side', () => {
+  const words = { retired: 'απ.', walkover: 'w/o' };
+  const sets = [{ w: 6, l: 4 }, { w: 6, l: 7, tb: [5, 7] as [number, number] }, { w: 10, l: 8, stb: true }];
+  it('the winner reads it as stored', () => {
+    expect(formatSideSets(sets, true, '2-1', {}, words)).toBe('6-4, 6-7(5), 10-8');
+  });
+  it('the loser reads every set turned round, the bracket still the set loser\'s points', () => {
+    expect(formatSideSets(sets, false, '2-1', {}, words)).toBe('4-6, 7-6(5), 8-10');
+  });
+  it('sets only: the summary turns round for the loser', () => {
+    expect(formatSideSets([], true, '2-1', {}, words)).toBe('2-1');
+    expect(formatSideSets([], false, '2-1', {}, words)).toBe('1-2');
+    expect(formatSideSets([], false, '2-0', { retired: true }, words)).toBe('0-2 απ.');
+  });
+  it('a walkover and no score', () => {
+    expect(formatSideSets(sets, false, '2-1', { walkover: true }, words)).toBe('w/o');
+    expect(formatSideSets([], false, null, {}, words)).toBe('');
   });
 });
