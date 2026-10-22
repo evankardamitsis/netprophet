@@ -63,40 +63,109 @@ export function todayHeading(now: Date, t: Copy): string {
 /** how many rows show before «Περισσότερα ›» */
 export const VOTE_TOP = 3;
 
+/** the key of the last group, matches outside a tournament («Φιλικά») */
+export const FRIENDLIES = 'friendlies';
+
+export interface VoteGroup {
+  /** the tournament id, or FRIENDLIES */
+  key: string;
+  /** the tournament to open on a tap; null for «Φιλικά» */
+  tournamentId: string | null;
+  /** the tournament's name; null for «Φιλικά» (the screen says it) */
+  title: string | null;
+  rows: CardMatch[];
+  /** all the matches of the tournament in the list (`rows` may be cut short while folded) */
+  count: number;
+}
+
 export interface VoteList {
   /** today: today's matches; tomorrow: nothing left today, the next ones; none: nothing at all */
   mode: 'today' | 'tomorrow' | 'none';
-  top: CardMatch[];
-  rest: CardMatch[];
+  /** the rows by tournament, in the order of «Τουρνουά σήμερα» */
+  groups: VoteGroup[];
 }
 
-const hasAny = (m: CardMatch, ids: ReadonlySet<string>) => [...m.a.people, ...m.b.people].some((p) => p.id !== undefined && ids.has(p.id));
+const TAG_ORDER: TournamentTag[] = ['playing', 'following', 'near', null];
+
+function tagOf(i: TournamentItem, areas: ReadonlySet<string>): TournamentTag {
+  return i.in_it ? 'playing' : i.followed ? 'following' : i.area_id && areas.has(i.area_id) ? 'near' : null;
+}
+
+/** each tournament's place in «Παίζεις › Ακολουθείς › Κοντά σου › the rest» (0 first), the order the home lists them in */
+export function tournamentRanks(items: readonly TournamentItem[], areaIds: readonly string[] = []): Map<string, number> {
+  const areas = new Set(areaIds);
+  return new Map(items.map((i) => [i.id, TAG_ORDER.indexOf(tagOf(i, areas))]));
+}
+
+/** the order inside a group: by day, the timed ones by time, the ones with no time at the end of their day */
+function rowOrder(m: CardMatch): [string, number, number] {
+  const day = m.day ?? (m.startsAt ? dayKey(m.startsAt) : '\uffff');
+  return hasTime(m.startsAt) ? [day, 0, Date.parse(m.startsAt!)] : [day, 1, 0];
+}
+
+function byRowOrder(x: CardMatch, y: CardMatch): number {
+  const [dx, ux, tx] = rowOrder(x);
+  const [dy, uy, ty] = rowOrder(y);
+  return dx.localeCompare(dy) || ux - uy || tx - ty;
+}
 
 /**
- * The matches to vote, across tournaments. Read from the cards as the feed loaded them (a vote made here does not move
- * a row: the list stays put while you go down it). Today's matches still taking votes come first in the feed's order
- * (splitToday: by tournament, the soonest first), the ones with your people ahead of the rest, then those you already
- * voted. Nothing left to vote today: tomorrow's (the later days), the first three on top.
+ * The matches grouped by tournament (founder, 22 Oct): tournaments in the order of «Τουρνουά σήμερα» (`ranks`; one not
+ * in it after those, the earlier first), the rows of each by time, and the matches outside a tournament last, in
+ * «Φιλικά».
  */
-export function voteList(cards: readonly FeedCard[], yours: ReadonlySet<string> = new Set()): VoteList {
+export function groupVotes(matches: readonly CardMatch[], ranks: ReadonlyMap<string, number> = new Map()): VoteGroup[] {
+  const by = new Map<string, VoteGroup>();
+  for (const m of matches) {
+    const key = m.tournamentId ?? FRIENDLIES;
+    const g = by.get(key) ?? { key, tournamentId: m.tournamentId ?? null, title: m.group?.title ?? null, rows: [], count: 0 };
+    if (g.title === null && m.group) g.title = m.group.title;
+    g.rows.push(m);
+    by.set(key, g);
+  }
+  const groups = [...by.values()].map((g) => ({ ...g, rows: [...g.rows].sort(byRowOrder), count: g.rows.length }));
+  const rank = (g: VoteGroup) => (g.key === FRIENDLIES ? Infinity : ranks.get(g.key) ?? TAG_ORDER.length);
+  return groups.sort((x, y) => rank(x) - rank(y) || byRowOrder(x.rows[0]!, y.rows[0]!) || x.key.localeCompare(y.key));
+}
+
+/** how many rows the groups hold */
+export const voteRows = (groups: readonly VoteGroup[]) => groups.reduce((n, g) => n + g.rows.length, 0);
+
+/**
+ * The first `limit` rows you can still vote on (not voted, not closed), in group and time order; a group shown keeps its
+ * heading and only those rows (never a heading alone). The voted ones wait for «Περισσότερα ›», in their time slot. When
+ * every row is voted, the first `limit` rows show.
+ */
+export function topVotes(groups: readonly VoteGroup[], limit: number = VOTE_TOP): VoteGroup[] {
+  const castable = (m: CardMatch) => m.myVote === undefined && !m.closed;
+  const any = groups.some((g) => g.rows.some(castable));
+  const out: VoteGroup[] = [];
+  let left = limit;
+  for (const g of groups) {
+    if (left <= 0) break;
+    const rows = (any ? g.rows.filter(castable) : g.rows).slice(0, left);
+    if (rows.length === 0) continue;
+    out.push({ ...g, rows });
+    left -= rows.length;
+  }
+  return out;
+}
+
+/**
+ * The matches to vote, across tournaments, by tournament. Read from the cards as the feed loaded them (a vote made here
+ * does not move a row: the list stays put while you go down it). Today's matches still taking votes (the ones you
+ * already voted sit beside them); nothing left to vote today: tomorrow's (the later days); all voted: today's, to show
+ * the split.
+ */
+export function voteList(cards: readonly FeedCard[], ranks: ReadonlyMap<string, number> = new Map()): VoteList {
   const split = splitToday([...cards]);
   const matches = (list: FeedCard[]) => list.filter((c): c is CardMatch => c.kind === 'match' && !c.closed);
-  const rank = (list: CardMatch[]) => [...list.filter((m) => hasAny(m, yours)), ...list.filter((m) => !hasAny(m, yours))];
   const today = matches(split.today);
-  const open = rank(today.filter((m) => m.myVote === undefined));
-  const voted = today.filter((m) => m.myVote !== undefined);
-  if (open.length > 0) {
-    const all = [...open, ...voted];
-    return { mode: 'today', top: all.slice(0, VOTE_TOP), rest: all.slice(VOTE_TOP) };
-  }
+  if (today.some((m) => m.myVote === undefined)) return { mode: 'today', groups: groupVotes(today, ranks) };
   const later = matches(split.later);
-  const laterOpen = rank(later.filter((m) => m.myVote === undefined));
-  if (laterOpen.length > 0) {
-    const all = [...laterOpen, ...later.filter((m) => m.myVote !== undefined)];
-    return { mode: 'tomorrow', top: all.slice(0, VOTE_TOP), rest: all.slice(VOTE_TOP) };
-  }
-  if (voted.length > 0) return { mode: 'today', top: voted.slice(0, VOTE_TOP), rest: voted.slice(VOTE_TOP) };
-  return { mode: 'none', top: [], rest: [] };
+  if (later.some((m) => m.myVote === undefined)) return { mode: 'tomorrow', groups: groupVotes(later, ranks) };
+  if (today.length > 0) return { mode: 'today', groups: groupVotes(today, ranks) };
+  return { mode: 'none', groups: [] };
 }
 
 /** «Ρήγας Κ.», or a pair «Ρήγας & Σταθάκης» (the app's own pair joiner) */
@@ -223,13 +292,11 @@ export function homeTournaments(items: readonly TournamentItem[], cards: readonl
   const c = t.home.tournaments;
   const nowMs = now.getTime();
   const areas = new Set(areaIds);
-  const tagOf = (i: TournamentItem): TournamentTag => (i.in_it ? 'playing' : i.followed ? 'following' : i.area_id && areas.has(i.area_id) ? 'near' : null);
-  const order: TournamentTag[] = ['playing', 'following', 'near', null];
   // a done tournament is only its draws: it is never «today»
   const live = items.filter((i) => i.state !== 'done' && (i.state === 'ongoing' || i.today > 0));
   return live
-    .map((i) => ({ i, tag: tagOf(i) }))
-    .sort((x, y) => order.indexOf(x.tag) - order.indexOf(y.tag) || y.i.today - x.i.today)
+    .map((i) => ({ i, tag: tagOf(i, areas) }))
+    .sort((x, y) => TAG_ORDER.indexOf(x.tag) - TAG_ORDER.indexOf(y.tag) || y.i.today - x.i.today)
     .map(({ i, tag }): HomeTournament => {
       const mine = cards.filter((m): m is CardMatch => m.kind === 'match' && m.tournamentId === i.id && !m.later);
       const at = (m: CardMatch) => (hasTime(m.startsAt) ? Date.parse(m.startsAt!) : NaN);

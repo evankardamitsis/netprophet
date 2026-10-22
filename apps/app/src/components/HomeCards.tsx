@@ -279,6 +279,28 @@ export function TournamentCard({ item }: { item: HomeTournament }) {
   );
 }
 
+/**
+ * The small heading over one tournament's vote rows: its name in the display font and «N ματς» muted on the right; a tap
+ * opens the tournament (no `onPress` for «Φιλικά»).
+ */
+export function VoteGroupHeading({ title, count, onPress }: { title: string; count: string; onPress?: () => void }) {
+  const body = (
+    <View style={styles.vgHead}>
+      <Text numberOfLines={1} style={styles.vgTitle}>
+        {title}
+      </Text>
+      <Text style={styles.small}>{count}</Text>
+    </View>
+  );
+  return onPress ? (
+    <Tap onPress={onPress} label={`${title}. ${count}`} scale={0.99}>
+      {body}
+    </Tap>
+  ) : (
+    body
+  );
+}
+
 /** a quiet ink text line that opens a page («Όλα τα τουρνουά ›», «Περισσότερα ›») */
 export function QuietLink({ label, onPress }: { label: string; onPress: () => void }) {
   const press = usePress(0.97);
@@ -351,6 +373,8 @@ const styles = StyleSheet.create({
   tcard: { padding: 14, borderRadius: 18, backgroundColor: cardSurface, gap: 8 },
   tTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
   tName: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  vgHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, paddingHorizontal: 4, paddingTop: 4 },
+  vgTitle: { ...text.heading, fontSize: 18, lineHeight: 22, flexShrink: 1 },
   tNameText: { ...text.heading, fontSize: 22, lineHeight: 24, flexShrink: 1 },
   tag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: colors.sand },
   tagInk: { backgroundColor: colors.lime },
