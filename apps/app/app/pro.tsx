@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -10,6 +10,8 @@ import { usePopIn, usePress, useRiseIn, useStgIn } from '../src/lib/motion';
 import { track } from '../src/lib/analytics';
 import { activeLine, planCards, trialLine, type PlanCard } from '../src/lib/pro';
 import { usePurchase, useProOffer } from '../src/lib/purchase';
+import { legalUrl } from '../src/lib/legalLinks';
+import { safeOpen } from '../src/lib/openUrl';
 import { fmt } from '../src/lib/votes';
 import { alpha, colors, fonts } from '../src/theme';
 
@@ -112,6 +114,15 @@ export default function ProScreen() {
           <Button label={busy === 'buy' ? p.finishing : fmt(p.buy, { price: plan.price })} onPress={() => void onBuy()} primary />
         ) : null}
         {!paid && !onTrial ? <TextLink label={p.notNow} onPress={close} /> : null}
+        <View style={styles.legal}>
+          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('terms'), (u) => Linking.openURL(u))}>
+            <Text style={styles.legalLink}>{p.terms}</Text>
+          </Pressable>
+          <Text style={styles.legalDot}>·</Text>
+          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('privacy'), (u) => Linking.openURL(u))}>
+            <Text style={styles.legalLink}>{p.privacy}</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -207,5 +218,8 @@ const styles = StyleSheet.create({
   buttonText: { fontFamily: fonts.bodyBold, fontSize: 17, textAlign: 'center' },
   primaryText: { color: colors.white },
   secondaryText: { color: colors.paper },
+  legal: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 2 },
+  legalLink: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.mist, textDecorationLine: 'underline', paddingVertical: 4 },
+  legalDot: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.mist },
   link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper, textAlign: 'center', textDecorationLine: 'underline', paddingVertical: 4 },
 });

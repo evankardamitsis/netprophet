@@ -9,6 +9,8 @@ import { FitText } from '../../src/components/FitText';
 import { namePlate } from '../../src/components/CardFrame';
 import { FlipCard } from '../../src/components/FlipCard';
 import { useCopy } from '../../src/i18n';
+import { legalUrl } from '../../src/lib/legalLinks';
+import { safeOpen } from '../../src/lib/openUrl';
 import { guestAllowed, useAuth } from '../../src/lib/auth';
 import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
@@ -828,6 +830,12 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
           {/* every «γράψε μας» in the app (a claim, a new player, a failed delete) lands here */}
           <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(`mailto:${CONTACT_EMAIL}`).catch(() => undefined)} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.me.contact}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="link" onPress={() => safeOpen(legalUrl('terms'), (u) => Linking.openURL(u))} style={styles.linkHit}>
+            <Text style={styles.signOut}>{t.me.terms}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="link" onPress={() => safeOpen(legalUrl('privacy'), (u) => Linking.openURL(u))} style={styles.linkHit}>
+            <Text style={styles.signOut}>{t.me.privacy}</Text>
           </Pressable>
           <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.auth.signOut}</Text>

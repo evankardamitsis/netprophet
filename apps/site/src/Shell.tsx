@@ -24,6 +24,7 @@ export function Shell({ lang, children }: { lang: Lang; children: React.ReactNod
           <span>{c.footer.by}</span>
           <nav className="foot-links" aria-label={lang === 'el' ? 'Σελίδες' : 'Pages'}>
             <Link href={`${base}/privacy`}>{c.nav.privacy}</Link>
+            <Link href={`${base}/terms`}>{c.nav.terms}</Link>
             <Link href={`${base}/support`}>{c.nav.support}</Link>
             <Link href={c.nav.otherHref} hrefLang={lang === 'el' ? 'en' : 'el'}>
               {c.nav.other}
