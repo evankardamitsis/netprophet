@@ -277,8 +277,17 @@ export const el = {
    * tournaments. Drafts for the founder.
    */
   home: {
+    /** the page title and today's date over it: «Πέμπτη 22 Οκτ» */
+    title: 'Σήμερα',
+    date: '{weekday} {day} {month}',
     results: {
-      title: 'Αποτελέσματα',
+      /** the title line over the results waiting: plain, or from today / from yesterday when they all are */
+      one: '1 αποτέλεσμα',
+      many: '{n} αποτελέσματα',
+      todayOne: '1 αποτέλεσμα από σήμερα',
+      todayMany: '{n} αποτελέσματα από σήμερα',
+      yesterdayOne: '1 αποτέλεσμα από χθες',
+      yesterdayMany: '{n} αποτελέσματα από χθες',
       /** the single blue action while results wait */
       take: 'Δες τα ›',
       /** «+30», the points the results bring (lime) */

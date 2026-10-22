@@ -108,6 +108,8 @@ export interface CardResult {
   kind: 'result';
   /** feed_inbox id: mark_inbox_seen takes it */
   id: string;
+  /** when the result came in (feed_inbox created_at): the home's card says «από χθες» */
+  at: string;
   matchId: string;
   ok: boolean;
   points: number;
@@ -156,6 +158,7 @@ export function fromResultCard(card: FeedResultCard, t: Copy): CardResult {
   return {
     kind: 'result',
     id: card.id,
+    at: card.created_at,
     matchId: p.match_id,
     ok,
     points: p.points,

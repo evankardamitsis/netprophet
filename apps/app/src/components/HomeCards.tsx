@@ -38,6 +38,19 @@ function Tap({ onPress, label, children, scale = 0.98 }: { onPress: () => void; 
   );
 }
 
+/* ================= the page header ================= */
+
+/** «Σήμερα» big on the left, today's date small and muted on the right, on one baseline (mockup A). Scrolls with the page. */
+export function HomeHeader({ date }: { date: string }) {
+  const t = useCopy();
+  return (
+    <View style={styles.header}>
+      <Text accessibilityRole="header" style={styles.headerTitle}>{t.home.title}</Text>
+      <Text style={styles.headerDate}>{date}</Text>
+    </View>
+  );
+}
+
 /* ================= the results card ================= */
 
 /** «Αποτελέσματα · 2 ✓ · 1 χαμένο · +30» on ink, with the one blue button; it opens the results one by one */
@@ -48,7 +61,7 @@ export function ResultsCard({ view, onOpen }: { view: ResultsLine; onOpen: () =>
   return (
     <View style={styles.results}>
       <View style={styles.resultsText}>
-        <Text style={styles.resultsTitle}>{t.home.results.title}</Text>
+        <Text style={styles.resultsTitle}>{view.title}</Text>
         <Text style={styles.resultsLine}>
           {view.line}
           {view.points > 0 ? (
@@ -59,7 +72,7 @@ export function ResultsCard({ view, onOpen }: { view: ResultsLine; onOpen: () =>
           ) : null}
         </Text>
       </View>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${t.home.results.take} ${view.line}`} onPress={onOpen} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${t.home.results.take} ${view.title}`} onPress={onOpen} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
         <Animated.View style={[styles.blue, press.style, pop]}>
           <Text style={styles.blueText}>{t.home.results.take}</Text>
         </Animated.View>
@@ -297,6 +310,9 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   chev: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.inkSoft },
   // results
+  header: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 },
+  headerTitle: { ...text.title, flexShrink: 1 },
+  headerDate: { ...text.meta, flexShrink: 0 },
   results: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: colors.ink },
   resultsText: { flex: 1, gap: 2 },
   resultsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.paper },
