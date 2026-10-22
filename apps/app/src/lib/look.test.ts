@@ -36,6 +36,27 @@ describe('tags', () => {
     expect(tagOf(tile('frame', 'frame_ten'), t)).toEqual({ text: 'Το κερδίζεις με 10 σωστές στη σειρά', tone: 'locked' });
     expect(tagOf(tile('frame', null), t)).toBeNull();
   });
+  it('an earned item is never for sale: what earns it until it is yours, then «Το κέρδισες»', () => {
+    const earned = look.items.filter((i) => i.kind === 'earned');
+    expect(earned.length).toBeGreaterThan(0);
+    for (const item of earned) {
+      const tl = { category: item.category, key: item.key, item };
+      const tag = tagOf(tl, t)!;
+      const cta = ctaOf(tl, look, t);
+      if (item.owned) {
+        expect(tag).toEqual({ text: 'Το κέρδισες', tone: 'earned' });
+        expect(['wear', 'worn']).toContain(cta.kind);
+      } else {
+        expect(tag).toEqual({ text: item.earn_rule, tone: 'locked' });
+        expect(item.earn_rule).toBeTruthy();
+        expect(cta).toEqual({ kind: 'none' });
+      }
+    }
+    // even if a price slipped onto an earned item, it still shows the way to earn it, never a buy button
+    const priced = { ...earned.find((i) => !i.owned)!, price_eur: 1.99 };
+    expect(tagOf({ category: priced.category, key: priced.key, item: priced }, t)!.tone).toBe('locked');
+    expect(ctaOf({ category: priced.category, key: priced.key, item: priced }, look, t)).toEqual({ kind: 'none' });
+  });
   it('formats euros with a comma', () => {
     expect(eur(1.99)).toBe('1,99');
     expect(eur(0.99)).toBe('0,99');
