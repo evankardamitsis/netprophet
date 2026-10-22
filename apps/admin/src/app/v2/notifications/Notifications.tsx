@@ -208,7 +208,10 @@ export function Notifications({ canApprove }: { canApprove: boolean }) {
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'failed'));
   }, []);
 
-  const waiting = texts?.filter((t) => !t.approved_at).length ?? 0;
+  // only what waits for approval is open; the approved ones fold under one toggle (founder, 22 Oct: no endless scroll)
+  const pending = texts?.filter((t) => !t.approved_at) ?? [];
+  const approved = texts?.filter((t) => t.approved_at) ?? [];
+  const waiting = pending.length;
   const replace = (t: NotificationText) => setTexts((all) => (all ? all.map((x) => (x.key === t.key ? t : x)) : all));
 
   return (
@@ -227,9 +230,21 @@ export function Notifications({ canApprove }: { canApprove: boolean }) {
           <p className="v2-muted" style={{ margin: 0 }}>
             Τα κενά σε {'{ }'} γεμίζουν μόνα τους. Αν κάποιο δεν είναι γνωστό (π.χ. ματς χωρίς τουρνουά), φεύγει όλο το κομμάτι του ανάμεσα στα « · ».
           </p>
-          {texts.map((t) => (
+          {pending.map((t) => (
             <TextCard key={t.key} text={t} canApprove={canApprove} onChange={replace} notify={notify} />
           ))}
+          {approved.length ? (
+            <details>
+              <summary className="v2-h3" style={{ cursor: 'pointer', padding: '8px 0' }}>
+                Εγκρίθηκαν ({approved.length})
+              </summary>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                {approved.map((t) => (
+                  <TextCard key={t.key} text={t} canApprove={canApprove} onChange={replace} notify={notify} />
+                ))}
+              </div>
+            </details>
+          ) : null}
         </Section>
       ) : null}
       <Section title="Email">
