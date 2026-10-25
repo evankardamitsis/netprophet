@@ -151,6 +151,11 @@ export function topVotes(groups: readonly VoteGroup[], limit: number = VOTE_TOP)
   return out;
 }
 
+/** is there anything past the three on the home? Then «Περισσότερα ›» opens the full list (the voted rows count too) */
+export function hasMoreVotes(groups: readonly VoteGroup[], limit: number = VOTE_TOP): boolean {
+  return voteRows(groups) > voteRows(topVotes(groups, limit));
+}
+
 /**
  * The matches to vote, across tournaments, by tournament. Read from the cards as the feed loaded them (a vote made here
  * does not move a row: the list stays put while you go down it). Today's matches still taking votes (the ones you
@@ -320,4 +325,36 @@ export function homeTournaments(items: readonly TournamentItem[], cards: readonl
 export function tagLabel(tag: TournamentTag, t: Copy): string | null {
   const c = t.home.tournaments;
   return tag === 'playing' ? c.playing : tag === 'following' ? c.following : tag === 'near' ? c.near : null;
+}
+
+/* ================= the home's order, top to bottom ================= */
+
+export type HomeSection = 'header' | 'results' | 'yours' | 'tournaments' | 'pro' | 'quiz' | 'vote' | 'sponsor' | 'links';
+
+/**
+ * What the home shows and in what order (founder, 25 Oct, layout C): the page header, the results, «Οι δικοί σου», the
+ * strip of today's tournaments (visible without scrolling), the Pro card, the quiz, the three votes («Περισσότερα ›»
+ * opens the rest on its own page, so the home keeps a steady length), the sponsor's banner only when the admin runs
+ * one, and the two quiet links last. Sections with nothing to show are left out; Pro's card decides for itself
+ * (it hides for Pro players), so it is always in the list.
+ */
+export function homeSections(has: { results: boolean; yours: boolean; quiz: boolean; sponsor: boolean }): HomeSection[] {
+  const out: HomeSection[] = ['header'];
+  if (has.results) out.push('results');
+  if (has.yours) out.push('yours');
+  out.push('tournaments', 'pro');
+  if (has.quiz) out.push('quiz');
+  out.push('vote');
+  if (has.sponsor) out.push('sponsor');
+  out.push('links');
+  return out;
+}
+
+/** a card of the strip: a tournament, or the last one, «Όλα ›» */
+export type StripItem = { kind: 'tournament'; item: HomeTournament } | { kind: 'all' };
+
+/** today's tournaments as the strip lays them out, «Όλα ›» at the end; nothing today, no strip */
+export function tournamentStrip(items: readonly HomeTournament[]): StripItem[] {
+  if (items.length === 0) return [];
+  return [...items.map((item): StripItem => ({ kind: 'tournament', item })), { kind: 'all' }];
 }

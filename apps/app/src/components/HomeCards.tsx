@@ -1,11 +1,11 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, type ReactNode, type Ref } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import type { ProOfferMoment } from '@netprophet/db';
 import { useCopy } from '../i18n';
-import type { HomeTournament, QuizCardView, ResultsLine, YoursNow } from '../lib/home';
+import type { HomeTournament, QuizCardView, ResultsLine, StripItem, YoursNow } from '../lib/home';
 import { tagLabel } from '../lib/home';
 import type { MyMatchView } from '../lib/myMatch';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
@@ -252,23 +252,51 @@ export function ProCard({ pro, myMatch }: { pro: boolean | null; myMatch: MyMatc
 
 /* ================= «Τουρνουά σήμερα» ================= */
 
-export function TournamentCard({ item }: { item: HomeTournament }) {
+/** a card of the strip, and the gap between two: the scroll snaps from one card's left edge to the next */
+const STRIP_W = 228;
+const STRIP_GAP = 10;
+const STRIP_PAD = 16;
+
+/**
+ * Today's tournaments as a row of compact cards you swipe sideways (founder, 25 Oct, layout C): the name, «ΤΩΡΑ» and the
+ * pair or the next match, and the «Παίζεις» / «Ακολουθείς» / «Κοντά σου» tag. It snaps card by card and bleeds to the
+ * screen's edges; the last card, «Όλα ›», opens the full list. `firstRef` is the tour's place for the first card.
+ */
+export function TournamentStrip({ items, firstRef, onAll }: { items: StripItem[]; firstRef?: Ref<View>; onAll: () => void }) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      decelerationRate="fast"
+      snapToInterval={STRIP_W + STRIP_GAP}
+      snapToAlignment="start"
+      contentContainerStyle={styles.strip}
+      style={styles.stripBleed}
+    >
+      {items.map((it, i) =>
+        it.kind === 'all' ? (
+          <StripAll key="all" onPress={onAll} />
+        ) : (
+          <View key={it.item.id} ref={i === 0 ? firstRef : undefined} collapsable={false}>
+            <StripCard item={it.item} />
+          </View>
+        ),
+      )}
+    </ScrollView>
+  );
+}
+
+function StripCard({ item }: { item: HomeTournament }) {
   const t = useCopy();
   const tag = tagLabel(item.tag, t);
   return (
     <Tap onPress={() => router.push(`/tournament/${item.id}`)} label={[item.name, tag, item.live, item.next, item.count].filter(Boolean).join('. ')}>
-      <View style={styles.tcard}>
-        <View style={styles.tTop}>
-          <View style={styles.tName}>
-            {/* a real logo only: without one the Logo's letter («O» for Open) read as a stray «0» badge here */}
-            {item.logo ? <Logo path={item.logo} name={item.name} size={24} /> : null}
-            <Text style={styles.tNameText}>{item.name}</Text>
-          </View>
-          {tag ? (
-            <View style={[styles.tag, item.tag === 'playing' && styles.tagInk]}>
-              <Text style={[styles.tagText, item.tag === 'playing' && styles.tagTextInk]}>{tag}</Text>
-            </View>
-          ) : null}
+      <View style={styles.scard}>
+        <View style={styles.tName}>
+          {item.logo ? <Logo path={item.logo} name={item.name} size={20} /> : null}
+          <Text numberOfLines={1} style={styles.scardName}>
+            {item.name}
+          </Text>
         </View>
         {item.live ? (
           <View style={styles.tLive}>
@@ -277,12 +305,31 @@ export function TournamentCard({ item }: { item: HomeTournament }) {
               {item.live}
             </Text>
           </View>
-        ) : item.next ? (
-          <Text style={styles.tLiveText}>{item.next}</Text>
+        ) : (
+          <Text numberOfLines={1} style={styles.tLiveText}>
+            {item.next ?? item.count ?? ''}
+          </Text>
+        )}
+        {tag ? (
+          <View style={[styles.tag, styles.scardTag, item.tag === 'playing' && styles.tagInk]}>
+            <Text style={[styles.tagText, item.tag === 'playing' && styles.tagTextInk]}>{tag}</Text>
+          </View>
         ) : null}
-        {item.count ? <Text style={styles.small}>{item.count}</Text> : null}
       </View>
     </Tap>
+  );
+}
+
+/** the strip's last card: «Όλα ›» */
+function StripAll({ onPress }: { onPress: () => void }) {
+  const t = useCopy();
+  const press = usePress(0.97);
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={t.home.tournaments.all} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.stripAllHit}>
+      <Animated.View style={[styles.sall, press.style]}>
+        <Text style={styles.sallText}>{t.home.tournaments.allCard}</Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -380,6 +427,14 @@ const styles = StyleSheet.create({
   tcard: { padding: 14, borderRadius: 18, backgroundColor: cardSurface, gap: 8 },
   tTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
   tName: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  stripBleed: { marginHorizontal: -STRIP_PAD, flexGrow: 0 },
+  strip: { paddingHorizontal: STRIP_PAD, gap: STRIP_GAP },
+  scard: { width: STRIP_W, flex: 1, padding: 12, borderRadius: 18, backgroundColor: cardSurface, gap: 6, justifyContent: 'space-between' },
+  scardName: { ...text.heading, fontSize: 18, lineHeight: 22, flexShrink: 1 },
+  scardTag: { alignSelf: 'flex-start' },
+  stripAllHit: { alignSelf: 'stretch' },
+  sall: { flex: 1, minWidth: 88, paddingHorizontal: 18, borderRadius: 18, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
+  sallText: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.ink },
   vgHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, paddingHorizontal: 4, paddingTop: 4 },
   vgTitle: { ...text.heading, fontSize: 18, lineHeight: 22, flexShrink: 1 },
   tNameText: { ...text.heading, fontSize: 22, lineHeight: 24, flexShrink: 1 },
