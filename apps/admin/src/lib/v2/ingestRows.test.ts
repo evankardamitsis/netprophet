@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { SheetPerson } from '@netprophet/ingest';
-import { candidateContext, pairOptions, rankCandidates, reviewAnswers, reviewQuestions, sameTwice, twinQuestions, type ReviewCandidate } from './ingestRows';
+import { parseSheet, type SheetPerson } from '@netprophet/ingest';
+import { candidateContext, pairOptions, rankCandidates, reviewAnswers, reviewQuestions, runRows, sameTwice, twinQuestions, type ReviewCandidate } from './ingestRows';
 
 const person = (surname: string, first = ''): SheetPerson => ({ surname, first, key: `${surname}|${first}` }) as SheetPerson;
 
@@ -86,5 +86,30 @@ describe('candidates with context', () => {
     const pairs = pairOptions([g, a, p]);
     expect(pairs[0]).toMatchObject({ a: { id: 'a' }, b: { id: 'p' }, together: 2 });
     expect(pairs).toHaveLength(3);
+  });
+});
+
+describe('a sheet row with a result (25 Oct)', () => {
+  // one ΑΟΚ order-of-play tab as the cron reads it, names anonymised; the scores are the live ones that never came over
+  const tab = {
+    name: 'ΣΑΒ 24/10',
+    rows: [
+      ['', 'ΑΟΚ TENNIS OPEN'],
+      ['ΩΡΑ', 'ΚΑΤΗΓΟΡΙΑ', 'PLAYER 1', 'PLAYER 2', 'ΑΠΟΤΕΛΕΣΜΑ'],
+      ['12.00', 'MD 70+', 'ΑΛΦΑΣ / ΒΗΤΑΣ', 'ΓΑΜΑΣ / ΔΕΛΤΑΣ', '46 34 ret'],
+      ['13.00', 'Μ -40', 'ΕΨΙΛΟΝ ΠΑΝΟΣ', 'ΖΗΤΑΣ ΜΙΧΑΛΗΣ', '63-5710-5'],
+      ['14.00', 'MIXED 55+', 'ΗΤΑ / ΘΗΤΑΣ', 'ΙΩΤΑ / ΚΑΠΠΑΣ', '63-36 107'],
+      ['15.00', 'MD 50+', 'ΛΑΜΔΑΣ / ΜΙΑΣ', 'ΝΙΑΣ / ΞΙΑΣ', '61 26 1210'],
+    ],
+  };
+  const rows = runRows(parseSheet([tab], 2026));
+  it('every played row carries its result', () => {
+    expect(rows.map((r) => (r.result && 'winner_side' in r.result ? r.result.winner_side : null))).toEqual([2, 1, 1, 1]);
+  });
+  it('a retirement is sent as one, winner first', () => {
+    expect(rows[0]!.result).toEqual({ winner_side: 2, sets: [{ w: 6, l: 4 }, { w: 4, l: 3 }], walkover: false, retired: true });
+  });
+  it('a finished match is not marked retired', () => {
+    expect(rows[3]!.result).toEqual({ winner_side: 1, sets: [{ w: 6, l: 1 }, { w: 2, l: 6 }, { w: 12, l: 10, stb: true }], walkover: false });
   });
 });

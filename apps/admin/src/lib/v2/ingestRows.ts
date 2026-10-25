@@ -30,10 +30,17 @@ export interface RowOptions {
   walkover?: 1 | 2 | 'queue' | null;
 }
 
-type DbResult = { winner_side: 1 | 2; sets: ReturnType<typeof toDbSets>; walkover: boolean } | { walkover: true } | null;
+type DbResult =
+  | { winner_side: 1 | 2; sets: ReturnType<typeof toDbSets>; walkover: boolean; retired?: true }
+  | { walkover: true }
+  | null;
 
 function resultOf(m: SheetMatch, walkover: RowOptions['walkover']): DbResult {
-  if (m.status === 'completed' && m.winner) return { winner_side: m.winner, sets: toDbSets(m.sets, m.winner), walkover: false };
+  if (m.status === 'completed' && m.winner) {
+    const r = { winner_side: m.winner, sets: toDbSets(m.sets, m.winner), walkover: false };
+    // a retirement: the database takes any score for it, only with this flag (core.check_match_result)
+    return m.retired ? { ...r, retired: true as const } : r;
+  }
   if (m.status === 'walkover') {
     if (walkover === 1 || walkover === 2) return { winner_side: walkover, sets: [], walkover: true };
     if (walkover === 'queue') return { walkover: true };

@@ -38,6 +38,12 @@ export interface DrawCounts {
   linked?: number;
   rows_seen?: number;
   dry?: boolean;
+  /** results the draw gave to matches still waiting for one (walkovers too), 25 Oct */
+  draw_results?: number;
+  /** a draw result two waiting matches could take: left for staff */
+  draw_results_unclear?: number;
+  /** a draw score the database refused: that match is left as it was */
+  draw_results_failed?: number;
 }
 
 export type Health = 'ok' | 'drop' | 'empty' | 'error';

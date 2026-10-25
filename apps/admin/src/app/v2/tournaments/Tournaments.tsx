@@ -466,6 +466,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
         return;
       }
       let draws: number | null = null;
+      let drawResults = 0;
       if (t.draw_url) {
         setNote({ tone: 'working', title: 'Schedule read. Now the draws…', detail: 'Decisions the sheet no longer supports are already closed.' });
         const d = await readDraws(t.id, false);
@@ -475,10 +476,13 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
           return;
         }
         draws = d.data?.draws ?? 0;
+        drawResults = d.data?.draw_results ?? 0;
       }
       const c = res.data ?? {};
       const created = c.created ?? 0;
-      const extra = [created ? `${created} new matches` : '', c.results ? `${c.results} new results` : '', c.new_players ? `${c.new_players} new players` : '', c.moved ? `${c.moved} moved` : '', c.cancelled ? `${c.cancelled} cancelled` : '']
+      // results from the schedule plus the ones only the draw had (a walkover's winner, a row taken off the schedule)
+      const results = (c.results ?? 0) + drawResults;
+      const extra = [created ? `${created} new matches` : '', results ? `${results} new results` : '', c.new_players ? `${c.new_players} new players` : '', c.moved ? `${c.moved} moved` : '', c.cancelled ? `${c.cancelled} cancelled` : '']
         .filter(Boolean)
         .join(', ');
       setNote({
@@ -487,6 +491,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
         detail:
           [
             draws !== null ? `${draws} draws refreshed.` : '',
+            drawResults ? `${plural(drawResults, 'result')} from the draws.` : '',
             autoNamed(c) ? `${plural(autoNamed(c), 'name')} decided from match history.` : '',
             c.recategorised ? `${plural(c.recategorised, 'match', 'matches')} moved to the category of its draw.` : '',
             c.relinked ? `${plural(c.relinked, 'edited row')} kept ${c.relinked === 1 ? 'its match' : 'their matches'}.` : '',
@@ -723,6 +728,8 @@ function NeedsYou({ items, onChanged, notify }: { items: ReviewItem[]; onChanged
         const run = await runNow(id, false);
         if (run.ok) closed += run.data?.stale_closed ?? 0;
         else unread.push(name);
+        // the draw sheet too: it names who won a walkover, which closes that card (a tournament without one skips this)
+        if (run.ok) await readDraws(id, false);
       }
       setNote({ tone: 'working', title: 'Checking the waiting names against match history…' });
       const res = await rerunReviews();
