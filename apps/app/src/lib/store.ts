@@ -1,5 +1,4 @@
 import { NativeModules, Platform } from 'react-native';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
 import type { AnalyticsEvents } from '@netprophet/core';
 import { track } from './analytics';
 import {
@@ -32,9 +31,13 @@ let forUser: string | null = null;
 let pending: Promise<RNP | null> | null = null;
 let lastError: StoreDiagnostics['lastError'] = null;
 
-/** Expo Go has no RevenueCat native module; a development or store build does */
+/**
+ * Expo Go has no RevenueCat native module; a development or store build does. The same check the SDK makes
+ * (utils/environment.js): Expo Go registers an ExpoGo module. Not executionEnvironment «storeClient», which a
+ * development build (expo-dev-client) reports too.
+ */
 function isExpoGo(): boolean {
-  return Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+  return Boolean((globalThis as { expo?: { modules?: { ExpoGo?: unknown } } }).expo?.modules?.ExpoGo);
 }
 
 function native(): RNP | null {

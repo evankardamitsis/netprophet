@@ -43,7 +43,7 @@ export function keyLooksRight(key: string, platform: string): boolean {
 }
 
 export interface StoreEnv {
-  /** Expo Go (expo-constants executionEnvironment «storeClient»): no native module there */
+  /** Expo Go (it registers an ExpoGo module, the SDK's own check): no native module there */
   expoGo: boolean;
   /** react-native-purchases loaded, and its native side answered configure */
   hasModule: boolean;
