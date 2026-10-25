@@ -10,6 +10,7 @@ import { usePopIn, usePress, useRiseIn, useStgIn } from '../src/lib/motion';
 import { track } from '../src/lib/analytics';
 import { activeLine, buyLine, planCards, restoreLine, trialLine, type PlanCard } from '../src/lib/pro';
 import { usePurchase, useProOffer, useRestore } from '../src/lib/purchase';
+import { buyLineFor } from '../src/lib/storeTypes';
 import { legalUrl } from '../src/lib/legalLinks';
 import { safeOpen } from '../src/lib/openUrl';
 import { fmt } from '../src/lib/votes';
@@ -34,7 +35,7 @@ export default function ProScreen() {
   const p = t.pro;
   const insets = useSafeAreaInsets();
   const { state, join, refresh } = usePro();
-  const { offer, refresh: refreshOffer } = useProOffer();
+  const { offer, failed: offerFailed, refresh: refreshOffer } = useProOffer();
   const purchase = usePurchase();
   const restorePurchases = useRestore();
   const [picked, setPicked] = useState<string | null>(null);
@@ -67,13 +68,18 @@ export default function ProScreen() {
       await refresh();
       return false;
     });
+    if (r.result === 'ok') {
+      setBusy(null);
+      await done(p.welcome);
+      return;
+    }
+    const line = buyLineFor(r);
+    // the founding list only while payments are not open (no key in this build), and only if the list took you
+    if (line === 'waitlist') setNote((await join()) ? p.unavailable : p.notDone);
+    else if (line === 'device') setNote(p.deviceUnavailable);
+    else if (line === 'failed') setNote(p.notDone);
+    else setNote(null);
     setBusy(null);
-    if (r === 'ok') await done(p.welcome);
-    else if (r === 'cancelled') setNote(null);
-    else if (r === 'unavailable') {
-      await join();
-      setNote(p.unavailable);
-    } else setNote(p.failed);
   };
 
   /** App Store 3.1.1: the store gives back what this store account bought, then the server is asked again */
@@ -126,6 +132,11 @@ export default function ProScreen() {
           <>
             <Button label={busy === 'buy' ? p.finishing : fmt(p.buy, { price: plan.price })} onPress={() => void onBuy()} primary />
             <Text style={styles.note}>{buyLine(plan, t)}</Text>
+          </>
+        ) : offerFailed ? (
+          <>
+            <Text style={styles.note}>{p.plansFailed}</Text>
+            <Button label={p.retry} onPress={() => void refreshOffer()} primary />
           </>
         ) : null}
         {!paid && !onTrial ? <TextLink label={p.notNow} onPress={close} /> : null}

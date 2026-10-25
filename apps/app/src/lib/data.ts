@@ -1766,6 +1766,36 @@ export interface PlayStyleState {
 }
 
 /**
+ * Staff (profile role admin or editor, as core.is_staff): only they see the store diagnostics row. A display choice
+ * and nothing more: the row shows this phone's own store state, no server data.
+ */
+export function useIsStaff(): boolean {
+  const api = useApi();
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
+  const [staff, setStaff] = useState(false);
+  useEffect(() => {
+    if (!api || !supabase || !userId) {
+      setStaff(false);
+      return undefined;
+    }
+    let live = true;
+    supabase
+      .from('my_profile')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (live) setStaff(data?.role === 'admin' || data?.role === 'editor');
+      });
+    return () => {
+      live = false;
+    };
+  }, [api, userId]);
+  return staff;
+}
+
+/**
  * «Πώς παίζεις» in Εγώ › Ρυθμίσεις (founder, 19 Oct: it left the first run): hand and tournament experience from
  * the account's own profile row, saved with the same update_profile the onboarding used. The guest keeps a sample.
  */

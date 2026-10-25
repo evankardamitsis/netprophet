@@ -16,7 +16,8 @@ import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
-import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, usePushPrefs, type PushPrefKey } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, usePushPrefs, type PushPrefKey } from '../../src/lib/data';
+import { useStoreDiagnostics } from '../../src/lib/purchase';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { greekCaps } from '@netprophet/copy';
@@ -772,6 +773,7 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
   const blocks = useBlocks();
   const newPlayer = useNewPlayer();
   const mockMode = useApi() === null;
+  const staff = useIsStaff();
   return (
     <View style={styles.card}>
       <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} style={styles.rowBetween}>
@@ -827,6 +829,7 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
               <Text style={styles.signOut}>{newPlayer.on ? t.me.newPlayerOn : t.me.newPlayer}</Text>
             </Pressable>
           ) : null}
+          {staff ? <StoreDiagRow /> : null}
           {/* every «γράψε μας» in the app (a claim, a new player, a failed delete) lands here */}
           <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(`mailto:${CONTACT_EMAIL}`).catch(() => undefined)} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.me.contact}</Text>
@@ -843,6 +846,38 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
           <DeleteAccount />
         </>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * Staff only: the store on this phone, to see why buying does not work on a build (TestFlight, Play internal).
+ * «Έλεγχος» configures RevenueCat for this account and asks for the offerings; the key itself never shows.
+ */
+function StoreDiagRow() {
+  const t = useCopy();
+  const d = t.me.storeDiag;
+  const { diag, checking, check } = useStoreDiagnostics();
+  const yn = (v: boolean) => (v ? d.yes : d.no);
+  return (
+    <View style={styles.blocks}>
+      <Text style={styles.blocksTitle}>{d.title}</Text>
+      {diag ? (
+        <>
+          <Text style={styles.diagLine}>{`${d.ready}: ${yn(diag.ready)}${diag.block ? ` (${diag.block})` : ''}`}</Text>
+          <Text style={styles.diagLine}>{`${d.module}: ${yn(diag.nativeModule)}`}</Text>
+          <Text style={styles.diagLine}>{`${d.key}: ${yn(diag.keyPresent)} · ${d.keyShape}: ${diag.keyLength} / ${yn(diag.keyPrefixOk)}`}</Text>
+          <Text style={styles.diagLine}>{`${d.configured}: ${yn(diag.configured)}`}</Text>
+          <Text style={styles.diagLine}>
+            {`${d.offerings}: ${diag.offerings === null ? d.none : `${diag.offerings.length}`}`}
+            {diag.offerings?.map((o) => `\n${o.id}: ${o.products.length} (${o.products.slice(0, 6).join(', ')}${o.products.length > 6 ? ', …' : ''})`).join('')}
+          </Text>
+          <Text style={styles.diagLine}>{`${d.lastError}: ${diag.lastError ? `${diag.lastError.op} · ${diag.lastError.code}` : d.none}`}</Text>
+        </>
+      ) : null}
+      <Pressable accessibilityRole="button" disabled={checking} onPress={() => void check()} style={styles.linkHit}>
+        <Text style={styles.signOut}>{checking ? d.checking : d.check}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -952,6 +987,7 @@ const styles = StyleSheet.create({
   blocks: { gap: 2 },
   blocksTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.inkSoft },
   blockName: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  diagLine: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
   unblock: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink, textDecorationLine: 'underline' },
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },

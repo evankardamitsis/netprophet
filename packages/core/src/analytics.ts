@@ -41,6 +41,11 @@ export interface AnalyticsEvents {
   win_card_shared: { via: 'image' | 'text'; free: boolean };
   schedule_shared: { via: 'image' | 'text'; matches: number };
   win_card_locked: { from: string };
+  /**
+   * the store (RevenueCat) said no: op is the step, code its readable error code («NETWORK_ERROR») or why the build
+   * cannot sell («no_key», «no_module»). No ids beyond the product, never the key.
+   */
+  store_error: { op: 'configure' | 'login' | 'customer' | 'offerings' | 'products' | 'purchase' | 'restore' | 'blocked'; code: string; product?: string; platform: string };
 }
 
 export type AnalyticsEvent = keyof AnalyticsEvents;

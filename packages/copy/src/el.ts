@@ -591,6 +591,23 @@ export const el = {
     statsLine: 'Τα ματς σου, σε νούμερα',
     /** dev builds only: the drawn avatars for review */
     avatarsDev: 'Τα avatar (δοκιμή)',
+    /** staff only, in Ρυθμίσεις: the store's state on this phone (never the key) */
+    storeDiag: {
+      title: 'Αγορές: διάγνωση',
+      check: 'Έλεγχος',
+      checking: 'Ελέγχω…',
+      ready: 'Κατάστημα έτοιμο',
+      block: 'Γιατί όχι',
+      module: 'Native module',
+      key: 'Κλειδί στο build',
+      keyShape: 'Μήκος / πρόθεμα',
+      configured: 'Ρυθμίστηκε για σένα',
+      offerings: 'Offerings',
+      lastError: 'Τελευταίο σφάλμα',
+      yes: 'ναι',
+      no: 'όχι',
+      none: 'κανένα',
+    },
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
     /** your game level from points (Εγώ, under the hero) */
     gameLevel: {
@@ -736,6 +753,12 @@ export const el = {
     buy: 'Συνέχεια · {price}',
     unavailable: 'Οι πληρωμές ανοίγουν σύντομα. Σε κρατάμε στη λίστα με την τιμή του ιδρυτικού μέλους.',
     finishing: 'Ολοκληρώνεται…',
+    /** a purchase the store did not finish (any error but a cancel): the button stays for another try */
+    notDone: 'Δεν ολοκληρώθηκε. Πάτα ξανά για να το ξαναδοκιμάσεις.',
+    /** only when this phone cannot buy at all (no store here, or purchases turned off in its settings) */
+    deviceUnavailable: 'Οι αγορές δεν είναι διαθέσιμες σε αυτή τη συσκευή.',
+    plansFailed: 'Δεν φόρτωσαν τα πακέτα.',
+    retry: 'Ξαναδοκίμασε',
     welcome: 'Καλώς ήρθες στο Pro',
     /** App Store 3.1.1 and 3.1.2: under the plans, what a subscription does and restoring (drafts for the founder) */
     renewal: 'Η συνδρομή ανανεώνεται αυτόματα στο τέλος κάθε περιόδου, εκτός αν την ακυρώσεις τουλάχιστον 24 ώρες πριν. Την ακυρώνεις όποτε θες από τις συνδρομές του λογαριασμού σου στο κατάστημα.',
