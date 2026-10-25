@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetQuizResult, TournamentItem } from '@netprophet/db';
 import type { CardMatch, CardResult, FeedCard } from './feed';
-import { groupVotes, homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, todayHeading, topVotes, tournamentRanks, voteList, voteRows, yoursNow } from './home';
+import { groupVotes, hasMoreVotes, homeSections, homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, todayHeading, topVotes, tournamentRanks, tournamentStrip, voteList, voteRows, yoursNow } from './home';
 
 describe('rowTime: a day, never «χωρίς ώρα»', () => {
   const now = new Date('2026-10-22T15:00:00Z');
@@ -170,6 +170,59 @@ describe('topVotes', () => {
   it('counts the rows', () => {
     expect(voteRows([grp('A', 1), grp('B', 2)])).toBe(3);
   });
+});
+
+describe('«Περισσότερα ›» and the full list', () => {
+  const grp = (key: string, n: number) => ({ key, tournamentId: key, title: key, count: n, rows: Array.from({ length: n }, (_, i) => match(`${key}${i}`)) });
+  it('no link when the three cover everything', () => {
+    expect(hasMoreVotes([grp('A', 2), grp('B', 1)])).toBe(false);
+    expect(hasMoreVotes([])).toBe(false);
+  });
+  it('a link when more rows exist than the three the home shows', () => {
+    expect(hasMoreVotes([grp('A', 2), grp('B', 2)])).toBe(true);
+  });
+  it('voted rows wait on the full page, so they count as more', () => {
+    const g = grp('A', 3);
+    g.rows[0] = match('A0', { myVote: 'a' });
+    expect(hasMoreVotes([g])).toBe(true);
+  });
+  it('the full list keeps every row while the home keeps three, and the tomorrow fallback is whole too', () => {
+    const cards = ['a', 'b', 'c', 'd', 'e'].map((id, i) => match(id, { tournamentId: i < 3 ? 'T1' : 'T2', startsAt: `2026-10-22T1${i}:00:00Z`, day: '2026-10-22' }));
+    const full = voteList(cards);
+    expect(full.mode).toBe('today');
+    expect(voteRows(full.groups)).toBe(5);
+    expect(voteRows(topVotes(full.groups))).toBe(3);
+    const voted = cards.map((c) => ({ ...c, myVote: 'a' as const }));
+    const later = [...voted, ...['x', 'y', 'z', 'w'].map((id) => match(id, { later: true, day: '2026-10-23', startsAt: '2026-10-23T09:00:00Z' }))];
+    const tomorrow = voteList(later);
+    expect(tomorrow.mode).toBe('tomorrow');
+    expect(voteRows(tomorrow.groups)).toBe(4);
+  });
+});
+
+describe('homeSections: the order of the home (layout C)', () => {
+  it('everything on: header, results, yours, tournaments strip, Pro, quiz, votes, sponsor, links', () => {
+    expect(homeSections({ results: true, yours: true, quiz: true, sponsor: true })).toEqual(['header', 'results', 'yours', 'tournaments', 'pro', 'quiz', 'vote', 'sponsor', 'links']);
+  });
+  it('empty parts are left out; tournaments and Pro come before the quiz, and the sponsor sits at the end before the links', () => {
+    const out = homeSections({ results: false, yours: false, quiz: true, sponsor: false });
+    expect(out).toEqual(['header', 'tournaments', 'pro', 'quiz', 'vote', 'links']);
+    expect(out.indexOf('tournaments')).toBeLessThan(out.indexOf('pro'));
+    expect(out.indexOf('pro')).toBeLessThan(out.indexOf('quiz'));
+    expect(homeSections({ results: false, yours: true, quiz: false, sponsor: true }).slice(-2)).toEqual(['sponsor', 'links']);
+  });
+  it('the strip comes right after «Οι δικοί σου»', () => {
+    const out = homeSections({ results: true, yours: true, quiz: true, sponsor: false });
+    expect(out[out.indexOf('yours') + 1]).toBe('tournaments');
+  });
+});
+
+describe('tournamentStrip', () => {
+  const tn = (id: string) => ({ id, name: id, logo: null, tag: null, live: null, next: null, count: null });
+  it('the tournaments in order, then «Όλα ›»', () => {
+    expect(tournamentStrip([tn('a'), tn('b')]).map((x) => (x.kind === 'all' ? 'all' : x.item.id))).toEqual(['a', 'b', 'all']);
+  });
+  it('none today: no strip at all', () => expect(tournamentStrip([])).toEqual([]));
 });
 
 describe('sideLabel', () => {

@@ -9,6 +9,7 @@ import { useCopy } from '../../src/i18n';
 import { useBallers, useLadder } from '../../src/lib/data';
 import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { Baller } from '../../src/components/Baller';
+import { LadderProSection } from '../../src/components/ProEntries';
 import { boardItems, motivation, nextLine, pickScope, podiumOf, pointRules, rowName, scopeLabel, scopeTabs } from '../../src/lib/ladder';
 import { useFadeUpIn, usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
 import { useUnlocks } from '../../src/lib/unlocks';
@@ -74,6 +75,7 @@ export default function LadderScreen() {
             <Motivate ladder={ladder} />
             <Podium ladder={ladder} />
             <Board ladder={ladder} />
+            <LadderProSection />
             <HowPoints />
           </View>
         ) : null}

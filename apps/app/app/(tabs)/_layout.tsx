@@ -38,6 +38,8 @@ export default function TabsLayout() {
               {/* every tournament, «Όλα τα τουρνουά ›» from the home; no longer a tab */}
               <Tabs.Screen name="tournaments" options={{ title: t.tabs.tournaments, href: null }} />
               {/* player search opens from Τουρνουά */}
+              {/* «Περισσότερα ›» under the home's three votes: every match of the day, Τουρνουά lit */}
+              <Tabs.Screen name="all-matches" options={{ title: t.home.all.title, href: null }} />
               <Tabs.Screen name="players" options={{ title: t.tabs.players, href: null }} />
               <Tabs.Screen name="badges" options={{ title: t.badges.title, href: null }} />
               <Tabs.Screen name="tournament/[id]" options={{ title: t.tournaments.title, href: null }} />
