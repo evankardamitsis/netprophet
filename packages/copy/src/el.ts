@@ -279,7 +279,6 @@ export const el = {
       /** nothing left to vote today: tomorrow's first three */
       tomorrow: 'Τα επόμενα ματς αύριο',
       more: 'Περισσότερα ›',
-      less: 'Λιγότερα ↑',
       /** under a tournament's name in the vote list */
       count: { one: '1 ματς', many: '{n} ματς' },
       /** the last group: matches outside a tournament */
@@ -317,8 +316,15 @@ export const el = {
       first: 'Πρώτο ματς {time}',
       next: 'Επόμενο ματς {time}',
       all: 'Όλα τα τουρνουά ›',
+      /** the last card of the strip */
+      allCard: 'Όλα ›',
       search: 'Ψάξε παίκτη ›',
       none: 'Κανένα τουρνουά σήμερα.',
+    },
+    /** «Περισσότερα ›» under the three votes opens the full list */
+    all: {
+      title: 'Όλα τα ματς σήμερα',
+      back: '‹ Τουρνουά',
     },
   },
   result: {
@@ -763,6 +769,12 @@ export const el = {
       follow: 'Μάθε πρώτος την κλήρωση και την ώρα σου με Pro ›',
       /** the header's small entry */
       headerLabel: 'Pro',
+      /** the line after the last result has played (Αποτελέσματα, once a day) */
+      resultsEnd: 'Δες πώς πας φέτος με Pro ›',
+      /** Κατάταξη: the locked month-by-month section */
+      ladderTag: 'Η πορεία σου μήνα με μήνα · Pro',
+      ladderRows: ['Η θέση σου ανά μήνα', 'Οι πόντοι σου ανά μήνα', 'Ο καλύτερος μήνας σου'],
+      ladderLabel: 'Η πορεία σου μήνα με μήνα, με Pro',
     },
   },
   /** Pro «Η σεζόν σου» (17 Oct 2026, drafts for the founder): the month recap and a card for every win */
@@ -1646,7 +1658,7 @@ export const el = {
     steps: {
       vote: { title: 'Ψήφισε σήμερα', line: 'Πάτα το όνομα αυτού που πιστεύεις ότι θα κερδίσει. Αν δεν είσαι σίγουρος, κράτα πατημένο το όνομά του για να δεις περισσότερα.' },
       streak: { title: 'Το σερί σου', line: 'Όσες φορές ψηφίσεις σωστά στη σειρά, τόσο μεγαλώνει το σερί σου. Δίπλα, οι πόντοι σου.' },
-      tournaments: { title: 'Τουρνουά σήμερα', line: 'Άνοιξε ένα και δες Ταμπλό και Πρόγραμμα. Κράτα πατημένο ένα όνομα για να δεις την πορεία του παίκτη στο Ταμπλό.' },
+      tournaments: { title: 'Τουρνουά σήμερα', line: 'Σύρε στο πλάι κι άνοιξε ένα, να δεις Ταμπλό και Πρόγραμμα. Κράτα πατημένο ένα όνομα για να δεις την πορεία του παίκτη στο Ταμπλό.' },
       results: { title: 'Τι έγινε', line: 'Εδώ βλέπεις τα αποτελέσματα και πώς πάει το σερί σου κάθε μέρα.' },
       ladder: { title: 'Η Κατάταξη', line: 'Θα βγεις πρώτος στην παρέα; Δες πού βρίσκεσαι.' },
       me: { title: 'Εγώ', line: 'Η κάρτα παίκτη σου, ο Baller σου και το Pro, όλα εδώ.' },

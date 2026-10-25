@@ -38,6 +38,7 @@ import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
 import { colors, fonts } from '../src/theme';
 import { useOnboardingGate } from '../src/lib/onboardingGate';
+import { markOnboardingPro } from '../src/lib/proOnboarding';
 
 /**
  * Onboarding (prototype V2, after the welcome screen): your name, your player on the roster («Είσαι
@@ -361,6 +362,8 @@ export default function OnboardingScreen() {
 
   const enterApp = useCallback(() => {
     if (preview) return router.replace('/');
+    // a new account meets Pro once, softly, as Σήμερα opens (proOnboarding.ts)
+    markOnboardingPro();
     gate.open();
     if (!session) router.replace('/');
   }, [gate, session, preview]);

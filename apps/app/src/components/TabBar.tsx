@@ -26,7 +26,7 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 const IN_BAR = ['index', 'results', 'ladder', 'me'];
 /**
  * screens opened from a tab keep that tab lit: every tournament screen (the list, one tournament, a held name's run,
- * its path and its draw) and player search belong to Τουρνουά, the home (mockup D, 22 Oct); badges to Εγώ
+ * its path and its draw) and player search and «Όλα τα ματς σήμερα» belong to Τουρνουά, the home (mockup D, 22 Oct); badges to Εγώ
  */
 const LIT_BY: Record<string, string> = {
   tournaments: 'index',
@@ -35,6 +35,7 @@ const LIT_BY: Record<string, string> = {
   'tournament-path': 'index',
   'tournament-draw': 'index',
   players: 'index',
+  'all-matches': 'index',
   badges: 'me',
 };
 const COLOR_MS = 250;

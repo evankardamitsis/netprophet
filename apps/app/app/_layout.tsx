@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Stack, router, useRootNavigationState, useSegments } from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -79,25 +79,10 @@ function Routes() {
     if (userId && api) void refreshPushToken(api);
     if (userId) identify(userId, "el");
   }, [userId]);
-  // a tapped push opens its screen (pushRoute). On a cold start the tap comes in while the logo and the sign-in check
-  // still show and no screen is mounted to navigate in, so the route waits here until the app's screens are up
-  // (founder, 21 Oct: a push opened the app on Σήμερα instead of its place).
-  const [pushTo, setPushTo] = useState<string | null>(null);
-  useEffect(() => {
-    if (!userId) return undefined;
-    return listenForPushTaps(setPushTo);
-  }, [userId]);
-  const navKey = useRootNavigationState()?.key;
-  const screensUp = ready && !!navKey && session !== null && gate.status !== "unknown" && gate.status !== "needed";
-  useEffect(() => {
-    if (!pushTo || !screensUp) return undefined;
-    // one frame, so the tabs under the Stack have mounted too
-    const id = requestAnimationFrame(() => {
-      setPushTo(null);
-      router.push(pushTo as never);
-    });
-    return () => cancelAnimationFrame(id);
-  }, [pushTo, screensUp]);
+  // a tapped push opens its screen (pushRoute), from the first moment, signed in or not: the tap that launched a killed
+  // app, a tap from the background, a banner tapped in the app. The place waits (setPendingPush) and the main layout
+  // ((tabs)/_layout, only there when signed in and past onboarding) opens it (founder, 25 Oct: pushes landed wrong).
+  useEffect(() => listenForPushTaps(), []);
   // screens by route («/player/[id]»), never with ids in them
   const segments = useSegments();
   const route = "/" + segments.filter((s) => !s.startsWith("(")).join("/");

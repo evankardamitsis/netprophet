@@ -12,6 +12,7 @@ import { HudProvider } from '../../src/lib/hud';
 import { TourProvider } from '../../src/lib/tour';
 import { UnlocksProvider } from '../../src/lib/unlocks';
 import { useClearSeenPushes } from '../../src/lib/useClearSeenPushes';
+import { useOpenPushes } from '../../src/lib/useOpenPushes';
 
 export default function TabsLayout() {
   const t = useCopy();
@@ -19,6 +20,8 @@ export default function TabsLayout() {
   const { me, raw, refresh } = useMe(session?.user.email);
   // seen results: their pushes leave the notification centre (launch, back to the front, the inbox emptied)
   useClearSeenPushes(raw?.inbox_unseen, refresh);
+  // a tapped push's place opens here: this layout is only up when signed in and past onboarding, with its tabs mounted
+  useOpenPushes();
   return (
     <HudProvider>
       <UnlocksProvider serverUnlocked={raw?.unlocks ?? null} refresh={refresh}>
@@ -38,6 +41,8 @@ export default function TabsLayout() {
               {/* every tournament, «Όλα τα τουρνουά ›» from the home; no longer a tab */}
               <Tabs.Screen name="tournaments" options={{ title: t.tabs.tournaments, href: null }} />
               {/* player search opens from Τουρνουά */}
+              {/* «Περισσότερα ›» under the home's three votes: every match of the day, Τουρνουά lit */}
+              <Tabs.Screen name="all-matches" options={{ title: t.home.all.title, href: null }} />
               <Tabs.Screen name="players" options={{ title: t.tabs.players, href: null }} />
               <Tabs.Screen name="badges" options={{ title: t.badges.title, href: null }} />
               <Tabs.Screen name="tournament/[id]" options={{ title: t.tournaments.title, href: null }} />

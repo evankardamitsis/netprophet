@@ -200,6 +200,41 @@ export function segmentsOf(d: Pick<GetTournamentResult, 'days' | 'draws'>, today
   ].filter((s): s is Segment => s !== null);
 }
 
+/** what a link or a push asks of the tournament page: ?draw=<tab>, ?day=YYYY-MM-DD, ?match=<id> */
+export interface TournamentAsk {
+  draw?: string | null;
+  day?: string | null;
+  match?: string | null;
+}
+
+/** where the page opens for an ask: the segment, the Πρόγραμμα day, the match to scroll to, the draw; null keeps the default */
+export interface TournamentLanding {
+  segment: Segment | null;
+  day: string | null;
+  focus: string | null;
+  draw: string | null;
+}
+
+/**
+ * Where a push lands on the tournament page (20270320000000_push_landing). ?match= (the schedule push): Σήμερα when
+ * the match is today and the tournament plays today (your match leads it), else Πρόγραμμα on the match's day,
+ * scrolled to it; a match the page does not have (put off, gone) keeps the default. ?draw= (a draw, a final):
+ * Ταμπλό on that draw. ?day= (tomorrow's schedule): Πρόγραμμα on that day. An ask the page has no data for keeps the default.
+ */
+export function tournamentLanding(d: Pick<GetTournamentResult, 'days' | 'draws'>, today: string, ask: TournamentAsk): TournamentLanding {
+  const none: TournamentLanding = { segment: null, day: null, focus: null, draw: null };
+  const have = segmentsOf(d, today);
+  if (ask.match) {
+    const on = d.days.find((x) => x.matches.some((m) => m.match_id === ask.match));
+    if (!on) return none;
+    if (on.date === today && have.includes('today')) return { ...none, segment: 'today' };
+    return { ...none, segment: 'schedule', day: on.date, focus: ask.match };
+  }
+  if (ask.draw && d.draws.some((x) => x.tab === ask.draw)) return { ...none, segment: 'bracket', draw: ask.draw };
+  if (ask.day && d.days.some((x) => x.date === ask.day)) return { ...none, segment: 'schedule', day: ask.day };
+  return none;
+}
+
 /** Σήμερα when it plays today, else Ταμπλό (else whichever has data) */
 export function defaultSegment(d: Pick<GetTournamentResult, 'days' | 'draws'>, today: string): Segment {
   const have = segmentsOf(d, today);

@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { AppState, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
-import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmRow } from '../../src/components/ConfirmCard';
 import { ProLine } from '../../src/components/ProEntries';
 import { ResultsDeck } from '../../src/components/ResultsDeck';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
-import { TOAST_MS, Toast } from '../../src/components/Toast';
+import { Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteRow } from '../../src/components/VoteRow';
 import {
@@ -20,27 +19,27 @@ import {
   QuizCard,
   ResultsCard,
   Reveal,
-  TournamentCard,
+  TournamentStrip,
   VoteGroupHeading,
   YoursBlock,
   YoursRow,
 } from '../../src/components/HomeCards';
 import { useCopy } from '../../src/i18n';
 import { openProEntry } from '../../src/lib/proEntry';
-import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, useTournaments, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
+import { ONBOARDING_MOMENT, takeOnboardingPro } from '../../src/lib/proOnboarding';
+import { useBaller, useConfirmations, useFeed, useMyMatch, usePro, useQuiz, useTournaments, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
-import { homeTournaments, quizCard, resultsLine, todayHeading, topVotes, tournamentRanks, VOTE_TOP, voteList, voteRows, yoursNow } from '../../src/lib/home';
+import { hasMoreVotes, homeSections, homeTournaments, quizCard, resultsLine, todayHeading, topVotes, tournamentRanks, tournamentStrip, voteList, yoursNow, type HomeSection } from '../../src/lib/home';
 import { useFollowedIds } from '../../src/lib/myPeople';
 import { yoursSet } from '../../src/lib/tournamentToday';
-import { useToastQueue } from '../../src/lib/toastQueue';
+import { useNotes, useVotePath } from '../../src/lib/useVotePath';
 import { skipIds, takenToast } from '../../src/lib/resultsSummary';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { isUnlock, nextGroup } from '../../src/lib/celebrate';
-import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
+import { hasMoment } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
-import { feedbackAfterVote } from '../../src/lib/quests';
 import { quizStaleIn } from '../../src/lib/quiz';
-import { fmt, type Side } from '../../src/lib/votes';
+import { fmt } from '../../src/lib/votes';
 import { useHudActions } from '../../src/lib/hud';
 import { measureView, useTour, useTourTarget } from '../../src/lib/tour';
 import { revealDelta, type TourTarget } from '../../src/lib/tourSteps';
@@ -48,38 +47,28 @@ import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { colors, fonts, text } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
-import { momentsAct, rereadCelebrations, useMoments } from '../../src/lib/useMoments';
+import { momentsAct, useMoments } from '../../src/lib/useMoments';
 import { currentMe } from '../../src/lib/meStore';
 import { clearSeenResultPushes } from '../../src/lib/push';
 import { markResultsSeen } from '../../src/lib/resultsSeen';
-import { mayHaveCelebrated, voteBurst, type GameSnapshot } from '../../src/lib/postVote';
 import type { MomentKind } from '../../src/lib/moments';
 
 /**
- * Τουρνουά, the home (mockup D, founder 22 Oct), top to bottom: the page header («Σήμερα» and the date, scrolls with the page), the results card (only while results wait; it opens
- * the results one by one, as Σήμερα played them), «Οι δικοί σου», the quiz, «Ψήφισε σήμερα» (tap a name to vote),
- * Pro, «Τουρνουά σήμερα». Everything under the layout is Σήμερα's machinery as it was: the header's held numbers while
+ * Τουρνουά, the home (layout C, founder 25 Oct), top to bottom (homeSections): the page header («Σήμερα» and the date,
+ * scrolls with the page), the results card (only while results wait; it opens the results one by one, as Σήμερα played
+ * them), «Οι δικοί σου», «Τουρνουά σήμερα» as a strip you swipe, Pro, the quiz, «Ψήφισε σήμερα» (the first three; tap a
+ * name to vote; «Περισσότερα ›» opens «Όλα τα ματς σήμερα»), the sponsor's banner and the two quiet links. Everything under the layout is Σήμερα's machinery as it was: the header's held numbers while
  * results wait, the vote burst (quests, badges, celebrations), the moments pacer (Baller, «Για σένα»), the tour.
  */
 /** the results deck opens on a tap: its first card comes in after this short beat */
 const FIRST_RESULT_DELAY = 150;
-/** a vote counts for the pacer once its reveal has played, so no moment covers the split (prototype reveal ~900ms) */
-const VOTE_SETTLE_MS = 1400;
 /** after a vote, Baller or «Για σένα» wait for this long without scrolling (founder, 18 Oct: when it makes sense) */
 const CALM_MS = 2000;
-
-/** one line at a time over Σήμερα: a toast, or the quest bar over the tab bar (founder, 19 Oct) */
-type Note =
-  | { kind: 'toast'; text: string }
-  | { kind: 'bar'; bar: { title: string; from: number; to: number; progress: number; target: number } };
 
 export default function HomeScreen() {
   const t = useCopy();
   // a failed vote, a confirmed match, a finished or moved quest, a report sent: one queue, one at a time
-  const notes = useToastQueue<Note>();
-  const pushNote = notes.push;
-  const toast = useCallback((text: string) => pushNote({ kind: 'toast', text }, TOAST_MS), [pushNote]);
-  const onVoteError = useCallback((kind: VoteErrorKind) => toast(t.feed[kind]), [toast, t]);
+  const { note, pushNote, toast, onVoteError } = useNotes();
   const { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote } = useFeed(onVoteError);
   const confirmations = useConfirmations();
   const myMatch = useMyMatch();
@@ -90,13 +79,12 @@ export default function HomeScreen() {
   const [deckOpen, setDeckOpen] = useState(false);
   // a tap on the card opens the results in the full view and they stay full (founder, 22 Oct); a push opens them as before
   const [deckFull, setDeckFull] = useState(false);
+  // every result of this visit has played: «Δες πώς πας φέτος με Pro ›» takes the deck's place
+  const [deckEnded, setDeckEnded] = useState(false);
   const params = useLocalSearchParams<{ results?: string }>();
-  // «Περισσότερα ›» under the three votes
-  const [moreVotes, setMoreVotes] = useState(false);
   const unlocks = useUnlocks();
   const unlocksNow = useRef(unlocks);
   unlocksNow.current = unlocks;
-  const quests = useQuests();
   const quiz = useQuiz();
   // «Οι ερωτήσεις της ημέρας»: read again when the feed comes back into view after playing, or on a new quiz day
   // (get_quiz is slow; quizNeedsRead)
@@ -122,65 +110,13 @@ export default function HomeScreen() {
     const id = setTimeout(() => void quizRefresh(), ms + 1000);
     return () => clearTimeout(id);
   }, [heldQuiz, quizRefresh]);
-  const questsNow = useRef(quests.quests);
-  questsNow.current = quests.quests;
-  const badges = useBadges();
-  const badgesNow = useRef(badges.badges);
-  badgesNow.current = badges.badges;
-  // after a vote: a toast for a quest that finished, else the slim bar for a quest that moved, else for a badge one
-  // vote short of its next tier (never more than one), in the queue
-  // votes cast since the feed loaded: the line under the title counts down at once (the cards keep their loaded vote)
-  // votes in a row make one burst: a second after the last one, one read of quests, badges and get_me, one note,
-  // and the celebration queue only if that read shows a vote could have queued one (postVote.ts)
-  const afterVotes = useRef<ReturnType<typeof voteBurst<GameSnapshot>> | null>(null);
-  const burstRun = useRef<(before: GameSnapshot) => void>(() => undefined);
-  burstRun.current = (before) => {
-    const since = Date.now();
-    void Promise.all([quests.refresh(), badges.refresh(), unlocksNow.current.refresh({ since })]).then(([after, badgesAfter]) => {
-      const me = currentMe();
-      const now: GameSnapshot = { quests: after, badges: badgesAfter, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null };
-      if (mayHaveCelebrated(before, now)) rereadCelebrations();
-      // quests and badges that are not open yet say nothing
-      const { has } = unlocksNow.current;
-      const f = after
-        ? feedbackAfterVote(before.quests && gateQuests(before.quests, has), gateQuests(after, has), t, has('badges_shelf') ? { before: before.badges, after: badgesAfter } : undefined)
-        : null;
-      if (f?.kind === 'toast') toast(f.text);
-      else if (f) pushNote({ kind: 'bar', bar: { title: f.title, from: f.from, to: f.to, progress: f.progress, target: f.target } }, QUEST_BAR_MS);
-    });
-  };
-  useEffect(() => {
-    const burst = voteBurst<GameSnapshot>((before) => burstRun.current(before));
-    afterVotes.current = burst;
-    return () => burst.cancel();
-  }, []);
-  const onVote = useCallback(
-    async (matchId: string, side: Side) => {
-      const me = currentMe();
-      const before: GameSnapshot = { quests: questsNow.current, badges: badgesNow.current, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null };
-      const pct = await vote(matchId, side);
-      afterVotes.current?.add(() => before);
-      // the first vote of the visit opens the door for one moment; after a calm beat Baller or «Για σένα» may come.
-      // The burst above decides whether the celebration queue is read again.
-      setTimeout(() => {
-        momentsAct({ reread: false });
-        setCalmFrom(Date.now());
-      }, VOTE_SETTLE_MS);
-      return pct;
-    },
-    [vote],
-  );
+  // a vote counts for the pacer once its reveal has played: then, in a calm beat, Baller or «Για σένα» may come
+  const onVote = useVotePath({ vote, pushNote, toast, onSettled: () => setCalmFrom(Date.now()) });
   // «Αναφορά» from a long press on a card
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
   // one function for every card, so the memoised VoteRow does not re-render with each render of the home
   const onCardLongPress = useCallback((id: string) => setSafety({ kind: 'match', id }), []);
   const hud = useHudActions();
-  // the bar slides over the tab bar, so the tabs layout draws it (prototype mp); it shows when its turn comes
-  const { showQuestBar } = hud;
-  const note = notes.active;
-  useEffect(() => {
-    showQuestBar(note?.item.kind === 'bar' ? note.item.bar : null);
-  }, [note, showQuestBar]);
   const moments = useMoments();
   /** when the last vote settled: from then on we wait for a calm moment; 0 when not waiting */
   const [calmFrom, setCalmFrom] = useState(0);
@@ -243,6 +179,8 @@ export default function HomeScreen() {
     }
     if (hadResults.current) {
       hadResults.current = false;
+      // the last result has played: one quiet Pro line where the deck was (capped once a day)
+      setDeckEnded(true);
       const at = currentMe()?.results_at;
       if (at) markResultsSeen(at);
     }
@@ -255,13 +193,24 @@ export default function HomeScreen() {
       setDeckFull(false);
     }
   }, [results.length]);
-  // opened from a results push
+  // opened from a results push: read the feed again (the one held may be from before the push), then the results open
+  // in the full view, as a tap on the card does (founder, 25 Oct). The param goes at once, so the same push again
+  // (or a new one) opens them again.
   const wantResults = params.results === '1';
+  const [pushOpen, setPushOpen] = useState(false);
   useEffect(() => {
-    if (!wantResults || loading) return;
-    if (results.length > 0) setDeckOpen(true);
+    if (!wantResults) return;
     router.setParams({ results: undefined });
-  }, [wantResults, loading, results.length]);
+    void refresh().finally(() => setPushOpen(true));
+  }, [wantResults, refresh]);
+  useEffect(() => {
+    if (!pushOpen || loading) return;
+    setPushOpen(false);
+    if (results.length > 0) {
+      setDeckFull(true);
+      setDeckOpen(true);
+    }
+  }, [pushOpen, loading, results.length]);
   // celebrations wait until every result card has played and the player did something this visit (moments.ts);
   // the group order is nextGroup's; every queued quest together as one. One a visit: the rest stay unseen on the
   // server and come back next visit.
@@ -388,15 +337,21 @@ export default function HomeScreen() {
   const meNow = currentMe();
   const yours = yoursSet(meNow?.player?.id ?? null, followed);
   const votes = voteList(cards, tournamentRanks(tournaments.data?.items ?? [], meNow?.profile.area_ids ?? []));
-  const voteTotal = voteRows(votes.groups);
-  const shownVotes = moreVotes ? votes.groups : topVotes(votes.groups);
+  // always the first three still open; «Περισσότερα ›» opens the rest on its own page, so the home keeps its length
+  const shownVotes = topVotes(votes.groups);
   const resultsView = resultsLine(results, t, now);
   const mine = myMatch.match;
   const people = yoursNow(cards, yours, now, t, mine?.matchId);
   const quizView = unlocks.has('daily_quiz') && quiz.quiz ? quizCard(quiz.quiz, t) : null;
   const todays = tournaments.data ? homeTournaments(tournaments.data.items, cards, meNow?.profile.area_ids ?? [], now, t) : [];
+  const strip = tournamentStrip(todays);
   // the sponsor's banner only when the admin has one running (the feed carries it); nothing configured, nothing shown
   const sponsored = cards.find((c) => c.kind === 'sponsored');
+  const pro = proState ? proState.pro : null;
+  // a new account meets Pro once, softly, right after onboarding (proOnboarding.ts); «Όχι τώρα» lands back here
+  useEffect(() => {
+    if (focused && takeOnboardingPro(pro)) openProEntry(ONBOARDING_MOMENT);
+  }, [pro, focused]);
   /** «Ο αγώνας σου» opens its tournament; a match outside one (or one we cannot place) opens the opponent page */
   const openMine = () => {
     if (!mine) return;
@@ -409,38 +364,38 @@ export default function HomeScreen() {
     else if (proState?.pro) router.push(`/scout/${mine.matchId}`);
     else openProEntry('opponent');
   };
-  let n = 0;
-  const next = () => n++;
 
-  return (
-    <View style={styles.screen}>
-      <ScrollView
-        ref={scroller}
-        onScroll={onScrolled}
-        onScrollBeginDrag={onScrolled}
-        scrollEventThrottle={250}
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={onPull} tintColor={colors.ink} />}
-      >
-        <Reveal i={next()}>
-          <HomeHeader date={todayHeading(now, t)} />
-        </Reveal>
-
-        {/* results: a card while they wait; a tap plays them one by one, as before (ResultsDeck) */}
-        {deckOpen ? (
+  const hasYours = !!mine || confirmations.items.length > 0 || people.length > 0;
+  // the order is homeSections' (layout C, founder 25 Oct); each block is drawn here
+  const sections = homeSections({ results: deckOpen || resultsView !== null || deckEnded, yours: hasYours, quiz: quizView !== null, sponsor: sponsored?.kind === 'sponsored' });
+  const block = (id: HomeSection, i: number): ReactNode => {
+    switch (id) {
+      case 'header':
+        return (
+          <Reveal i={i}>
+            <HomeHeader date={todayHeading(now, t)} />
+          </Reveal>
+        );
+      case 'results':
+        // a card while they wait; a tap plays them one by one, as before (ResultsDeck)
+        return deckOpen ? (
           <ResultsDeck openFull={deckFull} results={results} firstDelay={FIRST_RESULT_DELAY} onDone={onResultDone} onTake={onTake} onTaken={onTaken} />
         ) : resultsView ? (
-          <Reveal i={next()}>
-            <ResultsCard view={resultsView} onOpen={() => {
-              setDeckFull(true);
-              setDeckOpen(true);
-            }} />
+          <Reveal i={i}>
+            <ResultsCard
+              view={resultsView}
+              onOpen={() => {
+                setDeckFull(true);
+                setDeckOpen(true);
+              }}
+            />
           </Reveal>
-        ) : null}
-
-        {mine || confirmations.items.length > 0 || people.length > 0 ? (
-          <Reveal i={next()}>
+        ) : (
+          <ProLine moment="results_end" label={t.pro.entries.resultsEnd} />
+        );
+      case 'yours':
+        return (
+          <Reveal i={i}>
             <YoursBlock>
               {mine ? <MyMatchRow match={mine} onPress={openMine} /> : null}
               {mine ? <ProLine moment="my_match" label={t.pro.entries.opponent} /> : null}
@@ -457,63 +412,96 @@ export default function HomeScreen() {
                 />
               ))}
               {people.map((r) => (
-                <YoursRow key={r.matchId} row={r} onPress={
+                <YoursRow
+                  key={r.matchId}
+                  row={r}
+                  onPress={
                     r.tournamentId
                       ? () => router.push(r.playerId ? { pathname: '/tournament-player', params: { tournament: r.tournamentId!, player: r.playerId, match: r.matchId } } : `/tournament/${r.tournamentId}`)
                       : undefined
-                  } />
+                  }
+                />
               ))}
             </YoursBlock>
           </Reveal>
-        ) : null}
-
-        {quizView ? (
-          <Reveal i={next()}>
+        );
+      case 'tournaments':
+        // today's tournaments as a strip you swipe, right under «Οι δικοί σου»; «+ Ματς» stays beside the heading
+        return (
+          <>
+            <Reveal i={i}>
+              <View style={styles.h2Row}>
+                <Text style={[styles.h2, styles.h2Flex]}>{t.home.tournaments.title}</Text>
+                <AddMatchPill />
+              </View>
+            </Reveal>
+            {strip.length > 0 ? (
+              <Reveal i={i + 1}>
+                <TournamentStrip items={strip} firstRef={tourTournament} onAll={() => router.push('/tournaments')} />
+              </Reveal>
+            ) : tournaments.data ? (
+              <Text style={styles.end}>{t.home.tournaments.none}</Text>
+            ) : null}
+          </>
+        );
+      case 'pro':
+        return <ProCard pro={pro} myMatch={mine} />;
+      case 'quiz':
+        return quizView ? (
+          <Reveal i={i}>
             <QuizCard view={quizView} onPress={() => router.push('/quiz')} />
           </Reveal>
-        ) : null}
-
-        <Reveal i={next()}>
-          <Text style={styles.h2}>{votes.mode === 'tomorrow' ? t.home.vote.tomorrow : t.home.vote.title}</Text>
-        </Reveal>
-        {shownVotes.map((g, gi) => (
-          <View key={g.key} style={styles.voteGroup}>
-            <VoteGroupHeading
-              title={g.title ?? t.home.vote.friendlies}
-              count={fmt(g.count === 1 ? t.home.vote.count.one : t.home.vote.count.many, { n: g.count })}
-              onPress={g.tournamentId ? () => router.push(`/tournament/${g.tournamentId}`) : undefined}
-            />
-            {g.rows.map((m, i) => (
-              <View key={m.id} ref={gi === 0 && i === 0 ? tourVote : undefined} collapsable={false}>
-                <VoteRow match={m} where={m.category ?? ''} onVote={onVote} onLongPress={onCardLongPress} index={i} />
+        ) : null;
+      case 'vote':
+        return (
+          <>
+            <Reveal i={i}>
+              <Text style={styles.h2}>{votes.mode === 'tomorrow' ? t.home.vote.tomorrow : t.home.vote.title}</Text>
+            </Reveal>
+            {shownVotes.map((g, gi) => (
+              <View key={g.key} style={styles.voteGroup}>
+                <VoteGroupHeading
+                  title={g.title ?? t.home.vote.friendlies}
+                  count={fmt(g.count === 1 ? t.home.vote.count.one : t.home.vote.count.many, { n: g.count })}
+                  onPress={g.tournamentId ? () => router.push(`/tournament/${g.tournamentId}`) : undefined}
+                />
+                {g.rows.map((m, ri) => (
+                  <View key={m.id} ref={gi === 0 && ri === 0 ? tourVote : undefined} collapsable={false}>
+                    <VoteRow match={m} where={m.category ?? ''} onVote={onVote} onLongPress={onCardLongPress} index={ri} />
+                  </View>
+                ))}
               </View>
             ))}
+            {hasMoreVotes(votes.groups) ? <QuietLink label={t.home.vote.more} onPress={() => router.push('/all-matches')} /> : null}
+            {votes.mode === 'none' && !loading ? error && empty ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
+          </>
+        );
+      case 'sponsor':
+        return sponsored?.kind === 'sponsored' ? <SponsoredCard card={sponsored} /> : null;
+      case 'links':
+        return (
+          <View style={styles.links}>
+            <QuietLink label={t.home.tournaments.all} onPress={() => router.push('/tournaments')} />
+            <QuietLink label={t.home.tournaments.search} onPress={() => router.push('/players?focus=1')} />
           </View>
-        ))}
-        {voteTotal > VOTE_TOP ? <QuietLink label={moreVotes ? t.home.vote.less : t.home.vote.more} onPress={() => setMoreVotes((v) => !v)} /> : null}
-        {votes.mode === 'none' && !loading ? error && empty ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
+        );
+    }
+  };
 
-        <ProCard pro={proState ? proState.pro : null} myMatch={mine} />
-
-        <Reveal i={next()}>
-          <View style={styles.h2Row}>
-            <Text style={[styles.h2, styles.h2Flex]}>{t.home.tournaments.title}</Text>
-            <AddMatchPill />
-          </View>
-        </Reveal>
-        {todays.map((item, i) => (
-          <Reveal key={item.id} i={next() + i}>
-            <View ref={i === 0 ? tourTournament : undefined} collapsable={false}>
-              <TournamentCard item={item} />
-            </View>
-          </Reveal>
+  return (
+    <View style={styles.screen}>
+      <ScrollView
+        ref={scroller}
+        onScroll={onScrolled}
+        onScrollBeginDrag={onScrolled}
+        scrollEventThrottle={250}
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={onPull} tintColor={colors.ink} />}
+      >
+        {sections.map((id, i) => (
+          <Fragment key={id}>{block(id, i)}</Fragment>
         ))}
-        {tournaments.data && todays.length === 0 ? <Text style={styles.end}>{t.home.tournaments.none}</Text> : null}
-        {sponsored?.kind === 'sponsored' ? <SponsoredCard card={sponsored} /> : null}
-        <View style={styles.links}>
-          <QuietLink label={t.home.tournaments.all} onPress={() => router.push('/tournaments')} />
-          <QuietLink label={t.home.tournaments.search} onPress={() => router.push('/players?focus=1')} />
-        </View>
       </ScrollView>
       {note?.item.kind === 'toast' ? <Toast key={note.n} text={note.item.text} /> : null}
       <SafetySheet
