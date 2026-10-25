@@ -28,18 +28,26 @@ export interface BuyOutcome {
 }
 
 /**
- * The key as the build holds it, cleaned: a value pasted into the EAS env with spaces, a newline or its quotes
- * («"appl_…"») would reach RevenueCat as a different key and every call would fail on credentials.
+ * The key as the build holds it, cleaned. RevenueCat's public keys are only letters, digits and «_», so anything
+ * else goes: spaces, a newline, wrapping quotes, a non-breaking space, control characters. Build 19 shipped the key
+ * with two trailing 0x03 (ETX) characters from the EAS env, and every RevenueCat call failed on credentials.
  */
 export function cleanKey(raw: string | null | undefined): string {
-  return (raw ?? '').trim().replace(/^(["'])(.*)\1$/, '$2').trim();
+  return (raw ?? '')
+    .trim()
+    .replace(/^(["'])([\s\S]*)\1$/, '$2')
+    .replace(/[^A-Za-z0-9_]/g, '');
 }
 
-/** RevenueCat's public SDK keys start with the store's prefix: «appl_» on iOS, «goog_» on Android */
+const KEY_SHAPE = /^(appl|goog|rcb)_[A-Za-z0-9]{20,}$/;
+
+/** A RevenueCat public SDK key's shape and the store's prefix: «appl_» on iOS, «goog_» on Android, «rcb_» on the web */
 export function keyLooksRight(key: string, platform: string): boolean {
+  if (!KEY_SHAPE.test(key)) return false;
   if (platform === 'ios') return key.startsWith('appl_');
   if (platform === 'android') return key.startsWith('goog_');
-  return key.length > 0;
+  if (platform === 'web') return key.startsWith('rcb_');
+  return true;
 }
 
 export interface StoreEnv {

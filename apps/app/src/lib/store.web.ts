@@ -1,5 +1,5 @@
 import { ErrorCode, Purchases, PurchasesError } from '@revenuecat/purchases-js';
-import { cleanKey, storeErrorCode, type BuyOutcome, type RestoreResult, type StoreBlock, type StoreDiagnostics } from './storeTypes';
+import { cleanKey, keyLooksRight, storeErrorCode, type BuyOutcome, type RestoreResult, type StoreBlock, type StoreDiagnostics } from './storeTypes';
 
 /**
  * Buying on the web (founder, 17 Oct): RevenueCat Web Billing, paid through Stripe. The products (Pro plans and every
@@ -82,7 +82,7 @@ export async function storeDiagnostics(userId: string | null): Promise<StoreDiag
     nativeModule: false,
     keyPresent: KEY.length > 0,
     keyLength: KEY.length,
-    keyPrefixOk: KEY.length > 0,
+    keyPrefixOk: keyLooksRight(KEY, 'web'),
     configured: forUser !== null,
     offerings,
     lastError,

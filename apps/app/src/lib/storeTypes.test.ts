@@ -7,25 +7,43 @@ const KEY = 'appl_AbCdEfGhIjKlMnOpQrStUvWxYz0';
 describe('cleanKey', () => {
   it.each([
     [KEY, KEY],
+    // build 19: two trailing ETX characters from the EAS env
+    [`${KEY}\u0003\u0003`, KEY],
     [`  ${KEY}\n`, KEY],
+    [`${KEY}\r\n`, KEY],
     [`"${KEY}"`, KEY],
     [`'${KEY}'`, KEY],
     [` "${KEY}" `, KEY],
-    [`"${KEY}`, `"${KEY}`],
+    [`"${KEY}`, KEY],
+    [`"${KEY}"\u0003`, KEY],
+    [`\u00a0${KEY}\u00a0`, KEY],
+    [`${KEY}\u200b`, KEY],
     ['', ''],
     [undefined, ''],
     [null, ''],
   ])('%j -> %j', (raw, want) => {
     expect(cleanKey(raw)).toBe(want);
   });
+  it('turns the build 19 value (34 chars) into the 32 char key', () => {
+    const raw = `${KEY}\u0003\u0003`;
+    expect(raw.length).toBe(34);
+    expect(cleanKey(raw).length).toBe(32);
+    expect(keyLooksRight(cleanKey(raw), 'ios')).toBe(true);
+  });
 });
 
 describe('keyLooksRight', () => {
-  it('wants the store prefix', () => {
+  const GOOG = 'goog_AbCdEfGhIjKlMnOpQrStUvWxYz0';
+  it('wants the shape and the store prefix', () => {
     expect(keyLooksRight(KEY, 'ios')).toBe(true);
-    expect(keyLooksRight('goog_x', 'ios')).toBe(false);
-    expect(keyLooksRight('goog_x', 'android')).toBe(true);
+    expect(keyLooksRight(`${KEY}\u0003\u0003`, 'ios')).toBe(false);
+    expect(keyLooksRight(`"${KEY}"`, 'ios')).toBe(false);
+    expect(keyLooksRight('appl_short', 'ios')).toBe(false);
+    expect(keyLooksRight(GOOG, 'ios')).toBe(false);
+    expect(keyLooksRight(GOOG, 'android')).toBe(true);
     expect(keyLooksRight(KEY, 'android')).toBe(false);
+    expect(keyLooksRight('rcb_AbCdEfGhIjKlMnOpQrStUvWxYz0', 'web')).toBe(true);
+    expect(keyLooksRight('sk_AbCdEfGhIjKlMnOpQrStUvWxYz0', 'ios')).toBe(false);
     expect(keyLooksRight('', 'ios')).toBe(false);
   });
 });
