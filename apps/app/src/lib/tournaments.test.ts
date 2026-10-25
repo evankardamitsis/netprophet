@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { DrawMatchRow, GetTournamentResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
-import { allPairs, blocksOf, boldLine, bracketRounds, groupFinished, groupViews, orderStandings, chipOf, dayChips, defaultDay, defaultSegment, segmentsOf, mineHeadline, mineRows, openCount, roundName, scheduleRows, scheduleWindow, sectionsOf, subLine } from './tournaments';
+import { allPairs, blocksOf, boldLine, bracketRounds, groupFinished, groupViews, orderStandings, chipOf, dayChips, defaultDay, defaultSegment, segmentsOf, mineHeadline, mineRows, openCount, roundName, scheduleRows, scheduleWindow, sectionsOf, subLine, tournamentLanding } from './tournaments';
 
 const t = getCopy('el');
 
@@ -317,4 +317,27 @@ describe('a start with no time (the import stores 00:00 Athens)', async () => {
     expect(whenLine('2026-10-21T21:00:00Z', '2026-10-22', tt)).toBe('Σήμερα');
     expect(when('2026-10-21T21:00:00Z', new Date('2026-10-22T09:00:00Z'), tt).label).toBe('Σήμερα');
   });
+});
+
+describe('where a push lands on the tournament page (tournamentLanding)', () => {
+  const draws = [{ tab: 'M OPEN' }, { tab: 'W' }] as TournamentDraw[];
+  const days = [
+    { date: '2026-10-12', matches: [match({ match_id: 'today1', starts_at: '2026-10-12T08:00:00Z' })] },
+    { date: '2026-10-14', matches: [match({ match_id: 'later1', starts_at: '2026-10-14T08:00:00Z' })] },
+  ];
+  const d = { days, draws };
+  const none = { segment: null, day: null, focus: null, draw: null };
+  it('your match today: Σήμερα, where it leads', () =>
+    expect(tournamentLanding(d, '2026-10-12', { match: 'today1' })).toEqual({ ...none, segment: 'today' }));
+  it('your match on another day: Πρόγραμμα on that day, scrolled to it', () =>
+    expect(tournamentLanding(d, '2026-10-12', { match: 'later1' })).toEqual({ ...none, segment: 'schedule', day: '2026-10-14', focus: 'later1' }));
+  it('a match the page does not have (put off, gone): the default', () =>
+    expect(tournamentLanding(d, '2026-10-12', { match: 'gone' })).toEqual(none));
+  it('a draw: Ταμπλό on it', () =>
+    expect(tournamentLanding(d, '2026-10-12', { draw: 'W' })).toEqual({ ...none, segment: 'bracket', draw: 'W' }));
+  it('a draw the page does not have yet: the default', () => expect(tournamentLanding(d, '2026-10-12', { draw: 'X' })).toEqual(none));
+  it('a day: Πρόγραμμα on it', () =>
+    expect(tournamentLanding(d, '2026-10-12', { day: '2026-10-14' })).toEqual({ ...none, segment: 'schedule', day: '2026-10-14' }));
+  it('a day with nothing: the default', () => expect(tournamentLanding(d, '2026-10-12', { day: '2026-10-20' })).toEqual(none));
+  it('nothing asked: the default', () => expect(tournamentLanding(d, '2026-10-12', {})).toEqual(none));
 });

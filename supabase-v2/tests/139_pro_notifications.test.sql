@@ -47,8 +47,8 @@ select is((select count(*)::int from core.notifications where user_id = :'free':
 select is(core.schedule_alert(:'m2'::uuid, 'new', (:'d'::date + time '12:00') at time zone 'Europe/Athens'), 1, 'schedule: of two Pro players, one switched it off');
 select is((select count(*)::int from core.notifications where user_id = :'off'::uuid), 0, '«Τα τουρνουά σου» off: nothing');
 select is(core.schedule_alert(:'m1'::uuid, 'new', (:'d'::date + time '13:00') at time zone 'Europe/Athens'), 0, 'schedule: once per event');
-select is((select payload -> 'data' ->> 'url' from core.notifications where user_id = :'pro'::uuid and type = 'schedule'), '/tournament/' || :'t',
-          'schedule: data.url opens the tournament');
+select is((select payload -> 'data' ->> 'url' from core.notifications where user_id = :'pro'::uuid and type = 'schedule'),
+          '/tournament/' || :'t' || '?match=' || :'m1', 'schedule: data.url opens the tournament on the match (20270320000000_push_landing)');
 select is((select payload ->> 'type' from core.outbox where payload ->> 'user_id' = :'pro' and payload ->> 'type' = 'schedule'), 'schedule', 'schedule: typed');
 
 -- at night: it waits for 08:00, and a newer change takes its place

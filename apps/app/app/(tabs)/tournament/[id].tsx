@@ -32,6 +32,8 @@ import {
   dayChips,
   defaultSegment,
   scheduleRows,
+  tournamentLanding,
+  type TournamentAsk,
   segmentsOf,
   subLine,
   todayKey,
@@ -52,8 +54,9 @@ const STAGGER = 70;
 export default function TournamentScreen() {
   const t = useCopy();
   const c = t.tournaments;
-  // ?draw=<tab>: a «Βγήκε η κλήρωση» push opens straight on that draw; ?day=YYYY-MM-DD: «το αυριανό πρόγραμμα» on that day
-  const { id, draw, day } = useLocalSearchParams<{ id: string; draw?: string; day?: string }>();
+  // ?draw=<tab>: a «Βγήκε η κλήρωση» push opens straight on that draw; ?day=YYYY-MM-DD: «το αυριανό πρόγραμμα» on that day;
+  // ?match=<id>: «Το πρόγραμμά σου» on your match (tournamentLanding)
+  const { id, draw, day, match } = useLocalSearchParams<{ id: string; draw?: string; day?: string; match?: string }>();
   const { data, loading, error, notFound, refresh } = useTournament(String(id));
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/tournaments'));
@@ -85,8 +88,9 @@ export default function TournamentScreen() {
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>{c.detail.back}</Animated.Text>
         </Pressable>
-        {data ? (
-          <Body key={data.id} d={data} today={today} openDraw={draw} openDay={day} onToast={say} bindRefresh={bindRefresh} scrollTo={(y) => scroller.current?.scrollTo({ y, animated: true })} />
+        {/* only this tournament's data: while another one is still on screen, its page must not take this ask */}
+        {data && data.id === String(id) ? (
+          <Body key={data.id} d={data} today={today} openDraw={draw} openDay={day} openMatch={match} reload={refresh} onToast={say} bindRefresh={bindRefresh} scrollTo={(y) => scroller.current?.scrollTo({ y, animated: true })} />
         ) : null}
         {!data && notFound ? <Text style={styles.empty}>{c.detail.notFound}</Text> : null}
         {!data && !loading && error && !notFound ? <Text style={styles.empty}>{c.detail.error}</Text> : null}
@@ -129,6 +133,8 @@ function Body({
   today,
   openDraw,
   openDay,
+  openMatch,
+  reload,
   onToast,
   bindRefresh,
   scrollTo,
@@ -137,28 +143,61 @@ function Body({
   today: string;
   openDraw?: string;
   openDay?: string;
+  openMatch?: string;
+  reload: () => Promise<void>;
   onToast: (text: string) => void;
   bindRefresh: (fn: (() => void) | null) => void;
   scrollTo: (y: number) => void;
 }) {
   const t = useCopy();
   const segments = segmentsOf(d, today);
-  const askedDay = openDay && d.days.some((x) => x.date === openDay) ? openDay : null;
-  const [picked, setPicked] = useState<Segment | null>(openDraw && d.draws.some((x) => x.tab === openDraw) ? 'bracket' : askedDay ? 'schedule' : null);
+  // what a push or a link asks (?draw, ?day, ?match): read on the first draw, and again whenever it changes while the
+  // page is open (a tab screen stays mounted: a second push for this tournament changes the params in place)
+  const first = tournamentLanding(d, today, { draw: openDraw, day: openDay, match: openMatch });
+  const [picked, setPicked] = useState<Segment | null>(first.segment);
   const seg = picked && segments.includes(picked) ? picked : defaultSegment(d, today);
   const sub = subLine(d, t);
-  const [pickedDay, setPickedDay] = useState<string | null>(null);
-  const day = pickedDay && d.days.some((x) => x.date === pickedDay) ? pickedDay : openingDay(d.days, today, askedDay);
+  const [pickedDay, setPickedDay] = useState<string | null>(first.day);
+  const day = pickedDay && d.days.some((x) => x.date === pickedDay) ? pickedDay : openingDay(d.days, today, null);
+  const [drawTab, setDrawTab] = useState<string | null>(first.draw);
   const follows = useFollowedIds();
   const [following, setFollowing] = useState(d.followed === true);
   const yours = useMemo(() => yoursSet(d.me, follows), [d.me, follows]);
   const todayMatches = useMemo(() => d.days.find((x) => x.date === today)?.matches ?? [], [d.days, today]);
-  const [focus, setFocus] = useState<Focus | null>(null);
+  const [focus, setFocus] = useState<Focus | null>(first.focus ? { id: first.focus, n: 1 } : null);
   const goTo = (matchId: string, onDay: string) => {
     setPicked('schedule');
     setPickedDay(onDay);
     setFocus((f) => ({ id: matchId, n: (f?.n ?? 0) + 1 }));
   };
+  // the first ask is already on screen (the state above); a later one (a push while the page is open) reads the
+  // tournament again first, so a moved match or a new draw is there, then moves the page
+  const firstAsk = useRef(true);
+  const [later, setLater] = useState<{ ask: TournamentAsk; n: number } | null>(null);
+  useEffect(() => {
+    const isFirst = firstAsk.current;
+    firstAsk.current = false;
+    if (!openDraw && !openDay && !openMatch) return;
+    const ask: TournamentAsk = { draw: openDraw, day: openDay, match: openMatch };
+    // the ask is taken: the same push again asks again
+    router.setParams({ draw: undefined, day: undefined, match: undefined });
+    if (isFirst) return;
+    void reload().finally(() => setLater((p) => ({ ask, n: (p?.n ?? 0) + 1 })));
+    // reload is the tournament's own read
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openDraw, openDay, openMatch]);
+  useEffect(() => {
+    if (!later) return;
+    setLater(null);
+    const l = tournamentLanding(d, today, later.ask);
+    if (l.segment) setPicked(l.segment);
+    if (l.day) setPickedDay(l.day);
+    if (l.draw) setDrawTab(l.draw);
+    if (l.focus) {
+      const target = l.focus;
+      setFocus((f) => ({ id: target, n: (f?.n ?? 0) + 1 }));
+    }
+  }, [later, d, today]);
   return (
     <>
       <Reveal i={0}>
@@ -209,7 +248,7 @@ function Body({
           scrollTo={scrollTo}
         />
       ) : null}
-      {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} openDraw={openDraw} yours={yours} /> : null}
+      {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} openDraw={drawTab ?? undefined} yours={yours} /> : null}
     </>
   );
 }
@@ -641,6 +680,10 @@ function MatchRow({
 function Bracket({ d, openDraw, yours }: { d: GetTournamentResult; openDraw?: string; yours: Set<string> }) {
   const t = useCopy();
   const [pickedTab, setPickedTab] = useState<string | null>(openDraw ?? null);
+  // a push for another draw of this tournament while Ταμπλό is open
+  useEffect(() => {
+    if (openDraw) setPickedTab(openDraw);
+  }, [openDraw]);
   const draw = d.draws.find((x) => x.tab === pickedTab) ?? d.draws[0]!;
   const robin = draw.format === 'round_robin';
   const rounds = robin ? [] : bracketRounds(draw, d.masked, t);
