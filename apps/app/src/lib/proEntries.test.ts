@@ -50,6 +50,22 @@ describe('proEntries', () => {
     expect(showsProEntry({ moment: 'opponent', pro: false, seen: {}, now: noon })).toBe(true);
   });
 
+  it('the new moments (25 Oct): none shows to Pro players; the end of the results rests the day it was tapped', () => {
+    for (const moment of ['onboarding', 'results_end', 'ladder'] as const) expect(showsProEntry({ moment, pro: true, seen: {}, now: noon })).toBe(false);
+    expect(showsProEntry({ moment: 'results_end', pro: false, seen: {}, now: noon })).toBe(true);
+    const seen = markSeen({}, 'results_end', noon);
+    expect(showsProEntry({ moment: 'results_end', pro: false, seen, now: noon })).toBe(false);
+    expect(showsProEntry({ moment: 'results_end', pro: false, seen, now: tomorrow })).toBe(true);
+    // nothing flashes before storage is read
+    expect(showsProEntry({ moment: 'results_end', pro: false, seen: {}, now: noon, ready: false })).toBe(false);
+  });
+
+  it('the locked ladder section stays for players without Pro, even after a tap', () => {
+    expect(markSeen({}, 'ladder', noon)).toEqual({});
+    expect(showsProEntry({ moment: 'ladder', pro: false, seen: {}, now: noon })).toBe(true);
+    expect(showsProEntry({ moment: 'ladder', pro: null, seen: {}, now: noon })).toBe(false);
+  });
+
   it('reads storage safely', () => {
     expect(parseSeen(null)).toEqual({});
     expect(parseSeen('not json')).toEqual({});

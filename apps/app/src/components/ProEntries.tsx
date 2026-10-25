@@ -96,19 +96,32 @@ export function MeProCard() {
  * surface), greyed and locked. A tap opens Pro. Not on your own card, where those numbers are «Τα στατιστικά σου».
  */
 export function ProTeaser() {
-  const t = useCopy();
-  const e = t.pro.entries;
-  const { show, open } = useProEntry('player');
+  const e = useCopy().pro.entries;
+  return <LockedBlock moment="player" head={e.teaserTag} rows={e.teaserRows} label={e.teaserLabel} />;
+}
+
+/**
+ * Κατάταξη, under the board (founder, 25 Oct): «Η πορεία σου μήνα με μήνα · Pro», greyed preview rows. It sells a look
+ * back at your own months, never points or ranking. A tap opens Pro.
+ */
+export function LadderProSection() {
+  const e = useCopy().pro.entries;
+  return <LockedBlock moment="ladder" head={e.ladderTag} rows={e.ladderRows} label={e.ladderLabel} />;
+}
+
+/** the locked block: a heading, greyed rows with a bar each, «›»; nothing for Pro players or while it rests */
+function LockedBlock({ moment, head, rows, label }: { moment: ProMoment; head: string; rows: readonly string[]; label: string }) {
+  const { show, open } = useProEntry(moment);
   const press = usePress(0.98);
   if (!show) return null;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={e.teaserLabel} onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
       <Animated.View style={[styles.teaser, press.style]}>
         <View style={styles.teaserTop}>
-          <Text style={styles.teaserHead}>{greekCaps(e.teaserTag)}</Text>
+          <Text style={styles.teaserHead}>{greekCaps(head)}</Text>
           <Text style={styles.teaserGo}>›</Text>
         </View>
-        {e.teaserRows.map((row, i) => (
+        {rows.map((row, i) => (
           <View key={row} style={styles.teaserRow}>
             <Text style={styles.teaserLabel}>{row}</Text>
             <View style={[styles.bar, { width: 56 - i * 10 }]} />

@@ -393,8 +393,8 @@ insert into core.match_results (match_id, winner_side, walkover) values (:'m_wo'
 update core.matches set status = 'played' where id = :'m_wo'::uuid;
 
 -- tournament days either side of midnight in Athens (21:30 and 20:30 UTC), and a match nobody is in yet
-select tests.mk_match(:'pb'::uuid, :'pc'::uuid, ((:'today'::date + 2)::timestamp + interval '21 hours 30 minutes') at time zone 'UTC') as m_late1 \gset
-select tests.mk_match(:'pd'::uuid, :'pdef'::uuid, ((:'today'::date + 2)::timestamp + interval '20 hours 30 minutes') at time zone 'UTC') as m_late2 \gset
+select tests.mk_match(:'pb'::uuid, :'pc'::uuid, ((:'today'::date + 3)::timestamp + interval '30 minutes') at time zone 'Europe/Athens') as m_late1 \gset
+select tests.mk_match(:'pd'::uuid, :'pdef'::uuid, ((:'today'::date + 2)::timestamp + interval '23 hours 30 minutes') at time zone 'Europe/Athens') as m_late2 \gset
 insert into core.matches (sport_id, format, status, starts_at, source, tournament_id)
 values ('tennis', 'singles', 'scheduled', now() + interval '3 days', 'admin', '00000000-0000-0000-0000-0000000020a1') returning id as m_empty \gset
 update core.matches set tournament_id = '00000000-0000-0000-0000-0000000020a1' where id in (:'m_late1'::uuid, :'m_late2'::uuid);

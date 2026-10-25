@@ -5,6 +5,9 @@
  * - Pro players never see a sales entry.
  * - The header pill and Εγώ's card are always there for players without Pro.
  * - Every other entry is one quiet line or card per moment, and once it was tapped it rests until the next day.
+ * - 'onboarding' is the soft paywall after a new sign-up: it opens once (proOnboarding.ts keeps the one-shot), so it has no
+ *   daily rest of its own. 'ladder' is the locked section on Κατάταξη, always there for players without Pro like Εγώ's card.
+ *   'results_end' is the line after the last result played, once a day.
  * - While we do not know yet whether the player has Pro, nothing shows (no flash that disappears).
  * Nothing here sells advantage: every entry is information, alerts or convenience.
  */
@@ -17,10 +20,13 @@ export type ProMoment =
   | 'my_match'
   | 'result'
   | 'follow'
-  | 'opponent';
+  | 'opponent'
+  | 'onboarding'
+  | 'results_end'
+  | 'ladder';
 
 /** the moments that rest for the day once tapped; the header pill and Εγώ's card never do */
-export const CAPPED_MOMENTS: readonly ProMoment[] = ['home', 'player', 'tournament_player', 'my_match', 'result', 'follow'];
+export const CAPPED_MOMENTS: readonly ProMoment[] = ['home', 'player', 'tournament_player', 'my_match', 'result', 'follow', 'results_end'];
 
 /** the day each capped moment was last tapped, «2026-10-22» in the player's own calendar */
 export type ProSeen = Partial<Record<ProMoment, string>>;
