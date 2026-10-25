@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ProOffer, ProOfferMoment } from '@netprophet/db';
 import { useAuth } from './auth';
 import { useApi } from './data';
-import { buy, restore, storeReady } from './store';
-import type { BuyResult, RestoreResult } from './storeTypes';
+import { buy, restore, storeDiagnostics, storeReady } from './store';
+import type { BuyOutcome, RestoreResult, StoreDiagnostics } from './storeTypes';
 
 /**
  * Pro and cosmetics, bought (founder, 17 Oct). The store (RevenueCat: Stripe on the web, Google Play, later Apple)
@@ -25,21 +25,24 @@ const SAMPLE: ProOffer = {
   can_offer: true,
 };
 
-export function useProOffer(): { offer: ProOffer | null; refresh: () => Promise<void> } {
+export function useProOffer(): { offer: ProOffer | null; failed: boolean; refresh: () => Promise<void> } {
   const api = useApi();
   const [offer, setOffer] = useState<ProOffer | null>(api ? null : SAMPLE);
+  const [failed, setFailed] = useState(false);
   const refresh = useCallback(async () => {
     if (!api) return;
     try {
       setOffer(await api.proOffer());
+      setFailed(false);
     } catch {
-      // unknown: the screens show the plans without a free week
+      // the plans did not come: the Pro screen says so and offers to ask again, instead of showing no button
+      setFailed(true);
     }
   }, [api]);
   useEffect(() => {
     void refresh();
   }, [refresh]);
-  return { offer, refresh };
+  return { offer, failed, refresh };
 }
 
 /** an offer moment showed its line: the server counts it toward one a day */
@@ -60,20 +63,20 @@ const WAIT_TRIES = 8;
  * Buy a product (`pro_monthly`, `pro_founding`, `cos_bg_hard`…). Resolves after the store and, for a bought item,
  * once `landed()` says our database has it (the webhook), or after about twelve seconds of asking.
  */
-export function usePurchase(): { ready: boolean; buy: (productId: string, landed: () => Promise<boolean>) => Promise<BuyResult> } {
+export function usePurchase(): { ready: boolean; buy: (productId: string, landed: () => Promise<boolean>) => Promise<BuyOutcome> } {
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
   const run = useCallback(
-    async (productId: string, landed: () => Promise<boolean>) => {
-      if (!userId) return 'unavailable' as const;
+    async (productId: string, landed: () => Promise<boolean>): Promise<BuyOutcome> => {
+      if (!userId) return { result: 'unavailable', code: 'no_user' };
       const r = await buy(productId, userId);
-      if (r !== 'ok') return r;
+      if (r.result !== 'ok') return r;
       for (let i = 0; i < WAIT_TRIES; i++) {
-        if (await landed()) return 'ok' as const;
+        if (await landed().catch(() => false)) return r;
         await new Promise((res) => setTimeout(res, WAIT_MS));
       }
       // paid, the webhook is late: the next refresh shows it
-      return 'ok' as const;
+      return r;
     },
     [userId],
   );
@@ -85,4 +88,21 @@ export function useRestore(): () => Promise<RestoreResult> {
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
   return useCallback(async () => (userId ? restore(userId) : ('unavailable' as const)), [userId]);
+}
+
+/** Staff only (Εγώ › Ρυθμίσεις): the store's state on this phone, asked again with `check`. */
+export function useStoreDiagnostics(): { diag: StoreDiagnostics | null; checking: boolean; check: () => Promise<void> } {
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
+  const [diag, setDiag] = useState<StoreDiagnostics | null>(null);
+  const [checking, setChecking] = useState(false);
+  const check = useCallback(async () => {
+    setChecking(true);
+    try {
+      setDiag(await storeDiagnostics(userId));
+    } finally {
+      setChecking(false);
+    }
+  }, [userId]);
+  return { diag, checking, check };
 }

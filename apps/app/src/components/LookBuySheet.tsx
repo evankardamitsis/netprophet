@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
 import type { BuySheet } from '../lib/look';
 import { usePurchase } from '../lib/purchase';
+import { buyLineFor } from '../lib/storeTypes';
 import { usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 
@@ -31,14 +32,15 @@ export function LookBuySheet({
   const purchase = usePurchase();
   const press = usePress();
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  /** what the last try ended in, when it was not a purchase or a cancel */
+  const [failed, setFailed] = useState<null | 'device' | 'failed'>(null);
   const insets = useSafeAreaInsets();
   const open = sheet !== null;
   const p = useSharedValue(0);
   useEffect(() => {
     if (open) {
       setBusy(false);
-      setFailed(false);
+      setFailed(null);
       p.value = 0;
       p.value = withSpring(1, motion.spring);
     }
@@ -50,13 +52,17 @@ export function LookBuySheet({
   const buyIt = async () => {
     if (!sheet || busy) return;
     setBusy(true);
-    setFailed(false);
+    setFailed(null);
     const r = await purchase.buy(`cos_${sheet.key}`, () => owned(sheet.key));
     setBusy(false);
-    if (r === 'ok') {
+    if (r.result === 'ok') {
       onBought();
       close();
-    } else if (r !== 'cancelled') setFailed(true);
+      return;
+    }
+    const line = buyLineFor(r);
+    if (line === 'device') setFailed('device');
+    else if (line !== 'none') setFailed('failed');
   };
   const back = useAnimatedStyle(() => ({ opacity: Math.min(1, p.value) }));
   const body = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 420 }] }));
@@ -86,7 +92,7 @@ export function LookBuySheet({
                   <Text style={styles.soonLine}>{t.look.soonLine}</Text>
                 </>
               )}
-              {failed ? <Text style={styles.soonLine}>{t.look.buyFailed}</Text> : null}
+              {failed ? <Text style={styles.soonLine}>{failed === 'device' ? t.pro.deviceUnavailable : t.look.buyFailed}</Text> : null}
               <Pressable accessibilityRole="button" onPress={close} style={styles.close}>
                 <Text style={styles.closeText}>{t.look.close}</Text>
               </Pressable>

@@ -12,6 +12,7 @@ import {
 } from "../src/lib/onboardingGate";
 import { identify, screen } from "../src/lib/analytics";
 import { listenForPushTaps, refreshPushToken } from "../src/lib/push";
+import { prepareStore } from "../src/lib/store";
 import { api, isLive } from "../src/lib/supabase";
 import { colors } from "../src/theme";
 import { initSounds } from "../src/lib/sound";
@@ -78,6 +79,8 @@ function Routes() {
   useEffect(() => {
     if (userId && api) void refreshPushToken(api);
     if (userId) identify(userId, "el");
+    // the store (RevenueCat) is configured for this account now, not at the first tap on buy
+    if (userId) void prepareStore(userId);
   }, [userId]);
   // a tapped push opens its screen (pushRoute), from the first moment, signed in or not: the tap that launched a killed
   // app, a tap from the background, a banner tapped in the app. The place waits (setPendingPush) and the main layout
