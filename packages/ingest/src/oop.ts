@@ -53,6 +53,8 @@ export interface SheetMatch {
   setsWon: string;
   winner: 1 | 2 | null;
   status: ScoreStatus;
+  /** the sheet wrote «ret»: the match stopped, `winner` is the side ahead when it did */
+  retired?: boolean;
   /** date|discipline|level|sides: the same match on any run gets the same fingerprint */
   fingerprint: string;
   /** sorted; see parse_oop.py for the list */
@@ -164,6 +166,7 @@ export function parseSheet(tabs: TabInput[], seasonStartYear: number): SheetMatc
         setsWon: `${score.won[0]}-${score.won[1]}`,
         winner: score.winner,
         status: score.status,
+        ...(score.retired ? { retired: true } : {}),
         fingerprint: [day.date, discipline, parseCategoryRaw(g('c')).level, ...[k1, k2].sort()].join('|'),
         flags: [...f],
         dk: JSON.stringify([discipline, cat.level, [k1, k2].sort(), scoreRaw.toLowerCase()]),
