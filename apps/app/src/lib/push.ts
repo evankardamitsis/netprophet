@@ -89,8 +89,8 @@ export async function clearSeenResultPushes(): Promise<void> {
 }
 
 /**
- * A route a push carries itself (`data.url`, e.g. the Pro pushes): an app path only, «/results» or
- * «/tournament/abc?draw=M», never another site («//x.com», «https:», «javascript:») nor a path with a backslash.
+ * A route a push carries itself (`data.url`): an app path only, «/results» or «/tournament/abc?draw=M», never another
+ * site («//x.com», «https:», «javascript:») nor a path with a backslash.
  */
 export function safeAppPath(url: unknown): string | null {
   if (typeof url !== 'string') return null;
@@ -101,69 +101,148 @@ export function safeAppPath(url: unknown): string | null {
 
 /** the home opens its results deck on this (Τουρνουά, mockup D) */
 export const HOME_RESULTS = '/?results=1';
-
-const id = (v: unknown): string | null => (typeof v === 'string' && v.length > 0 ? v : null);
+/** where an unknown or old push opens: the home */
+export const HOME = '/';
 
 /**
- * Where a tapped push opens (founder, 21 Oct: "the dedicated place"). `data.url` first, so a new kind of push can
- * carry its own place; else by `data.type`:
- * results          the home, with the results card open (mockup D, 22 Oct: «Πάρε τους πόντους» lives there)
- * reaction         Αποτελέσματα on the match's tournament (a friendly: Αποτελέσματα)
- * claim            Εγώ, where the player now shows (or the claim can be asked again)
- * draw             the tournament, on that draw
- * schedule, entry  the tournament (entry with no tournament: Τουρνουά)
- * reminder         your match's tournament (a friendly: Σήμερα, where «Το ματς σου» leads)
- * Anything else stays where the app opens.
+ * The screens a push may open, by path (no query). Sign-in, onboarding and the opponent link are never a push's place,
+ * and a path the app no longer has (an old push in the notification centre) is not on the list.
  */
-export function pushRoute(data: Record<string, unknown> | undefined | null): string | null {
-  if (!data) return null;
-  const own = safeAppPath(data.url);
+const PUSH_PLACES: readonly RegExp[] = [
+  /^\/$/,
+  /^\/(results|ladder|me|tournaments|players|badges|tournament-player|tournament-path|tournament-draw)$/,
+  /^\/(tournament|player|scout)\/[^/?#]+$/,
+  /^\/(quiz|pro|kudos|season|match-stats|add-match|look|looks|avatars|baller|win-card|share-baller)$/,
+];
+
+/** a path the app has, with its query kept; anything else is null */
+export function knownAppPath(url: unknown): string | null {
+  const u = safeAppPath(url);
+  if (!u) return null;
+  const path = u.split(/[?#]/)[0] ?? '';
+  const seg = path.split('/')[2];
+  if (seg === 'undefined' || seg === 'null') return null;
+  return PUSH_PLACES.some((re) => re.test(path)) ? u : null;
+}
+
+const id = (v: unknown): string | null => (typeof v === 'string' && v.length > 0 ? v : null);
+const q = (v: string) => encodeURIComponent(v);
+
+/**
+ * Where a tapped push opens (founder, 25 Oct: "notifications are not landing to the correct place"). `data.url` first,
+ * when it is a screen the app has (the server sets it on every push, core.push_url in
+ * 20270320000000_push_landing); else by `data.type`, the same table, for pushes sent before that:
+ * results    the home, the results card opened full
+ * schedule   the tournament on your match (?match=: Σήμερα when it is today, else Πρόγραμμα on its day)
+ * draw       the tournament's Ταμπλό on that draw
+ * follow     the followed tournament: Ταμπλό on the draw (draw, final) or Πρόγραμμα on the day (tomorrow's schedule)
+ * entry      the tournament
+ * reminder   «Ο αντίπαλος πριν το ματς» (scout)
+ * reaction   Αποτελέσματα on the match's tournament (a friendly: Αποτελέσματα)
+ * claim      Εγώ (the server sends Παίκτες when the account holds no player)
+ * Anything else, or a place the app no longer has: the home.
+ */
+export function pushRoute(data: Record<string, unknown> | undefined | null): string {
+  if (!data) return HOME;
+  const own = knownAppPath(data.url);
   if (own) return own;
   const tournament = id(data.tournament_id);
+  const match = id(data.match_id);
+  const tab = id(data.tab);
+  const day = id(data.day);
+  const atTournament = (query: string) => (tournament ? `/tournament/${q(tournament)}${query}` : HOME);
   switch (data.type) {
     case 'results':
       return HOME_RESULTS;
+    case 'schedule':
+      return atTournament(match ? `?match=${q(match)}` : '');
+    case 'draw':
+    case 'follow':
+    case 'entry':
+      return atTournament(day ? `?day=${q(day)}` : tab ? `?draw=${q(tab)}` : '');
+    case 'reminder':
+      return match ? `/scout/${q(match)}` : atTournament('');
     case 'reaction':
-      return tournament ? `/results?tournament=${encodeURIComponent(tournament)}` : '/results';
+      return tournament ? `/results?tournament=${q(tournament)}` : '/results';
     case 'claim':
       return '/me';
-    case 'draw':
-      if (!tournament) return '/tournaments';
-      return `/tournament/${encodeURIComponent(tournament)}${typeof data.tab === 'string' ? `?draw=${encodeURIComponent(data.tab)}` : ''}`;
-    case 'schedule':
-    case 'entry':
-      return tournament ? `/tournament/${encodeURIComponent(tournament)}` : '/tournaments';
-    case 'reminder':
-      return tournament ? `/tournament/${encodeURIComponent(tournament)}` : '/';
     default:
-      return null;
+      return HOME;
   }
 }
 
-/** taps already handled: the launch tap is read again on every subscribe, and must open its screen once */
+/**
+ * The place a tapped push is waiting to open. The tap can come before any screen can show it: a cold start (the logo,
+ * the session restoring), the sign-in screen, onboarding. It waits here, a newer tap replacing it, and the main
+ * layout ((tabs)/_layout, mounted only when signed in and past onboarding) takes it once it is up.
+ */
+let pending: string | null = null;
+const waiting = new Set<() => void>();
+
+export function setPendingPush(route: string): void {
+  pending = route;
+  waiting.forEach((fn) => fn());
+}
+
+/** the waiting place, once: a second take is null */
+export function takePendingPush(): string | null {
+  const r = pending;
+  pending = null;
+  return r;
+}
+
+/** called when a place starts waiting; returns the unsubscribe */
+export function onPendingPush(fn: () => void): () => void {
+  waiting.add(fn);
+  return () => {
+    waiting.delete(fn);
+  };
+}
+
+/** taps already handled: the launch tap can be read again, and must open its screen once */
 const handled = new Set<string>();
 
+export interface PushTap {
+  notification: { request: { identifier: string; content: { data?: unknown } } };
+}
+
+/** one tap: its place waits to open (once per notification), and a results push clears the other result pushes */
+export function handlePushTap(r: PushTap | null | undefined): string | null {
+  if (!r) return null;
+  const key = r.notification.request.identifier;
+  if (handled.has(key)) return null;
+  handled.add(key);
+  const data = r.notification.request.content.data as Record<string, unknown> | undefined;
+  const route = pushRoute(data);
+  setPendingPush(route);
+  // opened from «Βγήκαν αποτελέσματα»: the other result pushes of the day go too
+  if (data?.type === 'results') void clearSeenResultPushes();
+  return route;
+}
+
 /**
- * A push was tapped (also the one that launched the app): `open` gets its route once. The caller holds the route
- * until the screens are mounted (a cold start opens on the logo and the sign-in check). Returns the unsubscribe.
+ * Listen for push taps from the start, signed in or not: the push that launched a killed app (cold start), a tap
+ * while the app is in the background (warm) and a tap on a banner while it is open (foreground). Each tap's place
+ * waits in setPendingPush until the main layout can open it. Returns the unsubscribe.
  */
-export function listenForPushTaps(open: (route: string) => void): () => void {
+export function listenForPushTaps(): () => void {
   const Notifications = notifications();
   if (!Notifications) return () => undefined;
-  const go = (r: { notification: { request: { identifier: string; content: { data?: unknown } } } } | null | undefined) => {
-    if (!r) return;
-    const key = r.notification.request.identifier;
-    if (handled.has(key)) return;
-    handled.add(key);
-    const data = r.notification.request.content.data as Record<string, unknown> | undefined;
-    const route = pushRoute(data);
-    if (route) open(route);
-    // opened from «Βγήκαν αποτελέσματα»: the other result pushes of the day go too
-    if (data?.type === 'results') void clearSeenResultPushes();
+  const clear = () => {
+    try {
+      // so a later launch from the icon does not open it again
+      Notifications.clearLastNotificationResponse();
+    } catch {
+      // nothing to clear
+    }
   };
-  void Notifications.getLastNotificationResponseAsync()
-    .then(go)
-    .catch(() => undefined);
-  const sub = Notifications.addNotificationResponseReceivedListener(go);
+  try {
+    if (handlePushTap(Notifications.getLastNotificationResponse())) clear();
+  } catch {
+    // the listener below still hears the taps that come in from now on
+  }
+  const sub = Notifications.addNotificationResponseReceivedListener((r) => {
+    if (handlePushTap(r)) clear();
+  });
   return () => sub.remove();
 }

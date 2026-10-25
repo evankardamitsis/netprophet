@@ -255,13 +255,24 @@ export default function HomeScreen() {
       setDeckFull(false);
     }
   }, [results.length]);
-  // opened from a results push
+  // opened from a results push: read the feed again (the one held may be from before the push), then the results open
+  // in the full view, as a tap on the card does (founder, 25 Oct). The param goes at once, so the same push again
+  // (or a new one) opens them again.
   const wantResults = params.results === '1';
+  const [pushOpen, setPushOpen] = useState(false);
   useEffect(() => {
-    if (!wantResults || loading) return;
-    if (results.length > 0) setDeckOpen(true);
+    if (!wantResults) return;
     router.setParams({ results: undefined });
-  }, [wantResults, loading, results.length]);
+    void refresh().finally(() => setPushOpen(true));
+  }, [wantResults, refresh]);
+  useEffect(() => {
+    if (!pushOpen || loading) return;
+    setPushOpen(false);
+    if (results.length > 0) {
+      setDeckFull(true);
+      setDeckOpen(true);
+    }
+  }, [pushOpen, loading, results.length]);
   // celebrations wait until every result card has played and the player did something this visit (moments.ts);
   // the group order is nextGroup's; every queued quest together as one. One a visit: the rest stay unseen on the
   // server and come back next visit.
