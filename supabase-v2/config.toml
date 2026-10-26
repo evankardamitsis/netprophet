@@ -29,7 +29,8 @@ enable_signup = true
 
 [auth.email]
 enable_signup = true
-# login is by one-time code, no passwords
+# login is by one-time code. Passwords: only review@monadlabs.gr (store review), enforced by the
+# review_password_only guard on auth.users; sign-up stays open because the code sign-up needs it
 enable_confirmations = true
 otp_length = 6
 otp_expiry = 3600   # the emails say «Ισχύει για μία ώρα»; hosted has 3600 (scripts/v2-project-settings.sh)

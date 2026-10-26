@@ -7,7 +7,8 @@ import * as Crypto from 'expo-crypto';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import type { Session } from '@netprophet/db';
-import { AuthFailure, EMAIL_RE, appleName, authErrorKind } from './authErrors';
+import { AuthFailure, EMAIL_RE, appleName, authErrorKind, passwordErrorKind } from './authErrors';
+import { isReviewEmail } from './reviewAccount';
 import { markMeStale } from './meStore';
 import { api, supabase } from './supabase';
 
@@ -27,6 +28,8 @@ interface AuthState {
   enterAsGuest(): void;
   sendCode(email: string): Promise<void>;
   verifyCode(email: string, code: string): Promise<void>;
+  /** the store reviewers' account only (REVIEW_EMAIL); everyone else signs in with a one-time code */
+  signInWithPassword(email: string, password: string): Promise<void>;
   signInWithGoogle(): Promise<void>;
   /** iOS only (App Store guideline 4.8): the native Sign in with Apple sheet, then Supabase with its identity token */
   signInWithApple(): Promise<void>;
@@ -116,6 +119,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!supabase) return;
         const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
         if (error) fail(error);
+      },
+      async signInWithPassword(email, password) {
+        if (!supabase) return;
+        // never a password request for any other address: the screen does not offer it, and this does not send it
+        if (!isReviewEmail(email)) throw new AuthFailure('generic', 'password sign-in is for the review account only');
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+        if (error) throw new AuthFailure(passwordErrorKind(error), error.message);
       },
       async signInWithGoogle() {
         if (!supabase) return;

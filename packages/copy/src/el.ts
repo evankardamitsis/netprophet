@@ -214,6 +214,9 @@ export const el = {
     verify: 'Μπες',
     resend: 'Ξαναστείλε τον',
     changeEmail: 'Άλλο email',
+    /** only the store reviewers' account (review@monadlabs.gr) signs in with a password */
+    passwordLabel: 'Κωδικός πρόσβασης',
+    signIn: 'Σύνδεση',
     signOut: 'Αποσύνδεση',
     deleteAccount: 'Διαγραφή λογαριασμού',
     deleteTitle: 'Να διαγραφεί ο λογαριασμός σου;',
@@ -225,6 +228,7 @@ export const el = {
     errors: {
       invalidEmail: 'Αυτό δεν μοιάζει με email.',
       badCode: 'Λάθος ή ληγμένος κωδικός. Ξαναδοκίμασε.',
+      badPassword: 'Λάθος κωδικός πρόσβασης. Ξαναδοκίμασε.',
       tooMany: 'Πολλές προσπάθειες. Δοκίμασε σε λίγο.',
       generic: 'Κάτι στράβωσε. Ξαναδοκίμασε.',
     },

@@ -17,6 +17,7 @@ import { AuthFailure, EMAIL_RE, guestAllowed, useAppleAvailable, useAuth, type A
 import { CODE_LEN, codeDigits, shouldAutoSubmit } from '../src/lib/authErrors';
 import { useFadeUpIn, usePopIn, usePress, useRiseIn } from '../src/lib/motion';
 import { SKIP_ONBOARDING_KEY } from '../src/lib/onboardingGate';
+import { authMode } from '../src/lib/reviewAccount';
 import { fmt } from '../src/lib/votes';
 import { cardSurface, colors, ease, fonts, text } from '../src/theme';
 
@@ -157,6 +158,7 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
   const apple = useAppleAvailable();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<AuthErrorKind | null>(null);
   const shake = useSharedValue(0);
@@ -185,6 +187,14 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
   };
 
   const cleanEmail = email.trim().toLowerCase();
+  // the store reviewers' account alone gets a password field; every other email sees today's code flow
+  const withPassword = authMode(cleanEmail) === 'password';
+  const signIn = () => run(() => auth.signInWithPassword(cleanEmail, password));
+  const submit = () => {
+    if (withPassword) {
+      if (password) void signIn();
+    } else if (EMAIL_RE.test(cleanEmail)) void send();
+  };
   const send = () =>
     run(async () => {
       await auth.sendCode(cleanEmail);
@@ -216,16 +226,40 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
             autoCorrect={false}
             autoComplete="email"
             textContentType="emailAddress"
-            returnKeyType="send"
-            onSubmitEditing={() => EMAIL_RE.test(cleanEmail) && void send()}
+            returnKeyType={withPassword ? 'next' : 'send'}
+            onSubmitEditing={submit}
             editable={!busy}
             accessibilityLabel={t.auth.emailLabel}
           />
+          {withPassword ? (
+            <TextInput
+              style={[styles.input, styles.password]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder={t.auth.passwordLabel}
+              placeholderTextColor={colors.muted}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="go"
+              onSubmitEditing={submit}
+              editable={!busy}
+              accessibilityLabel={t.auth.passwordLabel}
+            />
+          ) : null}
         </Animated.View>
         {error ? <Text style={styles.error}>{t.auth.errors[error]}</Text> : null}
-        <Button kind="hero" onPress={send} disabled={busy || !EMAIL_RE.test(cleanEmail)} busy={busy}>
-          {t.auth.sendCode}
-        </Button>
+        {withPassword ? (
+          <Button kind="hero" onPress={signIn} disabled={busy || !password} busy={busy}>
+            {t.auth.signIn}
+          </Button>
+        ) : (
+          <Button kind="hero" onPress={send} disabled={busy || !EMAIL_RE.test(cleanEmail)} busy={busy}>
+            {t.auth.sendCode}
+          </Button>
+        )}
         {apple ? (
           // Apple's own button (HIG), black on paper, as tall as ours (App Store guideline 4.8)
           <AppleAuthentication.AppleAuthenticationButton
@@ -393,6 +427,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: colors.ink,
   },
+  password: { marginTop: 12 },
   code: { fontFamily: fonts.displayHeavy, fontSize: 30, paddingBottom: 6, marginBottom: -6, letterSpacing: 8, textAlign: 'center' },
   error: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.ink },
 

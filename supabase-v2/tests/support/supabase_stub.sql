@@ -15,6 +15,7 @@ create schema if not exists auth;
 create table auth.users (
   id                  uuid primary key default gen_random_uuid(),
   email               text unique,
+  encrypted_password  varchar(255),
   raw_user_meta_data  jsonb,
   raw_app_meta_data   jsonb,
   email_confirmed_at  timestamptz,
