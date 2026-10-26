@@ -25,6 +25,8 @@ export interface Content {
   hero: { eyebrow: string; questions: [string, string, string]; line: string; cta: string; soon: string };
   questions: [Question, Question, Question];
   tournament: Question;
+  /** «Κράτα πατημένο ένα όνομα.»: the player's run, after the tournament section */
+  hold: { id: string; eyebrow: string; title: string; lines: [string, string] };
   game: { eyebrow: string; title: string; line: string; steps: Feature[] };
   more: { title: string; items: Feature[] };
   player: { eyebrow: string; title: string; line: string; note: string };
@@ -45,17 +47,30 @@ export interface Screens {
   lost: string;
   /** the app's bottom tab bar, Τουρνουά first */
   tabBar: string[];
+  /** the header's «PRO» pill, for a player without Pro */
+  proPill: string;
   home: {
     title: string; date: string; resultsTitle: string; resultsLine: string; resultsPoints: string; resultsBtn: string;
     yours: string; myMatch: string; myMatchLine: string; now: string; friends: string; friendsLine: string;
     quizTitle: string; quizLine: string; vote: string; voteHint: string; called: string;
     proTag: string; proTitle: string; proLine: string; proBtn: string; trial: string;
     tournaments: string; addMatch: string; playing: string; following: string; firstMatch: string; nextMatch: string; hard: string; clay: string;
+    nowCaps: string; all: string; more: string; count: string;
   };
-  results: { title: string; summary: string; points: string; day: string; right: string; wrong: string; upset: string };
+  results: {
+    title: string; summary: string; points: string; day: string; right: string; wrong: string; upset: string;
+    subtitle: string; search: string; tournaments: string; yesterday: string; calledIt: string; line: string; retired: string;
+  };
   tournament: {
     name: string; meta: string; tabs: string[]; hint: string; hold: string; played: string; close: string;
     path: string; ifWins: string; round: string[]; schedule: string[]; bracketTitle: string; newRecord: string; streakLine: string;
+    back: string; follow: string; following: string; court: string; next: string; category: string; mineLine: string;
+  };
+  /** one player in one tournament, as the app's player screen shows it */
+  player: {
+    name: string; tournament: string; held: string; other: string; ifWins: string; ifWinsWhen: string; nextMatch: string;
+    nextWhen: string; nextAgainst: string; nextPlace: string; playingNow: string; pathBtn: string; played: string;
+    rows: { against: string; meta: string }[];
   };
   scout: {
     title: string; pro: string; tabs: string[]; formats: string[]; year: string; last: string; h2h: string; h2hLine: string;
@@ -120,8 +135,16 @@ export const el: Content = {
     line: 'Κάθε τουρνουά έχει τρεις όψεις: τι παίζεται σήμερα, το ταμπλό και το πρόγραμμα. Και ένα κόλπο: κράτα πατημένο ένα όνομα.',
     points: [
       'Σήμερα, Ταμπλό και Πρόγραμμα, ένα πάτημα μακριά',
-      'Κράτα πατημένο ένα όνομα και δες την πορεία του στο ταμπλό, μαζί με το «Αν κερδίσει»',
       'Το σερί μετράει σωστές ψήφους στη σειρά. Όταν περάσεις το καλύτερό σου, βλέπεις «Νέο ρεκόρ»',
+    ],
+  },
+  hold: {
+    id: 'hold',
+    eyebrow: 'ΚΡΑΤΑ ΠΑΤΗΜΕΝΟ',
+    title: 'Κράτα πατημένο ένα όνομα.',
+    lines: [
+      'Βλέπεις την πορεία του παίκτη σε όλο το τουρνουά, σε κάθε κατηγορία που παίζει, και ποιον θα βρει αν κερδίσει.',
+      'Σήμερα, Ταμπλό και Πρόγραμμα, ένα πάτημα μακριά. Ακολούθησε ένα τουρνουά και μαθαίνεις δωρεάν για την κλήρωση και τον τελικό.',
     ],
   },
   game: {
@@ -189,6 +212,7 @@ export const el: Content = {
     won: 'Ν',
     lost: 'Η',
     tabBar: ['Τουρνουά', 'Αποτελέσματα', 'Κατάταξη', 'Εγώ'],
+    proPill: 'PRO',
     home: {
       title: 'Σήμερα',
       date: 'Πέμπτη 22 Οκτ',
@@ -210,7 +234,7 @@ export const el: Content = {
       proTag: 'PRO',
       proTitle: 'Ο αντίπαλός σου στις 18:00',
       proLine: 'Πώς έπαιξε φέτος, ποιους κέρδισε, σε ποια επιφάνεια.',
-      proBtn: 'Δες τον αντίπαλο ›',
+      proBtn: 'Δες τον με Pro ›',
       trial: '7 μέρες δωρεάν',
       tournaments: 'Τουρνουά σήμερα',
       addMatch: '+ Ματς',
@@ -220,6 +244,10 @@ export const el: Content = {
       nextMatch: 'Επόμενο ματς 17:30',
       hard: 'Σκληρό',
       clay: 'Χώμα',
+      nowCaps: 'ΤΩΡΑ',
+      all: 'Όλα ›',
+      more: 'Περισσότερα ›',
+      count: '3 ματς',
     },
     results: {
       title: 'Αποτελέσματα',
@@ -229,6 +257,13 @@ export const el: Content = {
       right: 'Το είχες',
       wrong: 'Όχι αυτή τη φορά',
       upset: 'Ανατροπή',
+      subtitle: 'Τι έγινε στα γήπεδα.',
+      search: 'Ψάξε παίκτη',
+      tournaments: 'Τουρνουά ↓',
+      yesterday: 'ΧΘΕΣ',
+      calledIt: 'Το ’πες · +10',
+      line: 'Το {pct}% έλεγε {name}',
+      retired: 'ret',
     },
     tournament: {
       name: 'Open Γλυφάδας',
@@ -241,10 +276,36 @@ export const el: Content = {
       path: 'Φορχάντης',
       ifWins: 'Αν κερδίσει',
       round: ['Φάση των 16', 'Προημιτελικός', 'Ημιτελικός', 'Τελικός'],
-      schedule: ['18:00 · Ρακετάκης με Φορχάντη', '19:30 · Σερβίδης με Λοβάκη', 'Αύριο 10:00 · Τελικός'],
+      schedule: ['18:00 · Ρακετάκης με Φορχάντη', '19:30 · Φορχάντης/Ρήγας με Δροπσώτη/Βολεάκη', 'Αύριο 10:00 · Τελικός'],
       bracketTitle: 'Ταμπλό',
       newRecord: 'Νέο ρεκόρ!',
       streakLine: 'Πέρασες το 4. Πάμε για παραπάνω!',
+      back: '‹ Τουρνουά',
+      follow: 'Ακολούθησε',
+      following: '✓ Ακολουθείς',
+      court: 'Κορτ 1',
+      next: 'Μετά',
+      category: 'Διπλό Ανδρών 45+',
+      mineLine: 'με Φορχάντη · Μονό Ανδρών 40+',
+    },
+    player: {
+      name: 'Φορχάντης',
+      tournament: 'Open Γλυφάδας',
+      held: 'Διπλό Ανδρών 45+ με τον Ρήγα',
+      other: 'Μονό Ανδρών 45+',
+      ifWins: 'Αν κερδίσει αυτό το ματς (Ημιτελικός): Ρακετάκης & Δροπσώτης ή Βολεάδης & Σλάισου',
+      ifWinsWhen: 'Αύριο 10:00',
+      nextMatch: 'Το επόμενο ματς',
+      nextWhen: 'Σήμερα 19:30',
+      nextAgainst: 'Δροπσώτης & Βολεάκη',
+      nextPlace: 'Κορτ 1',
+      playingNow: 'Παίζει τώρα',
+      pathBtn: 'Η πορεία στο ταμπλό',
+      played: 'Ως τώρα',
+      rows: [
+        { against: 'Βολεάκη & Λοβάκης', meta: 'Χθες · Φάση των 16 · 7-5 6-2' },
+        { against: 'Σερβίδης & Σλάισου', meta: 'Σήμερα · Προημιτελικός · 6-3 6-4' },
+      ],
     },
     scout: {
       title: 'Ο αντίπαλος πριν το ματς',
@@ -323,8 +384,16 @@ export const en: Content = {
     line: 'Every tournament has three views: what is on today, the draw and the schedule. And one trick: hold a name.',
     points: [
       'Today, Draw and Schedule, one tap apart',
-      'Hold a name to see their run through the draw, with “If they win”',
       'Your streak counts right votes in a row. Pass your best and you see “New record”',
+    ],
+  },
+  hold: {
+    id: 'hold',
+    eyebrow: 'HOLD A NAME',
+    title: 'Hold a name.',
+    lines: [
+      'See a player’s run through the whole tournament, in every category they play, and who they meet if they win.',
+      'Today, Draw and Schedule, one tap apart. Follow a tournament and you hear for free about the draw and the final.',
     ],
   },
   game: {
@@ -392,6 +461,7 @@ export const en: Content = {
     won: 'W',
     lost: 'L',
     tabBar: ['Tournaments', 'Results', 'Ladder', 'Me'],
+    proPill: 'PRO',
     home: {
       title: 'Today',
       date: 'Thu 22 Oct',
@@ -413,7 +483,7 @@ export const en: Content = {
       proTag: 'PRO',
       proTitle: 'Your opponent at 18:00',
       proLine: 'How they played this year, who they beat, on which surface.',
-      proBtn: 'See your opponent ›',
+      proBtn: 'See them with Pro ›',
       trial: '7 days free',
       tournaments: 'Tournaments today',
       addMatch: '+ Match',
@@ -423,6 +493,10 @@ export const en: Content = {
       nextMatch: 'Next match 17:30',
       hard: 'Hard',
       clay: 'Clay',
+      nowCaps: 'NOW',
+      all: 'All ›',
+      more: 'More ›',
+      count: '3 matches',
     },
     results: {
       title: 'Results',
@@ -432,6 +506,13 @@ export const en: Content = {
       right: 'You had it',
       wrong: 'Not this time',
       upset: 'Upset',
+      subtitle: 'What happened on court.',
+      search: 'Find a player',
+      tournaments: 'Tournaments ↓',
+      yesterday: 'YESTERDAY',
+      calledIt: 'You called it · +10',
+      line: '{pct}% said {name}',
+      retired: 'ret',
     },
     tournament: {
       name: 'Glyfada Open',
@@ -444,10 +525,36 @@ export const en: Content = {
       path: 'Forchantis',
       ifWins: 'If they win',
       round: ['Round of 16', 'Quarter-final', 'Semi-final', 'Final'],
-      schedule: ['18:00 · Raketakis against Forchantis', '19:30 · Servidis against Lovakis', 'Tomorrow 10:00 · Final'],
+      schedule: ['18:00 · Raketakis against Forchantis', '19:30 · Forchantis/Rigas against Dropsotis/Voleaki', 'Tomorrow 10:00 · Final'],
       bracketTitle: 'Draw',
       newRecord: 'New record!',
       streakLine: 'You passed 4. Let’s go for more!',
+      back: '‹ Tournaments',
+      follow: 'Follow',
+      following: '✓ Following',
+      court: 'Court 1',
+      next: 'Next',
+      category: 'Men’s Doubles 45+',
+      mineLine: 'against Forchantis · Men’s Singles 40+',
+    },
+    player: {
+      name: 'Forchantis',
+      tournament: 'Glyfada Open',
+      held: 'Men’s Doubles 45+ with Rigas',
+      other: 'Men’s Singles 45+',
+      ifWins: 'If they win this match (Semi-final): Raketakis & Dropsotis or Voleadis & Slaisou',
+      ifWinsWhen: 'Tomorrow 10:00',
+      nextMatch: 'Next match',
+      nextWhen: 'Today 19:30',
+      nextAgainst: 'Dropsotis & Voleaki',
+      nextPlace: 'Court 1',
+      playingNow: 'Playing now',
+      pathBtn: 'Their run through the draw',
+      played: 'So far',
+      rows: [
+        { against: 'Voleaki & Lovakis', meta: 'Yesterday · Round of 16 · 7-5 6-2' },
+        { against: 'Servidis & Slaisou', meta: 'Today · Quarter-final · 6-3 6-4' },
+      ],
     },
     scout: {
       title: 'Your opponent before the match',

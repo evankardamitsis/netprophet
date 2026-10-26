@@ -1,7 +1,7 @@
 import { colors } from '@netprophet/tokens';
 import { BallPerson } from './BallPerson';
 import { content, type Lang } from './content';
-import { HomeScreen, ResultsScreen, ScoutScreen, TournamentScreen } from './Screens';
+import { HomeScreen, PlayerScreen, ResultsScreen, ScoutScreen, TournamentScreen } from './Screens';
 import { Shell } from './Shell';
 import { StoreBadges } from './StoreBadges';
 
@@ -102,6 +102,21 @@ export function Home({ lang }: { lang: Lang }) {
           </div>
           <div className="shot">
             <TournamentScreen s={c.screens} />
+            <span className="try">{c.screens.tapHint}</span>
+          </div>
+        </div>
+      </section>
+
+      <section id={c.hold.id} className="sand">
+        <div className="wrap question">
+          <div>
+            <p className="eyebrow">{c.hold.eyebrow}</p>
+            <h2 className="display">{c.hold.title}</h2>
+            <p className="lead">{c.hold.lines[0]}</p>
+            <p className="lead">{c.hold.lines[1]}</p>
+          </div>
+          <div className="shot">
+            <PlayerScreen s={c.screens} />
             <span className="try">{c.screens.tapHint}</span>
           </div>
         </div>

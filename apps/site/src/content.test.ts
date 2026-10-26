@@ -56,6 +56,34 @@ describe('the site copy', () => {
     expect(el.screens.tournament.tabs).toEqual(['Σήμερα', 'Ταμπλό', 'Πρόγραμμα']);
     expect(el.screens.tournament.ifWins).toBe('Αν κερδίσει');
   });
+  it('has the hold section the founder wrote, and says it once', () => {
+    expect(el.hold.eyebrow).toBe('ΚΡΑΤΑ ΠΑΤΗΜΕΝΟ');
+    expect(el.hold.title).toBe('Κράτα πατημένο ένα όνομα.');
+    expect(el.hold.lines[0]).toBe('Βλέπεις την πορεία του παίκτη σε όλο το τουρνουά, σε κάθε κατηγορία που παίζει, και ποιον θα βρει αν κερδίσει.');
+    expect(el.hold.lines[1]).toBe('Σήμερα, Ταμπλό και Πρόγραμμα, ένα πάτημα μακριά. Ακολούθησε ένα τουρνουά και μαθαίνεις δωρεάν για την κλήρωση και τον τελικό.');
+    expect(en.hold.lines).toHaveLength(2);
+    expect(en.hold.title).not.toBe('');
+    // the tournament section no longer carries a bullet about the hold
+    expect(el.tournament.points.filter((p) => /πατημένο/.test(p))).toEqual([]);
+    expect(en.tournament.points.filter((p) => /Hold a name/.test(p))).toEqual([]);
+  });
+  it('draws the player run like the app: held category open, the others closed, won rounds ticked', () => {
+    const p = el.screens.player;
+    expect(p.name).toBe('Φορχάντης');
+    expect(p.held).toBe('Διπλό Ανδρών 45+ με τον Ρήγα');
+    expect(p.other).toBe('Μονό Ανδρών 45+');
+    expect(p.ifWins).toMatch(/^Αν κερδίσει/);
+    expect(p.rows.length).toBeGreaterThan(0);
+    expect(en.screens.player.rows).toHaveLength(p.rows.length);
+  });
+  it('shows the home as the app does: PRO pill, strip, dates and retirements', () => {
+    expect(el.screens.proPill).toBe('PRO');
+    expect(el.screens.home.all).toBe('Όλα ›');
+    expect(el.screens.home.more).toBe('Περισσότερα ›');
+    expect(el.screens.home.proBtn).toBe('Δες τον με Pro ›');
+    expect(el.screens.results.retired).toBe('ret');
+    expect(strings(el.screens).filter((x) => /χωρίς ώρα/.test(x))).toEqual([]);
+  });
   it('states the Pro prices and never sells advantage', () => {
     const text = strings(el).join(' ');
     expect(text).toContain('8,99€');
