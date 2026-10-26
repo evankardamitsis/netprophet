@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetQuizResult, TournamentItem } from '@netprophet/db';
 import type { CardMatch, CardResult, FeedCard } from './feed';
-import { groupVotes, hasMoreVotes, homeSections, homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, todayHeading, topVotes, tournamentRanks, tournamentStrip, voteList, voteRows, yoursNow } from './home';
+import { groupVotes, hasMoreVotes, homeSections, homeTournaments, quizCard, resultsLine, rowTime, rowWhere, sideLabel, tagLabel, todayHeading, topVotes, tournamentRanks, tournamentStrip, voteList, voteRows, yoursNow } from './home';
 
 describe('rowTime: a day, never «χωρίς ώρα»', () => {
   const now = new Date('2026-10-22T15:00:00Z');
@@ -334,5 +334,26 @@ describe('homeTournaments', () => {
     const [g, k] = homeTournaments([item('g', { today: 2 }), item('k', { today: 1 })], cards, [], NOW, t);
     expect(g).toMatchObject({ live: 'Παππάς · Λιάκος', next: 'Επόμενο ματς 19:00' });
     expect(k).toMatchObject({ live: null, next: 'Πρώτο ματς 20:00' });
+  });
+});
+
+describe('rowWhere', () => {
+  const ace = { name: 'ACE Tennis Club', logo: 'clubs/23910bab/mvjg06d6.jpg' };
+  it('adds the club after the category, with its logo', () => {
+    expect(rowWhere('Μ 40+', ace)).toEqual({ line: 'Μ 40+ · ACE Tennis Club', logo: 'clubs/23910bab/mvjg06d6.jpg', clubName: 'ACE Tennis Club' });
+  });
+  it('a club with no logo is named, with no badge', () => {
+    expect(rowWhere('Μ 40+', { name: 'PRC (Μαρούσι)', logo: null })).toEqual({ line: 'Μ 40+ · PRC (Μαρούσι)', logo: null, clubName: 'PRC (Μαρούσι)' });
+    expect(rowWhere('Μ 40+', { name: 'PRC', logo: '  ' }).logo).toBeNull();
+  });
+  it('the club alone when there is no category', () => {
+    expect(rowWhere('', ace).line).toBe('ACE Tennis Club');
+  });
+  it('never names the club twice', () => {
+    expect(rowWhere('Μ 40+ · ACE Tennis Club', ace).line).toBe('Μ 40+ · ACE Tennis Club');
+  });
+  it('without a club the line stays as it was', () => {
+    expect(rowWhere('Μ 40+', undefined)).toEqual({ line: 'Μ 40+', logo: null, clubName: null });
+    expect(rowWhere('Μ 40+', null)).toEqual({ line: 'Μ 40+', logo: null, clubName: null });
   });
 });

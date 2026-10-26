@@ -145,4 +145,95 @@ export interface StoreDiagnostics {
   /** each offering with its packages' store product ids; null when not asked or the ask failed */
   offerings: { id: string; products: string[] }[] | null;
   lastError: { op: string; code: string; at: number } | null;
+  /** why there are no offerings: «no_user», «not_ready», «timeout» or the store's code; null when they came back */
+  offeringsError: string | null;
+}
+
+/** a panel with nothing known, for a check that failed before the phone's own facts could be read */
+export function emptyDiag(): StoreDiagnostics {
+  return {
+    ready: false,
+    block: null,
+    nativeModule: false,
+    keyPresent: false,
+    keyLength: 0,
+    keyPrefixOk: false,
+    configured: false,
+    offerings: null,
+    lastError: null,
+    offeringsError: null,
+  };
+}
+
+/** how long the diagnostics wait on the store before they say «timeout» (a broken native setup can hang forever) */
+export const DIAG_TIMEOUT_MS = 10_000;
+
+/** `p`, or a rejection with the readable code «timeout» (storeErrorCode reads it) after `ms` */
+export function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { readableErrorCode: 'timeout' })), ms);
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e: unknown) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
+
+/** the words the diagnostics lines use (Copy's me.storeDiag) */
+export interface DiagWords {
+  ready: string;
+  block: string;
+  module: string;
+  key: string;
+  keyShape: string;
+  configured: string;
+  offerings: string;
+  lastError: string;
+  yes: string;
+  no: string;
+  none: string;
+  waiting: string;
+}
+
+/** one line of the staff panel: a label, its value, and whether it is fine (null: neither) */
+export interface DiagLine {
+  label: string;
+  value: string;
+  ok: boolean | null;
+}
+
+/**
+ * The staff panel's lines (Εγώ › Ρυθμίσεις), from what the store said. `waiting`: the offerings are still being asked
+ * for. Only the key's length and whether its prefix is right ever show, never the key.
+ */
+export function diagLines(diag: StoreDiagnostics, w: DiagWords, waiting = false): DiagLine[] {
+  const yn = (v: boolean) => (v ? w.yes : w.no);
+  const offerings: DiagLine = waiting
+    ? { label: w.offerings, value: w.waiting, ok: null }
+    : diag.offerings === null
+      ? { label: w.offerings, value: diag.offeringsError ? `${w.none} (${diag.offeringsError})` : w.none, ok: false }
+      : {
+          label: w.offerings,
+          value: [
+            `${diag.offerings.length}`,
+            ...diag.offerings.map((o) => `${o.id}: ${o.products.length} (${o.products.slice(0, 6).join(', ')}${o.products.length > 6 ? ', …' : ''})`),
+          ].join('\n'),
+          ok: diag.offerings.some((o) => o.products.length > 0),
+        };
+  return [
+    { label: w.ready, value: yn(diag.ready), ok: diag.ready },
+    ...(diag.block ? [{ label: w.block, value: diag.block, ok: false }] : []),
+    { label: w.module, value: yn(diag.nativeModule), ok: diag.nativeModule },
+    { label: w.key, value: yn(diag.keyPresent), ok: diag.keyPresent },
+    { label: w.keyShape, value: `${diag.keyLength} / ${yn(diag.keyPrefixOk)}`, ok: diag.keyPrefixOk },
+    { label: w.configured, value: yn(diag.configured), ok: diag.configured },
+    offerings,
+    { label: w.lastError, value: diag.lastError ? `${diag.lastError.op} · ${diag.lastError.code}` : w.none, ok: diag.lastError ? false : null },
+  ];
 }

@@ -1,5 +1,5 @@
 import { ErrorCode, Purchases, PurchasesError } from '@revenuecat/purchases-js';
-import { cleanKey, keyLooksRight, storeErrorCode, type BuyOutcome, type RestoreResult, type StoreBlock, type StoreDiagnostics } from './storeTypes';
+import { cleanKey, DIAG_TIMEOUT_MS, keyLooksRight, storeErrorCode, withTimeout, type BuyOutcome, type RestoreResult, type StoreBlock, type StoreDiagnostics } from './storeTypes';
 
 /**
  * Buying on the web (founder, 17 Oct): RevenueCat Web Billing, paid through Stripe. The products (Pro plans and every
@@ -66,16 +66,8 @@ function fail(code: string): BuyOutcome {
   return { result: 'failed', code };
 }
 
-export async function storeDiagnostics(userId: string | null): Promise<StoreDiagnostics> {
-  let offerings: StoreDiagnostics['offerings'] = null;
-  if (userId && storeReady()) {
-    try {
-      const o = await (await client(userId)).getOfferings();
-      offerings = Object.values(o.all).map((x) => ({ id: x.identifier, products: x.availablePackages.map((p) => p.webBillingProduct.identifier) }));
-    } catch (e) {
-      lastError = { op: 'offerings', code: storeErrorCode(e), at: Date.now() };
-    }
-  }
+/** what this browser knows without asking RevenueCat; never the key */
+export function storeFacts(): StoreDiagnostics {
   return {
     ready: storeReady(),
     block: storeBlockNow(),
@@ -84,7 +76,26 @@ export async function storeDiagnostics(userId: string | null): Promise<StoreDiag
     keyLength: KEY.length,
     keyPrefixOk: keyLooksRight(KEY, 'web'),
     configured: forUser !== null,
-    offerings,
+    offerings: null,
     lastError,
+    offeringsError: null,
   };
+}
+
+/** as the native one: never throws, gives up after DIAG_TIMEOUT_MS */
+export async function storeDiagnostics(userId: string | null): Promise<StoreDiagnostics> {
+  let offerings: StoreDiagnostics['offerings'] = null;
+  let offeringsError: string | null = null;
+  if (!userId) offeringsError = 'no_user';
+  else if (!storeReady()) offeringsError = 'not_ready';
+  else {
+    try {
+      const o = await withTimeout(client(userId).then((c) => c.getOfferings()), DIAG_TIMEOUT_MS);
+      offerings = Object.values(o.all).map((x) => ({ id: x.identifier, products: x.availablePackages.map((p) => p.webBillingProduct.identifier) }));
+    } catch (e) {
+      offeringsError = storeErrorCode(e);
+      lastError = { op: 'offerings', code: offeringsError, at: Date.now() };
+    }
+  }
+  return { ...storeFacts(), offerings, offeringsError };
 }

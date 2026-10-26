@@ -12,6 +12,8 @@ import {
   type RestoreResult,
   type StoreBlock,
   type StoreDiagnostics,
+  DIAG_TIMEOUT_MS,
+  withTimeout,
 } from './storeTypes';
 
 /**
@@ -200,20 +202,8 @@ export async function restore(userId: string): Promise<RestoreResult> {
 }
 
 
-/** For the staff row in Ρυθμίσεις: what the store looks like on this phone. Never the key itself. */
-export async function storeDiagnostics(userId: string | null): Promise<StoreDiagnostics> {
-  let offerings: StoreDiagnostics['offerings'] = null;
-  if (userId && storeReady()) {
-    try {
-      const P = await client(userId);
-      if (P) {
-        const o = await P.getOfferings();
-        offerings = Object.values(o.all).map((x) => ({ id: x.identifier, products: x.availablePackages.map((p) => p.product.identifier) }));
-      }
-    } catch (e) {
-      note('offerings', storeErrorCode(e));
-    }
-  }
+/** What this phone knows without asking the store (shown at once while the offerings are asked for). Never the key. */
+export function storeFacts(): StoreDiagnostics {
   return {
     ready: storeReady(),
     block: storeBlockNow(),
@@ -222,7 +212,33 @@ export async function storeDiagnostics(userId: string | null): Promise<StoreDiag
     keyLength: KEY.length,
     keyPrefixOk: keyLooksRight(KEY, Platform.OS),
     configured: forUser !== null,
-    offerings,
+    offerings: null,
     lastError,
+    offeringsError: null,
   };
+}
+
+/**
+ * For the staff row in Ρυθμίσεις: what the store looks like on this phone, after configuring it for this user (if it
+ * was not yet) and asking for the offerings. Never throws and never hangs: each store call gives up after
+ * DIAG_TIMEOUT_MS with «timeout». Never the key itself.
+ */
+export async function storeDiagnostics(userId: string | null): Promise<StoreDiagnostics> {
+  let offerings: StoreDiagnostics['offerings'] = null;
+  let offeringsError: string | null = null;
+  if (!userId) offeringsError = 'no_user';
+  else if (!storeReady()) offeringsError = 'not_ready';
+  else {
+    try {
+      const P = await withTimeout(client(userId), DIAG_TIMEOUT_MS);
+      if (P) {
+        const o = await withTimeout(P.getOfferings(), DIAG_TIMEOUT_MS);
+        offerings = Object.values(o.all).map((x) => ({ id: x.identifier, products: x.availablePackages.map((p) => p.product.identifier) }));
+      } else offeringsError = 'not_ready';
+    } catch (e) {
+      offeringsError = storeErrorCode(e);
+      note('offerings', offeringsError);
+    }
+  }
+  return { ...storeFacts(), offerings, offeringsError };
 }
