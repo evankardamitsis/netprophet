@@ -200,6 +200,8 @@ export const en: Copy = {
     verify: 'Let me in',
     resend: 'Send it again',
     changeEmail: 'Different email',
+    passwordLabel: 'Password',
+    signIn: 'Sign in',
     signOut: 'Sign out',
     deleteAccount: 'Delete account',
     deleteTitle: 'Delete your account?',
@@ -211,6 +213,7 @@ export const en: Copy = {
     errors: {
       invalidEmail: 'That does not look like an email.',
       badCode: 'Wrong or expired code. Try again.',
+      badPassword: 'Wrong password. Try again.',
       tooMany: 'Too many tries. Give it a minute.',
       generic: 'Something went wrong. Try again.',
     },

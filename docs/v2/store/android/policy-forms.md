@@ -19,23 +19,23 @@ the rest (check the converted prices once). Version for the first production rel
 
 All or some functionality is restricted: **Yes**, everything sits behind sign-in.
 
-There is no password login to hand over: sign-in is an email one-time code, Google or Apple. Instructions for the
-reviewer (paste into «Add instructions», name «Sign-in»):
+Reviewers get a ready-made account (founder, 26 Oct): `review@monadlabs.gr` with a password the founder sets in
+the Supabase dashboard and types into this form. Only that address signs in with a password; everyone else uses
+the email code, Google or Apple, and the database refuses a password on any other account. The founder's setup
+steps are in `../review-notes.md` («Founder steps»).
+
+Fill in «Add instructions» (name «Sign-in»): Username `review@monadlabs.gr`, Password: the founder's, and:
 
 ```
-Sign in with "Continue with Google" using any Google account. A new account opens a short setup: type any first
-name and surname, tick "15 or over", pick a sport; on "Are you already here?" tap "I cannot find myself, I am new";
-pick any area; on the people step tap "Later". All features except NetProphet Pro are free and open after setup.
-Pro (subscriptions with a 7-day free trial) is bought through Google Play Billing on the Pro screen (Me tab, or
-any "Pro" line). License testers are not charged.
+On the first screen tap "Πάμε" (Let's go). Type the email review@monadlabs.gr: a password field appears for this
+address only. Type the password and tap "Σύνδεση" (Sign in). The account has finished setup and opens on the first
+tab. All features except NetProphet Pro are free and open. Pro (subscriptions with a 7-day free trial) is bought
+through Google Play Billing on the Pro screen (Me tab, or any "Pro" line). License testers are not charged.
 Questions: hello@monadlabs.gr
 ```
 
-«I am new» sends a «Νέος παίκτης» request to admin moderation: reject the reviewer's request there after the
-review. Keep this the same as the App Review notes in the iOS package (there it is «Sign in with Apple» with any Apple ID).
-If the founder prefers a fixed reviewer account, it has to be a Google account the founder creates and gives here
-(username and password in this form); we do not create accounts, and an email-code account would not work because
-the reviewer cannot read the inbox.
+Keep this the same as the App Review notes in the iOS package. After the review the founder changes the password;
+the next review needs the new one here.
 
 ## Ads
 

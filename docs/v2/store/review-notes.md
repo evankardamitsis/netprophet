@@ -3,25 +3,43 @@
 Prepared 22 Oct 2026. The block under «Notes for the reviewer» is what goes into ASC (English, Apple's reviewers
 read English). The rest is for the founder.
 
-## Sign-in for review: the decision the founder has to make
+## Sign-in for review: the review account (founder, 26 Oct)
 
-The app signs in with a 6-digit code by email, Sign in with Apple, or Google. Sign-up is open and free; a new account
-goes through four onboarding steps and can vote at once. Nothing in the app or the backend gives a fixed code for a
-review address today (checked: `apps/app/src/lib/auth.tsx` uses `signInWithOtp` / `verifyOtp`; `supabase-v2/config.toml`
-has no test OTP; Supabase's built-in test OTP exists for phone sign-in only, not email).
+Apple and Google need a ready-made email and password ("we can't create new accounts"). Built in PR
+`v2-review-login`:
 
-Options, smallest first:
+- **App.** One address, `review@monadlabs.gr` (`REVIEW_EMAIL` in `apps/app/src/lib/reviewAccount.ts`, matched
+  trimmed and in any case). When that address is typed on the email step, a password field and «Σύνδεση» replace
+  «Στείλε μου κωδικό», and the app calls `supabase.auth.signInWithPassword`. A wrong password says «Λάθος κωδικός
+  πρόσβασης». Every other email sees exactly the old flow (code by email, Apple, Google); no hint that passwords exist.
+- **Server.** Supabase's Email provider serves both the code and passwords and must stay on for the code. Migration
+  `20270322000000_review_password_only.sql` adds a guard on `auth.users`: no account other than `review@monadlabs.gr`
+  can have a password (sign-up with a password, setting one later, the Admin API and the dashboard are all refused
+  with `password_not_allowed`). With no password stored, password sign-in fails for every other account. Code,
+  Google and Apple sign-ins never write a password and are untouched. pgTAP: `supabase-v2/tests/155_review_password_only.test.sql`.
+- **No password is in the repo.** The founder sets it in the dashboard and types it into the store forms.
 
-| | Option | Work | Risk |
-|---|---|---|---|
-| A | **Reviewer uses Sign in with Apple** (one tap, creates an account) and the notes say so. Apple accepts this when sign-up is open and free and nothing needs pre-loaded data. | None | The reviewer's account is new: no claimed player, no history. Σήμερα must have matches on review days (see «Before you press Submit»). If Apple insists on credentials anyway, fall back to C. |
-| B | A review inbox the founder controls (e.g. `review@monadlabs.gr` in Zoho) and the founder reads codes to Apple when asked | None in code | Weak: the reviewer cannot get the code alone; usually ends in a rejection under 2.1 |
-| C | **One allow-listed review email with a fixed secret code**, server-side: the founder creates `appreview@…` in Supabase with a password (Auth › Users › Add user, auto-confirm), and the app, after a failed code for any email, tries `signInWithPassword(email, code)` once. Only accounts that have a password can match; normal users have none. | ~20 lines in `auth.tsx` + a unit test; no migration, no secret in the repo | The code box takes 6 digits, so the secret is a 6-digit number: guessable in theory (GoTrue rate limits sign-ins per IP). The account is a normal user with no staff rights, so the worst case is someone using the demo account. Remove the password after approval. |
-| D | An edge function `review-login` that checks an allow-listed email and a secret from Supabase secrets and mints a session with `auth.admin.generateLink` | Larger: new function, client special case, and no Deno tests in CI | Same as C plus more surface |
+### Founder steps (once, after the migration is live)
 
-**Recommendation: A, with C ready.** Not built in this PR: the task said build only if small and safe, and the
-choice of a password on a production account is the founder's. Say "build C" and it is a 30-minute PR. Whatever is
-picked, Claude never creates the account; the founder does, in the Supabase dashboard, and types the code into ASC.
+1. Supabase dashboard (v2 project) › Authentication › Sign In / Providers › **Email**: leave it **on** (it already is,
+   the code needs it). Leave «Allow new users to sign up» on (code sign-up needs it). Nothing else to toggle: the
+   password rule is enforced by the database guard, not a dashboard switch.
+2. Authentication › Users › **Add user › Create new user**: email `review@monadlabs.gr`, a strong password (16+
+   characters, kept in your password manager), tick **Auto Confirm User**. The database guard allows this one address.
+3. On a phone with the store build: «Πάμε», type `review@monadlabs.gr`, type the password, «Σύνδεση». Finish
+   onboarding: any name (e.g. "App Review"), 15+, tennis; on «Είσαι ήδη εδώ;» tap «Δεν με βρίσκω, είμαι καινούριος» and then
+   reject that «Νέος παίκτης» request in admin (do not claim a real player); any area; «Αργότερα» on people. Vote on a
+   couple of matches so the screens have something in them.
+4. Put the email and password in ASC › App Review Information › Sign-in required, and in Play Console › App content ›
+   App access (see `android/policy-forms.md`).
+5. After both reviews: change the password (or delete the user) in Authentication › Users. The next review needs a
+   new one typed into the forms again.
+
+Not done, noted: the review account is a normal player, so once it votes it can show in «Όλοι» and its monthly
+Κατηγορία of the Ladder, and its votes count in the splits. There is no flag that the Ladder filters on today
+(`core.profiles.hidden` exists but `api.get_ladder` does not read it). It never appears in anyone's «Οι δικοί σου»,
+because that list comes from claimed players and the review account claims none. If this matters, a follow-up can
+make `get_ladder` skip hidden profiles and set `hidden` for the review account.
 
 ## Notes for the reviewer (paste into ASC)
 
@@ -33,12 +51,13 @@ are no odds, points cannot be bought or cashed out, and purchases are cosmetic o
 (information and notifications), never points or ranking.
 
 SIGN IN
-Use "Sign in with Apple" on the first screen; it creates an account in one tap. (Email sign-in sends a 6-digit
-code; Google is also offered.) Onboarding has four short steps: your name, "Are you already here?" (pick any
-player or tap "I can't find myself, I'm new"), your area, and the people you know (optional, "Later" skips it).
-[If option C is used, replace the paragraph above with:]
-[Email: <review email>  Code: <6-digit code>. Type the email, tap Continue, then type the code. Ignore the email
-that arrives; the code above always works for this account.]
+Use the demo account: on the first screen tap "Πάμε", type the email below, then the password, and tap
+"Σύνδεση" (Sign in). The password field appears only for this address; real users sign in with a 6-digit code by
+email, Sign in with Apple or Google.
+  Email: review@monadlabs.gr
+  Password: <the founder types it here in ASC, never in the repo>
+The account has finished onboarding and opens on the first tab. Sign in with Apple also works and creates a new
+account in one tap (onboarding then has four short steps).
 
 WHAT TO TRY
 1. The first tab (Τουρνουά) opens on Σήμερα (Today): tap a player's name on a match to call the winner. The

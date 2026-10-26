@@ -1,5 +1,5 @@
 /** Pure auth helpers, kept apart from the provider so they can be unit tested. */
-export type AuthErrorKind = 'invalidEmail' | 'badCode' | 'tooMany' | 'generic';
+export type AuthErrorKind = 'invalidEmail' | 'badCode' | 'badPassword' | 'tooMany' | 'generic';
 
 export class AuthFailure extends Error {
   constructor(public readonly kind: AuthErrorKind, message: string) {
@@ -18,6 +18,13 @@ export function authErrorKind(err: { status?: number; code?: string; message?: s
     return 'badCode';
   if (code === 'email_address_invalid' || code === 'validation_failed') return 'invalidEmail';
   return 'generic';
+}
+
+/** The review account's password sign-in: any 4xx that is not a rate limit is a wrong password. */
+export function passwordErrorKind(err: { status?: number; code?: string; message?: string }): AuthErrorKind {
+  const kind = authErrorKind(err);
+  if (kind === 'tooMany') return kind;
+  return (err.status ?? 400) < 500 ? 'badPassword' : 'generic';
 }
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
