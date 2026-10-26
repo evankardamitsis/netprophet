@@ -527,6 +527,9 @@ export const en: Copy = {
       yes: 'yes',
       no: 'no',
       none: 'none',
+      waiting: 'asking the store…',
+      again: 'Check again',
+      failed: 'The check did not finish ({code})',
     },
     direction: { up: 'Going up', same: 'Holding', down: 'Going down' },
     gameLevel: {

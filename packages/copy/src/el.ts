@@ -607,6 +607,9 @@ export const el = {
       yes: 'ναι',
       no: 'όχι',
       none: 'κανένα',
+      waiting: 'ρωτάω το κατάστημα…',
+      again: 'Ξανά έλεγχος',
+      failed: 'Ο έλεγχος δεν τελείωσε ({code})',
     },
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
     /** your game level from points (Εγώ, under the hero) */

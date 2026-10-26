@@ -345,6 +345,7 @@ export function fromTournamentMatch(m: TournamentMatch, tournamentId: string, t:
     startsAt: m.starts_at ?? undefined,
     category,
     tournamentId,
+    club: m.club ? { name: m.club, logo: m.club_logo ?? null } : undefined,
   };
 }
 

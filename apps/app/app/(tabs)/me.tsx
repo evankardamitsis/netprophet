@@ -18,6 +18,8 @@ import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
 import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, usePushPrefs, type PushPrefKey } from '../../src/lib/data';
 import { useStoreDiagnostics } from '../../src/lib/purchase';
+import { diagLines } from '../../src/lib/storeTypes';
+import { fmt } from '../../src/lib/votes';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { greekCaps } from '@netprophet/copy';
@@ -851,33 +853,47 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
 }
 
 /**
- * Staff only: the store on this phone, to see why buying does not work on a build (TestFlight, Play internal).
- * «Έλεγχος» configures RevenueCat for this account and asks for the offerings; the key itself never shows.
+ * Staff only: the store on this phone, to see why buying does not work on a build (TestFlight, Play internal). A tap
+ * on the row opens it and runs the check: the phone's own facts at once, then the store configures for this account
+ * and is asked for the offerings (each step gives up after 10 s). The key itself never shows, only its length and
+ * whether its prefix is right.
  */
 function StoreDiagRow() {
   const t = useCopy();
   const d = t.me.storeDiag;
-  const { diag, checking, check } = useStoreDiagnostics();
-  const yn = (v: boolean) => (v ? d.yes : d.no);
+  const { state, check } = useStoreDiagnostics();
+  const [open, setOpen] = useState(false);
+  const checking = state.phase === 'checking';
+  const toggle = () => {
+    const next = !open;
+    setOpen(next);
+    if (next && state.phase !== 'checking') void check();
+  };
   return (
     <View style={styles.blocks}>
-      <Text style={styles.blocksTitle}>{d.title}</Text>
-      {diag ? (
-        <>
-          <Text style={styles.diagLine}>{`${d.ready}: ${yn(diag.ready)}${diag.block ? ` (${diag.block})` : ''}`}</Text>
-          <Text style={styles.diagLine}>{`${d.module}: ${yn(diag.nativeModule)}`}</Text>
-          <Text style={styles.diagLine}>{`${d.key}: ${yn(diag.keyPresent)} · ${d.keyShape}: ${diag.keyLength} / ${yn(diag.keyPrefixOk)}`}</Text>
-          <Text style={styles.diagLine}>{`${d.configured}: ${yn(diag.configured)}`}</Text>
-          <Text style={styles.diagLine}>
-            {`${d.offerings}: ${diag.offerings === null ? d.none : `${diag.offerings.length}`}`}
-            {diag.offerings?.map((o) => `\n${o.id}: ${o.products.length} (${o.products.slice(0, 6).join(', ')}${o.products.length > 6 ? ', …' : ''})`).join('')}
-          </Text>
-          <Text style={styles.diagLine}>{`${d.lastError}: ${diag.lastError ? `${diag.lastError.op} · ${diag.lastError.code}` : d.none}`}</Text>
-        </>
-      ) : null}
-      <Pressable accessibilityRole="button" disabled={checking} onPress={() => void check()} style={styles.linkHit}>
-        <Text style={styles.signOut}>{checking ? d.checking : d.check}</Text>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open, busy: checking }} onPress={toggle} style={[styles.rowBetween, styles.linkHit, styles.diagHead]}>
+        <Text style={styles.signOut}>{d.title}</Text>
+        <Text style={[styles.settingsMark, open && styles.markOpen]}>+</Text>
       </Pressable>
+      {open ? (
+        <View style={styles.diagPanel} accessibilityLiveRegion="polite">
+          {state.phase === 'idle' ? <Text style={styles.diagLine}>{d.checking}</Text> : null}
+          {state.phase !== 'idle'
+            ? diagLines(state.diag, d, checking).map((l) => (
+                <Text key={l.label} style={[styles.diagLine, l.ok === false && styles.diagBad]}>
+                  {`${l.ok === true ? '✓ ' : ''}${l.label}: ${l.value}`}
+                </Text>
+              ))
+            : null}
+          {state.phase === 'failed' ? <Text style={[styles.diagLine, styles.diagBad]}>{fmt(d.failed, { code: state.code })}</Text> : null}
+          <View style={styles.diagActions}>
+            {checking ? <ActivityIndicator size="small" color={colors.ink} /> : null}
+            <Pressable accessibilityRole="button" disabled={checking} onPress={() => void check()} style={styles.linkHit}>
+              <Text style={[styles.signOut, checking && styles.diagMuted]}>{checking ? d.checking : d.again}</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -988,6 +1004,11 @@ const styles = StyleSheet.create({
   blocksTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.inkSoft },
   blockName: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   diagLine: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
+  diagBad: { fontFamily: fonts.bodyBold, color: colors.ink },
+  diagMuted: { color: colors.inkSoft },
+  diagHead: { alignSelf: 'stretch' },
+  diagPanel: { gap: 4, paddingBottom: 4 },
+  diagActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   unblock: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink, textDecorationLine: 'underline' },
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },

@@ -1,5 +1,19 @@
-import { describe, expect, it } from 'vitest';
-import { buyLineFor, cleanKey, deviceBlocked, keyLooksRight, purchaseErrorOutcome, restoreOutcome, storeBlock, storeErrorCode } from './storeTypes';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getCopy } from '@netprophet/copy';
+import {
+  buyLineFor,
+  cleanKey,
+  deviceBlocked,
+  diagLines,
+  emptyDiag,
+  keyLooksRight,
+  purchaseErrorOutcome,
+  restoreOutcome,
+  storeBlock,
+  storeErrorCode,
+  withTimeout,
+  type StoreDiagnostics,
+} from './storeTypes';
 
 // a made-up key of the usual shape; never a real one
 const KEY = 'appl_AbCdEfGhIjKlMnOpQrStUvWxYz0';
@@ -126,5 +140,76 @@ describe('restoreOutcome', () => {
     expect(restoreOutcome({ activeEntitlements: 1, oneTimePurchases: 0 })).toBe('restored');
     expect(restoreOutcome({ activeEntitlements: 0, oneTimePurchases: 2 })).toBe('restored');
     expect(restoreOutcome({ activeEntitlements: 0, oneTimePurchases: 0 })).toBe('none');
+  });
+});
+
+describe('withTimeout', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  it('passes the value through', async () => {
+    await expect(withTimeout(Promise.resolve(7), 50)).resolves.toBe(7);
+  });
+  it('passes the rejection through', async () => {
+    await expect(withTimeout(Promise.reject(Object.assign(new Error('x'), { code: '10' })), 50)).rejects.toMatchObject({ code: '10' });
+  });
+  it('gives up with «timeout» on a promise that never ends', async () => {
+    vi.useFakeTimers();
+    const p = withTimeout(new Promise<never>(() => undefined), 1000);
+    const caught = p.catch((e: unknown) => storeErrorCode(e));
+    vi.advanceTimersByTime(1000);
+    await expect(caught).resolves.toBe('timeout');
+  });
+});
+
+describe('diagLines', () => {
+  const w = { ...getCopy('el').me.storeDiag };
+  const base: StoreDiagnostics = {
+    ready: true,
+    block: null,
+    nativeModule: true,
+    keyPresent: true,
+    keyLength: 37,
+    keyPrefixOk: true,
+    configured: true,
+    offerings: [{ id: 'default', products: ['pro_monthly', 'pro_yearly'] }],
+    lastError: null,
+    offeringsError: null,
+  };
+  const KEY_TEXT = 'appl_AbCdEfGhIjKlMnOpQrStUvWxYz0';
+
+  it('a working store: every line fine, the offerings with their products', () => {
+    const lines = diagLines(base, w);
+    expect(lines.map((l) => l.label)).toEqual([w.ready, w.module, w.key, w.keyShape, w.configured, w.offerings, w.lastError]);
+    expect(lines.find((l) => l.label === w.offerings)).toEqual({ label: w.offerings, value: '1\ndefault: 2 (pro_monthly, pro_yearly)', ok: true });
+    expect(lines.find((l) => l.label === w.keyShape)?.value).toBe('37 / ναι');
+    expect(lines.find((l) => l.label === w.lastError)).toEqual({ label: w.lastError, value: w.none, ok: null });
+  });
+
+  it('a blocked build says why, and why there are no offerings', () => {
+    const lines = diagLines({ ...base, ready: false, block: 'no_key', keyPresent: false, keyLength: 0, keyPrefixOk: false, configured: false, offerings: null, offeringsError: 'not_ready' }, w);
+    expect(lines[0]).toEqual({ label: w.ready, value: 'όχι', ok: false });
+    expect(lines[1]).toEqual({ label: w.block, value: 'no_key', ok: false });
+    expect(lines.find((l) => l.label === w.offerings)).toEqual({ label: w.offerings, value: `${w.none} (not_ready)`, ok: false });
+  });
+
+  it('shows the last error and the waiting line while the store is asked', () => {
+    const lines = diagLines({ ...base, offerings: null, lastError: { op: 'login', code: 'INVALID_CREDENTIALS_ERROR', at: 1 } }, w, true);
+    expect(lines.find((l) => l.label === w.offerings)).toEqual({ label: w.offerings, value: w.waiting, ok: null });
+    expect(lines.find((l) => l.label === w.lastError)).toEqual({ label: w.lastError, value: 'login · INVALID_CREDENTIALS_ERROR', ok: false });
+  });
+
+  it('an offering with no products is not fine', () => {
+    expect(diagLines({ ...base, offerings: [{ id: 'default', products: [] }] }, w).find((l) => l.label === w.offerings)?.ok).toBe(false);
+  });
+
+  it('never prints a key, only its length', () => {
+    const all = diagLines(base, w).map((l) => `${l.label} ${l.value}`).join(' ');
+    expect(all).not.toContain('appl_');
+    expect(all).not.toContain(KEY_TEXT);
+  });
+
+  it('an empty panel is all «no»', () => {
+    expect(diagLines(emptyDiag(), w).every((l) => l.ok !== true)).toBe(true);
   });
 });

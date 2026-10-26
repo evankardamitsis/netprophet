@@ -4,16 +4,17 @@ import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, type CSST
 import * as Haptics from 'expo-haptics';
 import { useCopy } from '../i18n';
 import type { CardMatch, CardPct, CardSide } from '../lib/feed';
-import { sideLabel, rowTime } from '../lib/home';
+import { rowWhere, sideLabel, rowTime } from '../lib/home';
 import { hasTime } from '../lib/tournaments';
 import { runJpop, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { HOLD_MS, holdFor, pointOf, type HoldPerson } from '../lib/playerHold';
 import { fmt, type Side } from '../lib/votes';
 import { cardSurface, colors, fonts, motion, text } from '../theme';
+import { Logo } from './Logo';
 
 /**
- * One match as a row (mockup D, founder 22 Oct): the time on the left, a small line with the tournament and category,
- * then the two names as full-width buttons, one under the other (a pair shows both surnames). Tap a name to vote.
+ * One match as a row (mockup D, founder 22 Oct): the time on the left, a small line with the tournament and category
+ * (and the club, with its logo), then the two names as full-width buttons, one under the other (a pair shows both surnames). Tap a name to vote.
  *
  * A tap on a name votes at once (founder, 22 Oct: no lock-in): the name presses in and fills ink, `onVote` runs (the
  * screen's vote path: cast_vote, the burst, quests, error toasts) and the percentages pop in when the split comes back.
@@ -101,7 +102,8 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
   );
 
   const split = state.phase === 'voted' ? state.split : null;
-  const small = where ?? [match.group?.title, match.category].filter(Boolean).join(' · ');
+  const place = rowWhere(where ?? [match.group?.title, match.category].filter(Boolean).join(' · '), match.club);
+  const small = place.line;
   const hold = onLongPress ? () => onLongPress(match.id) : undefined;
 
   return (
@@ -117,9 +119,12 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
           </View>
           <View style={styles.body}>
             {small ? (
-              <Text numberOfLines={1} style={styles.small}>
-                {small}
-              </Text>
+              <View style={styles.whereRow}>
+                {place.logo && place.clubName ? <Logo path={place.logo} name={place.clubName} size={16} /> : null}
+                <Text numberOfLines={1} style={[styles.small, styles.whereText]}>
+                  {small}
+                </Text>
+              </View>
             ) : null}
             {(['a', 'b'] as const).map((s) => (
               <NameButton
@@ -241,6 +246,8 @@ const styles = StyleSheet.create({
   timeText: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 19, color: colors.ink },
   body: { flex: 1, minWidth: 0, gap: 6 },
   small: { ...text.meta, fontSize: 13, lineHeight: 17 },
+  whereRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  whereText: { flexShrink: 1 },
   center: { textAlign: 'center' },
   name: {
     minHeight: 46,

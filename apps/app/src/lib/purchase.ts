@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ProOffer, ProOfferMoment } from '@netprophet/db';
 import { useAuth } from './auth';
 import { useApi } from './data';
-import { buy, restore, storeDiagnostics, storeReady } from './store';
-import type { BuyOutcome, RestoreResult, StoreDiagnostics } from './storeTypes';
+import { buy, restore, storeDiagnostics, storeFacts, storeReady } from './store';
+import { DIAG_TIMEOUT_MS, emptyDiag, storeErrorCode, withTimeout, type BuyOutcome, type RestoreResult, type StoreDiagnostics } from './storeTypes';
 
 /**
  * Pro and cosmetics, bought (founder, 17 Oct). The store (RevenueCat: Stripe on the web, Google Play, later Apple)
@@ -90,19 +90,43 @@ export function useRestore(): () => Promise<RestoreResult> {
   return useCallback(async () => (userId ? restore(userId) : ('unavailable' as const)), [userId]);
 }
 
-/** Staff only (Εγώ › Ρυθμίσεις): the store's state on this phone, asked again with `check`. */
-export function useStoreDiagnostics(): { diag: StoreDiagnostics | null; checking: boolean; check: () => Promise<void> } {
+/** the staff panel's state: nothing asked yet, asking (the phone's own facts already in), done, or the check failed */
+export type DiagState =
+  | { phase: 'idle' }
+  | { phase: 'checking'; diag: StoreDiagnostics }
+  | { phase: 'done'; diag: StoreDiagnostics }
+  | { phase: 'failed'; diag: StoreDiagnostics; code: string };
+
+/**
+ * Staff only (Εγώ › Ρυθμίσεις): the store's state on this phone, asked again with `check`. The phone's own facts show
+ * at once; the offerings follow. A check that throws or hangs ends in «failed» with its code, never in silence.
+ */
+export function useStoreDiagnostics(): { state: DiagState; check: () => Promise<void> } {
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
-  const [diag, setDiag] = useState<StoreDiagnostics | null>(null);
-  const [checking, setChecking] = useState(false);
+  const [state, setState] = useState<DiagState>({ phase: 'idle' });
+  const running = useRef(false);
   const check = useCallback(async () => {
-    setChecking(true);
+    if (running.current) return;
+    running.current = true;
+    let facts: StoreDiagnostics | null = null;
     try {
-      setDiag(await storeDiagnostics(userId));
+      facts = storeFacts();
+      setState({ phase: 'checking', diag: facts });
+      // storeDiagnostics never hangs on its own; this is the last guard
+      const diag = await withTimeout(storeDiagnostics(userId), DIAG_TIMEOUT_MS * 2 + 1000);
+      setState({ phase: 'done', diag });
+    } catch (e) {
+      let now: StoreDiagnostics | null = facts;
+      try {
+        now = storeFacts();
+      } catch {
+        // keep what we had
+      }
+      setState({ phase: 'failed', diag: now ?? emptyDiag(), code: storeErrorCode(e) });
     } finally {
-      setChecking(false);
+      running.current = false;
     }
   }, [userId]);
-  return { diag, checking, check };
+  return { state, check };
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedPostponedCard, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { feedDay, fromFeedCard, fromPostponedCard, postponedLast, splitToday, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { feedDay, fromFeedCard, fromPostponedCard, fromTournamentMatch, postponedLast, splitToday, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -108,6 +108,30 @@ describe('fromFeedCard', () => {
     const c = fromFeedCard(card({ club: 'Γήπεδα Γλυφάδας', surface: 'clay' }), areas, t, NOW);
     expect(c.group?.surface).toBe('clay');
     expect(c.group?.sub).toBe('Γήπεδα Γλυφάδας');
+  });
+
+  it('carries the club and its logo to the row (the logos uploaded in admin)', () => {
+    const c = fromFeedCard(card({ club: 'ACE Tennis Club', club_logo: 'clubs/c1/mvjg06d6.jpg' }), areas, t, NOW);
+    expect(c.club).toEqual({ name: 'ACE Tennis Club', logo: 'clubs/c1/mvjg06d6.jpg' });
+    expect(fromFeedCard(card({ club: 'PRC' }), areas, t, NOW).club).toEqual({ name: 'PRC', logo: null });
+    expect(fromFeedCard(card(), areas, t, NOW).club).toBeUndefined();
+  });
+
+  it('a tournament page row carries its club and logo too', () => {
+    const m = {
+      match_id: 'm9',
+      format: 'singles',
+      starts_at: '2026-10-09T15:00:00Z',
+      round: null,
+      level: 'Μ 40+',
+      discipline: null,
+      sides: [],
+      winner_side: null,
+      club: 'Forty Love',
+      club_logo: 'clubs/c2/mvjg0opa.jpg',
+    } as unknown as Parameters<typeof fromTournamentMatch>[0];
+    expect(fromTournamentMatch(m, 't', t, NOW).club).toEqual({ name: 'Forty Love', logo: 'clubs/c2/mvjg0opa.jpg' });
+    expect(fromTournamentMatch({ ...m, club: null }, 't', t, NOW).club).toBeUndefined();
   });
 
   it('puts a friendly the prototype way: round text, then the venue', () => {

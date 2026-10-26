@@ -1,7 +1,7 @@
 import type { Copy } from '@netprophet/copy';
 import type { GetQuizResult, TournamentItem } from '@netprophet/db';
 import { accusativeWord, nameGender } from '@netprophet/copy';
-import { splitToday, type CardMatch, type CardPerson, type CardResult, type FeedCard } from './feed';
+import { splitToday, type CardMatch, type CardPerson, type CardResult, type ClubMark, type FeedCard } from './feed';
 import { summaryCounts } from './resultsSummary';
 import { NOW_WINDOW_MS } from './tournamentToday';
 import { dayKey } from '@netprophet/core';
@@ -171,6 +171,20 @@ export function voteList(cards: readonly FeedCard[], ranks: ReadonlyMap<string, 
   if (later.some((m) => m.myVote === undefined)) return { mode: 'tomorrow', groups: groupVotes(later, ranks) };
   if (today.length > 0) return { mode: 'today', groups: groupVotes(today, ranks) };
   return { mode: 'none', groups: [] };
+}
+
+/**
+ * A vote row's small line (founder, 26 Oct: the club logos uploaded in admin must show in the app): the category, then
+ * the club the match is played at, «Μ 40+ · ACE Tennis Club», with the club's logo in front when it has one. A club
+ * already named in the line is not said twice; without a logo there is no letter badge (the PR #269 follow-up).
+ */
+export function rowWhere(where: string, club: ClubMark | null | undefined): { line: string; logo: string | null; clubName: string | null } {
+  const base = where.trim();
+  const name = club?.name.trim() || null;
+  const logo = name ? (club?.logo ?? '').trim() || null : null;
+  if (!name) return { line: base, logo: null, clubName: null };
+  const named = base.split(' · ').some((part) => part.trim() === name);
+  return { line: named ? base : [base, name].filter(Boolean).join(' · '), logo, clubName: name };
 }
 
 /** «Ρήγας Κ.», or a pair «Ρήγας & Σταθάκης» (the app's own pair joiner) */
