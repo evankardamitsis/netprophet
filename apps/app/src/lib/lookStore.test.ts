@@ -3,7 +3,7 @@ import type { GetLookResult } from '@netprophet/db';
 import { changeLook, clearLook, currentLook, loadLook, lookOwner, subscribeLook } from './lookStore';
 
 const look = (kit: string) => ({ worn: { kit } }) as unknown as GetLookResult;
-const wearKit = (kit: string) => (_l: GetLookResult) => look(kit);
+const wearKit = (kit: string) => () => look(kit);
 const kitOf = (l: GetLookResult | null) => (l as unknown as { worn: { kit: string } } | null)?.worn.kit;
 
 describe('lookStore: one look for the header and the wardrobe', () => {
