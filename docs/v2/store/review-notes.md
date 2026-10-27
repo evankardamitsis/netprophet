@@ -41,6 +41,21 @@ Not done, noted: the review account is a normal player, so once it votes it can 
 because that list comes from claimed players and the review account claims none. If this matters, a follow-up can
 make `get_ladder` skip hidden profiles and set `hidden` for the review account.
 
+### The Play review account (founder, 27 Oct)
+
+Google's reviewers cannot use free trials or buy, and Play's App access form says the sign-in details open paid
+content too. Apple's reviewer needs the opposite: the Pro screen hides the plans from anyone who has Pro, and Apple
+has to find and buy the subscription in the sandbox. So there are two accounts:
+
+- `review@monadlabs.gr`: Apple. No Pro.
+- `play-review@monadlabs.gr`: Google Play. Holds Pro as a `promo` entitlement with no end date.
+
+Both are in `REVIEW_EMAILS` and in the guard (migration `20270323000000_play_review_account.sql`, pgTAP
+`156_play_review_account.test.sql`). Founder steps for the Play account: create it the same way (Authentication ›
+Users › Add user, its own strong password, Auto Confirm User), finish onboarding on a phone as in step 3, then approve
+the Pro grant (one row in `core.entitlements`: key `pro`, source `promo`, status `active`, no `ends_at`). Its email and
+password go into Play Console › App content › App access only.
+
 ## Notes for the reviewer (paste into ASC)
 
 ```

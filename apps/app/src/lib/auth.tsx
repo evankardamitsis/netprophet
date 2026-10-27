@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async signInWithPassword(email, password) {
         if (!supabase) return;
         // never a password request for any other address: the screen does not offer it, and this does not send it
-        if (!isReviewEmail(email)) throw new AuthFailure('generic', 'password sign-in is for the review account only');
+        if (!isReviewEmail(email)) throw new AuthFailure('generic', 'password sign-in is for the review accounts only');
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
         if (error) throw new AuthFailure(passwordErrorKind(error), error.message);
       },
