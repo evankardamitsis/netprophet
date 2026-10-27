@@ -112,7 +112,9 @@ describe('toProfile', () => {
       won: true,
       score: '6-4, 3-6, 10-8',
       against: 'Άννα Μάνου',
+      againstSegs: [{ text: 'Άννα Μάνου', id: 'Άννα-Μάνου' }],
       partner: null,
+      partnerSegs: null,
       meta: 'Χθες · Open Γλυφάδας · Γ 40+ · Ημιτελικός',
       when: 'Χθες · Γ 40+',
     });
@@ -121,7 +123,10 @@ describe('toProfile', () => {
       won: false,
       score: '4-6, 6-7(5)',
       against: 'Α Β & Γ Δ',
+      // every name keeps its roster id, so a tap on it opens that player's card
+      againstSegs: [{ text: 'Α Β', id: 'Α-Β' }, { text: ' & ' }, { text: 'Γ Δ', id: 'Γ-Δ' }],
       partner: 'με Μαρία Καρρά',
+      partnerSegs: [{ text: 'με ' }, { text: 'Μαρία Καρρά', id: 'Μαρία-Καρρά' }],
       meta: 'Την Κυριακή',
       when: 'Την Κυριακή',
     });

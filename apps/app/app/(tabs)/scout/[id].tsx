@@ -8,6 +8,7 @@ import { FormDots } from '../../../src/components/PlayerListRow';
 import { StatBlockCard } from '../../../src/components/StatBlocks';
 import { useCopy } from '../../../src/i18n';
 import { useScout } from '../../../src/lib/data';
+import { HoldName, HoldSegs } from '../../../src/lib/playerHold';
 import type { StatsFormat } from '../../../src/lib/matchStats';
 import { usePress, useStgIn } from '../../../src/lib/motion';
 import type { ScoutFormat, ScoutLine, ScoutView } from '../../../src/lib/scout';
@@ -169,7 +170,9 @@ function Opponent({ o, inTournament }: { o: ScoutView; inTournament: boolean }) 
               {o.common.map((c) => (
                 <View key={c.id} style={styles.commonRow}>
                   <Text style={styles.commonName} numberOfLines={1}>
-                    {c.name}
+                    <HoldName tournamentId={null} playerId={c.id}>
+                      {c.name}
+                    </HoldName>
                   </Text>
                   <Text style={styles.commonValue}>{c.me}</Text>
                   <Text style={styles.commonValue}>{c.them}</Text>
@@ -256,10 +259,14 @@ function LineRow({ m, first }: { m: ScoutLine; first: boolean }) {
       <View style={styles.rowBody}>
         <View style={styles.rowTop}>
           {/* a meeting between you has no names to show: the score leads */}
-          <Text style={styles.against}>{m.against || m.score}</Text>
+          <Text style={styles.against}>{m.againstSegs.length > 0 ? <HoldSegs tournamentId={null} segs={m.againstSegs} /> : m.score}</Text>
           {m.against && m.score ? <Text style={styles.score}>{m.score}</Text> : null}
         </View>
-        {m.partner ? <Text style={styles.muted}>{m.partner}</Text> : null}
+        {m.partnerSegs ? (
+          <Text style={styles.muted}>
+            <HoldSegs tournamentId={null} segs={m.partnerSegs} />
+          </Text>
+        ) : null}
         {m.meta ? <Text style={styles.muted}>{m.meta}</Text> : null}
       </View>
     </View>

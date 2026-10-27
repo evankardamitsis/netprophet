@@ -9,7 +9,9 @@ import type { NameSeg, PathContext } from './tournamentToday';
 
 /**
  * Press and hold a player's name (Πρόγραμμα, Ταμπλό, Σήμερα's cards) for their run in that tournament, full screen
- * (founder, 21 Oct). A tap keeps doing what it did. The hold is 350ms, shorter than a card's 450ms «Αναφορά».
+ * (founder, 21 Oct). A tap on a name opens the player's card, their profile, everywhere a name shows with a roster id
+ * (founder, 27 Oct); only the vote rows keep a tap for the vote (they do not use HoldName). The hold is 350ms,
+ * shorter than a card's 450ms «Αναφορά».
  */
 export const HOLD_MS = 350;
 
@@ -20,6 +22,14 @@ const HELD_CLEAR_MS = 900;
 
 /** where on the screen the name was held (page coordinates): the screen grows out of there */
 export type HoldPoint = { x: number; y: number };
+
+/** where a tap on a name goes: the player's card (profile, with the Pro stats for Pro) */
+export const playerCardHref = (playerId: string) => `/player/${playerId}` as const;
+
+/** a tap on a name: the player's card */
+export function openPlayerCard(playerId: string) {
+  router.push(playerCardHref(playerId));
+}
 
 /** `ctx`: the match the name was held on, so «Αν κερδίσει» speaks of that match */
 export function openPlayerPath(tournamentId: string, playerId: string, ctx: PathContext = null, point?: HoldPoint) {
@@ -134,7 +144,10 @@ export function useHold(onHold: ((at?: HoldPoint) => void) | undefined, onTap?: 
   return { onPressIn: start, onPressOut: stop, onPress, onLongPress: fire };
 }
 
-/** a name (inside a line of Text) that opens the player's profile on a tap and their run here on a hold */
+/**
+ * a name (inside a line of Text) that opens the player's card on a tap and their run here on a hold. `onTap` is only
+ * for a name with no roster id (nothing to open): it keeps doing what the line did.
+ */
 export function HoldName({
   tournamentId,
   playerId,
@@ -160,7 +173,7 @@ export function HoldName({
           openPlayerPath(tournamentId!, playerId!, ctx, at);
         }
       : undefined,
-    onTap,
+    playerId ? () => openPlayerCard(playerId) : onTap,
     HOLD_MS,
     can ? setDown : undefined,
   );

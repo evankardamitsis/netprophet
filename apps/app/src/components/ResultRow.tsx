@@ -163,8 +163,8 @@ function Pill({ text }: { text: string }) {
 
 /**
  * «Δεσύπρης Γ. & Μέμμος Η.»: the surname large, as on the feed cards, and the first name's initial;
- * a tap anywhere on the names column shows the first names for 4s (founder, 10 Oct; the prototype had it the other way
- * round). `open` comes from the card, so both sides open together and the whole column is one 44pt+ target.
+ * a tap on the column (not on a name) shows the first names for 4s (founder, 10 Oct; the prototype had it the other way
+ * round); a tap on a name opens that player's card (founder, 27 Oct). `open` comes from the card, so both sides open together and the whole column is one 44pt+ target.
  */
 function Names({
   people,

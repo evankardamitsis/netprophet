@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { TournamentMatch } from '@netprophet/db';
-import { mineToday, nowNext, openingDay, todayGroups, yoursSet, yoursToday } from './tournamentToday';
+import { mineToday, nowNext, openingDay, scheduleVoteMatch, todayGroups, yoursSet, yoursToday } from './tournamentToday';
 
 const t = getCopy('el');
 
@@ -169,5 +169,42 @@ describe('Σήμερα', () => {
     const row = todayGroups([match('x', at('10:00'), NIK, GIO, { postponed: true })], 'tour', new Map(), new Map(), now, t)[0]!.rows[0]!;
     expect(row.match.closed).toBe(true);
     expect(row.note).toBe('Αναβολή');
+  });
+});
+
+describe('scheduleVoteMatch (Πρόγραμμα: which rows take a vote)', () => {
+  const now = new Date('2026-10-22T06:00:00Z'); // 09:00 Athens
+  const at = (hhmm: string, d = '22') => `2026-10-${d}T${hhmm}:00Z`;
+  const fed = (over: Record<string, unknown> = {}) => ({ id: 'a', kind: 'match', myVote: 'b', split: { pctA: 30, pctB: 70 }, ...over }) as never;
+  const vote = (m: TournamentMatch, me: string | null = null, f?: never) => scheduleVoteMatch(m, 'tour', me, f, now, t);
+
+  it('an open match, today or on a later day, is a vote row for its tournament', () => {
+    expect(vote(match('a', at('10:00')))).toMatchObject({ id: 'a', tournamentId: 'tour' });
+    expect(vote(match('b', at('10:00', '24')))?.id).toBe('b');
+    expect(vote(match('a', at('10:00')))?.closed).toBeUndefined();
+  });
+  it('started or past its lock is not votable', () => {
+    expect(vote(match('gone', at('05:00')))).toBeNull();
+  });
+  it('a finished, put-off or walkover match is not votable', () => {
+    expect(vote(match('w', at('10:00'), NIK, GIO, { winner_side: 1, sets: [{ w: 6, l: 1 }] }))).toBeNull();
+    expect(vote(match('p', at('10:00'), NIK, GIO, { postponed: true }))).toBeNull();
+    expect(vote(match('wo', at('10:00'), NIK, GIO, { winner_side: 2, walkover: true }))).toBeNull();
+  });
+  it('a side with nobody yet (a «θα φανεί» slot) is not votable', () => {
+    const open = match('tbd', at('10:00'));
+    expect(vote({ ...open, sides: [{ side: 1, players: [NIK] }, { side: 2, players: [] }] })).toBeNull();
+    expect(vote({ ...open, sides: [{ side: 1, players: [NIK] }] })).toBeNull();
+  });
+  it('your own match is not votable (the server says own_match)', () => {
+    expect(vote(match('mine', at('10:00'), NIK, GIO), 'nik')).toBeNull();
+    expect(vote(match('mine', at('10:00'), NIK, GIO), 'gio')).toBeNull();
+    expect(vote(match('theirs', at('10:00'), NIK, GIO), 'ale')).not.toBeNull();
+  });
+  it('the feed lays your vote and the split over it, and its lock or closed flag wins over the clock', () => {
+    const row = vote(match('a', at('12:00')), null, fed({ lockAt: at('11:55') }));
+    expect(row).toMatchObject({ myVote: 'b', split: { pctA: 30, pctB: 70 } });
+    expect(vote(match('a', at('12:00')), null, fed({ closed: true }))).toBeNull();
+    expect(vote(match('a', at('12:00')), null, fed({ lockAt: at('05:55') }))).toBeNull();
   });
 });

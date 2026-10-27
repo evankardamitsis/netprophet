@@ -1,7 +1,6 @@
 import { useRef, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { router } from 'expo-router';
 import { useCopy } from '../i18n';
 import { HoldName } from '../lib/playerHold';
 import type { PathContext } from '../lib/tournamentToday';
@@ -138,7 +137,6 @@ function Names({ side, tournamentId, ctx = null }: { side: SideView; tournamentI
       tournamentId={tournamentId ?? null}
       playerId={p.playerId}
       ctx={ctx}
-      onTap={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined}
     >
       {j > 0 ? ' / ' : ''}
       {p.text}

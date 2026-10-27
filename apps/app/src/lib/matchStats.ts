@@ -61,6 +61,8 @@ export interface MonthBar {
 
 export interface PersonRow {
   key: string;
+  /** the roster id: a tap on the name opens the player's card */
+  playerId: string;
   name: string;
   /** «ΧΚ» for the ball */
   initials: string;
@@ -371,6 +373,7 @@ export function statBlocks(m: MatchStatsMore, format: StatsFormat, t: Copy): Sta
     (prefix: string, metaForms: { one: string; many: string }) =>
     (p: MatchStatsMore['opponents'][number]): PersonRow => ({
       key: `${prefix}_${p.player_id}`,
+      playerId: p.player_id,
       name: peopleNames([p], t),
       initials: initialsOf(p),
       meta: plural(metaForms, p.played),
