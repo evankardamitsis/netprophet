@@ -26,6 +26,7 @@ import type { Area, Hand } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
 import type { ClaimOutcome } from './claimLater';
+import { changeLook, currentLook, loadLook, lookOwner, subscribeLook } from './lookStore';
 import { clearMe, currentMe, loadMe, markMeStale, ME_STALE_MS, subscribeMe, type LoadMeOptions } from './meStore';
 import { askForPushOnce } from './push';
 import { MOCK_TOKEN, mockLinkView } from './link';
@@ -446,6 +447,7 @@ export function useBadges(): { badges: GetBadgesResult | null; refresh: () => Pr
 
 /* Εμφάνιση: what the guest owns and wears lives here for the session (mock mode and the dev guest) */
 let mockLookState: GetLookResult = mockLook();
+const MOCK_LOOK_OWNER = '__mock__';
 
 export interface LookState {
   look: GetLookResult | null;
@@ -456,42 +458,32 @@ export interface LookState {
 
 export function useLook(): LookState {
   const api = useApi();
-  const [look, setLook] = useState<GetLookResult | null>(api ? null : mockLookState);
+  const user = useAuth().session?.user.id ?? null;
+  // the one look the header, the wardrobe and every card share (lookStore.ts)
+  const who = api ? user : MOCK_LOOK_OWNER;
+  const raw = useSyncExternalStore(subscribeLook, currentLook, currentLook);
+  const look = who !== null && lookOwner() === who ? raw : api ? null : mockLookState;
   const refresh = useCallback(async (): Promise<GetLookResult | null> => {
-    if (!api) {
-      setLook(mockLookState);
-      return mockLookState;
-    }
-    try {
-      const fresh = await api.getLook();
-      setLook(fresh);
-      return fresh;
-    } catch {
-      // keep what is on screen
-      return null;
-    }
-  }, [api]);
+    if (who === null) return null;
+    return loadLook(async () => (api ? api.getLook() : mockLookState), who);
+  }, [api, who]);
   useEffect(() => {
     void refresh();
   }, [refresh]);
   const equip = useCallback(
     async (category: LookCategory, key: string | null) => {
-      const prev = look;
-      if (!prev) return false;
-      setLook(withWorn(prev, category, key));
-      if (!api) {
-        mockLookState = withWorn(mockLookState, category, key);
-        return true;
-      }
-      try {
-        setLook(await api.equipItem(category, key));
-        return true;
-      } catch {
-        setLook(prev);
-        return false;
-      }
+      if (who === null) return false;
+      return changeLook(
+        who,
+        (prev) => withWorn(prev, category, key),
+        async () => {
+          if (api) return api.equipItem(category, key);
+          mockLookState = withWorn(mockLookState, category, key);
+          return mockLookState;
+        },
+      );
     },
-    [api, look],
+    [api, who],
   );
   return { look, refresh, equip };
 }
