@@ -6,7 +6,7 @@ import { VoteRow } from '../../../src/components/VoteRow';
 import { YoursDot } from '../../../src/components/YoursDot';
 import { useFollowedIds } from '../../../src/lib/myPeople';
 import { HoldName, HoldSegs, useHoldHint } from '../../../src/lib/playerHold';
-import { mineToday, nowNext, openingDay, todayGroups, yoursSet, yoursToday, type CourtNowNext, type YoursRow } from '../../../src/lib/tournamentToday';
+import { mineToday, nowNext, openingDay, scheduleVoteMatch, todayGroups, yoursSet, yoursToday, type CourtNowNext, type YoursRow } from '../../../src/lib/tournamentToday';
 import type { CardMatch } from '../../../src/lib/feed';
 import { useTabScrollTop } from '../../../src/lib/scrollTop';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -246,6 +246,8 @@ function Body({
           focus={focus}
           onFocus={(matchId) => day && goTo(matchId, day)}
           scrollTo={scrollTo}
+          onToast={onToast}
+          bindRefresh={bindRefresh}
         />
       ) : null}
       {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} openDraw={drawTab ?? undefined} yours={yours} /> : null}
@@ -326,6 +328,23 @@ function YoursChip({ row, tournamentId, onPress }: { row: YoursRow; tournamentId
   );
 }
 
+/**
+ * The vote path of a tournament page, one for Σήμερα and Πρόγραμμα (founder, 27 Oct: vote from Πρόγραμμα too): the
+ * feed's own `vote` (cast_vote on the server, which decides), a failed vote said in a toast, and a pull on the page
+ * reads the feed again.
+ */
+function useTournamentFeed(onToast: (text: string) => void, bindRefresh: (fn: (() => void) | null) => void) {
+  const t = useCopy();
+  const onVoteError = useCallback((kind: VoteErrorKind) => onToast(t.feed[kind]), [onToast, t]);
+  const feed = useFeed(onVoteError);
+  const feedRefresh = feed.refresh;
+  useEffect(() => {
+    bindRefresh(() => void feedRefresh());
+    return () => bindRefresh(null);
+  }, [bindRefresh, feedRefresh]);
+  return feed;
+}
+
 /* ================= Σήμερα ================= */
 
 /**
@@ -349,13 +368,7 @@ function TodayTab({
   onFocus: (matchId: string) => void;
 }) {
   const t = useCopy();
-  const onVoteError = useCallback((kind: VoteErrorKind) => onToast(t.feed[kind]), [onToast, t]);
-  const feed = useFeed(onVoteError);
-  const feedRefresh = feed.refresh;
-  useEffect(() => {
-    bindRefresh(() => void feedRefresh());
-    return () => bindRefresh(null);
-  }, [bindRefresh, feedRefresh]);
+  const feed = useTournamentFeed(onToast, bindRefresh);
   const now = useMinute(true);
   const mine = useMemo(() => mineToday(matches, d.me, t), [matches, d.me, t]);
   const chips = useMemo(() => yoursToday(matches, yours, t, mine?.matchId), [matches, yours, t, mine]);
@@ -423,6 +436,8 @@ function Schedule({
   focus,
   onFocus,
   scrollTo,
+  onToast,
+  bindRefresh,
 }: {
   d: GetTournamentResult;
   today: string;
@@ -432,13 +447,29 @@ function Schedule({
   focus: Focus | null;
   onFocus: (matchId: string) => void;
   scrollTo: (y: number) => void;
+  onToast: (text: string) => void;
+  bindRefresh: (fn: (() => void) | null) => void;
 }) {
   const t = useCopy();
+  const feed = useTournamentFeed(onToast, bindRefresh);
   const chips = dayChips(d.days, today, t);
   const matches = useMemo(() => d.days.find((x) => x.date === day)?.matches ?? [], [d.days, day]);
   const rows = scheduleRows(matches, d.me, t);
   const isToday = day === today;
-  const now = useMinute(isToday);
+  // the clock also decides which matches still take a vote, on any day
+  const now = useMinute(true);
+  // the matches still open for a vote (scheduleVoteMatch), with the feed's own state laid over them
+  const fed = useMemo(() => new Map(feed.cards.flatMap((c): [string, CardMatch][] => (c.kind === 'match' ? [[c.id, c]] : []))), [feed.cards]);
+  const votable = useMemo(
+    () =>
+      new Map(
+        matches.flatMap((m): [string, CardMatch][] => {
+          const v = scheduleVoteMatch(m, d.id, d.me, fed.get(m.match_id), now, t);
+          return v ? [[m.match_id, v]] : [];
+        }),
+      ),
+    [matches, d.id, d.me, fed, now, t],
+  );
   const courts = isToday ? nowNext(matches, now, t) : [];
   // where each match sits in the page: the block's y, the list's y in it, the row's y in the list
   const at = useRef({ block: 0, list: 0, rows: new Map<string, number>() });
@@ -530,20 +561,23 @@ function Schedule({
       ) : null}
       {courts.length > 0 ? <NowNext courts={courts} tournamentId={d.id} onPick={onFocus} /> : null}
       <View key={day ?? 'none'} style={styles.list} onLayout={(e) => (at.current.list = e.nativeEvent.layout.y)}>
-        {rows.map((r, i) => (
-          <MatchRow
-            key={r.id}
-            row={r}
-            i={i}
-            tournamentId={d.id}
-            yours={yours}
-            flash={focus?.id === r.id ? focus.n : 0}
-            onY={(y) => {
-              at.current.rows.set(r.id, y);
-              if (pending.current === r.id) tryScroll();
-            }}
-          />
-        ))}
+        {rows.map((r, i) => {
+          const onY = (y: number) => {
+            at.current.rows.set(r.id, y);
+            if (pending.current === r.id) tryScroll();
+          };
+          const flash = focus?.id === r.id ? focus.n : 0;
+          const vm = votable.get(r.id);
+          // an open match is the same vote row as Σήμερα (tap a name to vote); locked, started, finished and your own stay schedule rows
+          return vm ? (
+            <View key={r.id} onLayout={(e) => onY(e.nativeEvent.layout.y)}>
+              {flash > 0 ? <Flash key={flash} onInk={false} /> : null}
+              <VoteRow match={vm} where={[vm.category, vm.meta].filter(Boolean).join(' · ')} onVote={feed.vote} index={i} />
+            </View>
+          ) : (
+            <MatchRow key={r.id} row={r} i={i} tournamentId={d.id} yours={yours} flash={flash} onY={onY} />
+          );
+        })}
         {rows.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noMatchesDay}</Text> : null}
         {rows.length > 0 ? (
           <Pressable accessibilityRole="button" disabled={busy} onPress={() => void share()} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.shareHit}>
@@ -661,7 +695,7 @@ function MatchRow({
               <Text style={[styles.sideName, s.winner || (ours && !row.score) ? styles.nameWin : styles.name, { color: fg }]} numberOfLines={1}>
                 {s.people.length === 0 ? dash : null}
                 {s.people.map((p, j) => (
-                  <HoldName key={p.id} tournamentId={tournamentId} playerId={p.id} ctx={{ match: row.id }} onTap={() => router.push(`/player/${p.id}`)}>
+                  <HoldName key={p.id} tournamentId={tournamentId} playerId={p.id} ctx={{ match: row.id }}>
                     {j > 0 ? ' & ' : ''}
                     {shortName(p)}
                   </HoldName>

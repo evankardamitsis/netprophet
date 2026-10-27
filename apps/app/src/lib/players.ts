@@ -7,6 +7,7 @@ import { dayLabel } from './results';
 import { fmt } from './votes';
 import { categoryLabel } from './category';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
+import { joinSegs, segmentsOf, type NameSeg } from './tournamentToday';
 
 /**
  * Παίκτες (prototype V2, isPlayers and the profile overlay): pure mapping from api rows to what the
@@ -41,6 +42,9 @@ export interface LastMatchLine {
   against: string;
   /** «με Μαρία Καρρά» on doubles */
   partner: string | null;
+  /** the same two lines as pieces, each name with its roster id: a tap on a name opens that player's card */
+  againstSegs: NameSeg[];
+  partnerSegs: NameSeg[] | null;
   /** «Χθες · Open Γλυφάδας · Μ 40+ · Διπλό · Ημιτελικός»: never a time */
   meta: string;
   /** «Χθες · Μ 40+ · Διπλό» (Εγώ's «Τα ματς σου») */
@@ -164,6 +168,8 @@ export function lastLine(m: PlayerProfile['last_matches'][number], t: Copy, now:
     score: formatSideSets(m.sets ?? [], m.won, m.score, { retired: m.retired, walkover: m.walkover }, t.results),
     against: m.opponents.map(fullName).join(' & '),
     partner: m.partner.length > 0 ? fmt(t.players.withPartner, { names: m.partner.map(nameAcc).join(' & ') }) : null,
+    againstSegs: joinSegs(m.opponents, (p) => ({ text: fullName(p), id: p.id })),
+    partnerSegs: m.partner.length > 0 ? segmentsOf(t.players.withPartner, { names: joinSegs(m.partner, (p) => ({ text: nameAcc(p), id: p.id })) }) : null,
     meta: [day, m.tournament ?? null, category, roundLabel(m.round ?? null, t)].filter(Boolean).join(' · '),
     when: [day, category].filter(Boolean).join(' · '),
   };

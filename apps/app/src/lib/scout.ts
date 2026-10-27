@@ -9,6 +9,7 @@ import type { FormDot } from './players';
 import { dayLabel } from './results';
 import { fmt } from './votes';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
+import { joinSegs, segmentsOf, type NameSeg } from './tournamentToday';
 
 /**
  * «Ο αντίπαλος πριν το ματς» (Pro): the other side of your own next match, turned into lines.
@@ -24,7 +25,10 @@ export interface ScoutLine {
   won: boolean;
   score: string;
   against: string;
+  /** the same as pieces, each name with its roster id (a tap opens that player's card) */
+  againstSegs: NameSeg[];
   partner: string | null;
+  partnerSegs: NameSeg[] | null;
   meta: string;
 }
 
@@ -96,6 +100,11 @@ function day(startsAt: string | null, now: Date, t: Copy): string | null {
 }
 
 const people = (list: StatsPerson[]) => list.map(fullName).join(' & ');
+const peopleSegs = (list: StatsPerson[]) => joinSegs(list, (p) => ({ text: fullName(p), id: p.player_id }));
+const partnerSegs = (list: StatsPerson[], t: Copy) =>
+  list.length > 0
+    ? segmentsOf(t.scout.withPartner, { names: joinSegs(list, (p) => ({ text: accusativeName(p.first_name, p.surname, p.gender), id: p.player_id })) })
+    : null;
 const partnerLine = (list: StatsPerson[], t: Copy) =>
   list.length > 0 ? fmt(t.scout.withPartner, { names: list.map((p) => accusativeName(p.first_name, p.surname, p.gender)).join(' & ') }) : null;
 
@@ -170,7 +179,9 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
         won: m.won,
         score: sideScore(m, m.won, t),
         against: '',
+        againstSegs: [],
         partner: null,
+        partnerSegs: null,
         meta: [day(m.starts_at, now, t), m.tournament, roundLabel(m.round, t)].filter(Boolean).join(' · '),
       })),
     },
@@ -184,7 +195,9 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
       won: m.won,
       score: sideScore(m, m.won, t),
       against: people(m.opponents),
+      againstSegs: peopleSegs(m.opponents),
       partner: null,
+      partnerSegs: null,
       meta: [roundLabel(m.round, t), day(m.starts_at, now, t)].filter(Boolean).join(' · '),
     })),
     traits: (p.traits ?? []).map((x) => ({ id: x.id, label: x.label_el[nameGender(p.first_name, p.gender)], count: x.count })),
@@ -193,7 +206,9 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
       won: m.won,
       score: sideScore(m, m.won, t),
       against: people(m.opponents),
+      againstSegs: peopleSegs(m.opponents),
       partner: partnerLine(m.partner, t),
+      partnerSegs: partnerSegs(m.partner, t),
       meta: [day(m.starts_at, now, t), m.tournament, categoryLabel(m.level, m.discipline, t), roundLabel(m.round, t)].filter(Boolean).join(' · '),
     })),
     historyCap: count > history.length ? fmt(s.historyCap, { shown: history.length, n: count }) : null,

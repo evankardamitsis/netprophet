@@ -59,12 +59,16 @@ describe('the scout shows more than the free card', () => {
       won: true,
       score: '6-3, 6-4',
       against: 'Κώστας Λιάπης',
+      againstSegs: [{ text: 'Κώστας Λιάπης', id: 'mock-o1' }],
       partner: null,
+      partnerSegs: null,
       meta: expect.any(String),
     });
     expect(v.history[0]!.meta).toContain('Open Γλυφάδας · Μ 40+ · Απλό · Προημιτελικός');
     expect(v.history[2]!.score).toBe('0-2');
     expect(v.history[3]!.partner).toBe('με Πέτρο Δρόσο');
+    expect(v.history[3]!.partnerSegs?.map((x) => x.text).join('')).toBe('με Πέτρο Δρόσο');
+    expect(v.history[3]!.partnerSegs?.some((x) => x.id)).toBe(true);
     expect(v.historyCap).toBe('Τα 4 πιο πρόσφατα από 28.');
   });
 

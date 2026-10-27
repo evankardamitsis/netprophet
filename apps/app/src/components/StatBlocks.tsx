@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { greekCaps } from '@netprophet/copy';
 import type { BarRow, BestWin, MonthBar, PersonRow, PressureTile, RoundRow, StatBlock, TournamentRow } from '../lib/matchStats';
+import { HoldName } from '../lib/playerHold';
 import { useFadeUpIn, useGrowIn, useGrowUpIn, useStgIn } from '../lib/motion';
 import { alpha, colors, fonts, motion, surfaceTints } from '../theme';
 
@@ -256,7 +257,11 @@ function PersonLine({ row, first, delay }: { row: PersonRow; first: boolean; del
         <Text style={styles.ballText}>{row.initials}</Text>
       </View>
       <View style={styles.rowText}>
-        <Text style={styles.rowLabel}>{row.name}</Text>
+        <Text style={styles.rowLabel}>
+          <HoldName tournamentId={null} playerId={row.playerId}>
+            {row.name}
+          </HoldName>
+        </Text>
         <Text style={styles.rowNote}>{row.meta}</Text>
         {row.share !== null ? (
           <View style={styles.personBar}>

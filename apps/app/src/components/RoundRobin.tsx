@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { router } from 'expo-router';
 import { useCopy } from '../i18n';
 import { useStgIn } from '../lib/motion';
 import { HoldName } from '../lib/playerHold';
@@ -48,7 +47,6 @@ function Names({ team, style, marks }: { team: GroupTeamView; style: StyleProp<T
             key={`${p.text}-${j}`}
             tournamentId={marks.tournamentId ?? null}
             playerId={p.playerId}
-            onTap={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined}
           >
             {j > 0 ? ' / ' : ''}
             {p.text}

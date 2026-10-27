@@ -63,6 +63,11 @@ export function segmentsOf(template: string, parts: Record<string, NameSeg[]>): 
   return out;
 }
 
+/** people joined by « & », one piece each (a name with a roster id opens that player's card on a tap) */
+export function joinSegs<P>(list: readonly P[], seg: (p: P) => NameSeg): NameSeg[] {
+  return list.flatMap((p, i): NameSeg[] => [...(i > 0 ? [{ text: ' & ' }] : []), seg(p)]);
+}
+
 /** a side as pieces: «Ροδίτης & Πράτσας», surnames (the accusative after «με»), each with its roster id */
 export function sideSegs(ps: Person[], accusative = false): NameSeg[] {
   return ps.flatMap((p, i): NameSeg[] => [
@@ -304,4 +309,29 @@ export function todayGroups(
   }
   const out = [...groups.entries()].map(([key, rows]): TodayGroup => ({ key, rows: [...rows].sort(byTime) }));
   return out.sort((x, y) => byTime(x.rows[0]!, y.rows[0]!) || x.key.localeCompare(y.key, 'el'));
+}
+
+/**
+ * Πρόγραμμα lets you vote too (founder, 27 Oct): a match that is still open takes the same vote row as Σήμερα. Open means
+ * no result, not put off, both sides known (a «θα φανεί» side has nobody to vote for), not your own match (the server
+ * refuses `own_match`), and not past its lock, by the clock or by the feed's own `lockAt`. Returns the row's match, with
+ * your vote and the split laid over it when the feed holds it, or null when the schedule row stays as it is. The server
+ * still decides; this only keeps a dead button off the page.
+ */
+export function scheduleVoteMatch(
+  m: TournamentMatch,
+  tournamentId: string,
+  me: string | null,
+  fed: CardMatch | undefined,
+  now: Date,
+  t: Copy,
+): CardMatch | null {
+  if (resolved(m) || m.postponed === true) return null;
+  if (sideOf(m, 1).length === 0 || sideOf(m, 2).length === 0) return null;
+  if (me !== null && [1, 2].some((n) => sideOf(m, n as 1 | 2).some((p) => p.id === me))) return null;
+  const card = overlayFeed(fromTournamentMatch(m, tournamentId, t, now), fed);
+  if (card.closed) return null;
+  // the feed's lock is the real one (a club can close voting earlier than the clock rule)
+  if (card.lockAt && Date.parse(card.lockAt) <= now.getTime()) return null;
+  return card;
 }

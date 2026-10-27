@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useCopy } from '../i18n';
 import type { LastMatchLine } from '../lib/players';
+import { HoldSegs } from '../lib/playerHold';
 import { colors, fonts } from '../theme';
 
 /**
@@ -19,10 +20,16 @@ export function LastMatchRow({ m, first }: { m: LastMatchLine; first: boolean })
       </View>
       <View style={styles.body}>
         <View style={styles.top}>
-          <Text style={styles.against}>{m.against}</Text>
+          <Text style={styles.against}>
+            <HoldSegs tournamentId={null} segs={m.againstSegs} />
+          </Text>
           {m.score ? <Text style={styles.score}>{m.score}</Text> : null}
         </View>
-        {m.partner ? <Text style={styles.muted}>{m.partner}</Text> : null}
+        {m.partnerSegs ? (
+          <Text style={styles.muted}>
+            <HoldSegs tournamentId={null} segs={m.partnerSegs} />
+          </Text>
+        ) : null}
         {m.meta ? <Text style={styles.muted}>{m.meta}</Text> : null}
       </View>
     </View>
