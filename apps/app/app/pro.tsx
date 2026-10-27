@@ -14,6 +14,7 @@ import { buyLineFor } from '../src/lib/storeTypes';
 import { legalUrl } from '../src/lib/legalLinks';
 import { safeOpen } from '../src/lib/openUrl';
 import { fmt } from '../src/lib/votes';
+import { ProWelcome } from '../src/components/ProWelcome';
 import { alpha, colors, fonts } from '../src/theme';
 
 /**
@@ -41,6 +42,8 @@ export default function ProScreen() {
   const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
   const [note, setNote] = useState<string | null>(null);
+  /** the full-screen welcome, only after buying (not after restoring) */
+  const [welcome, setWelcome] = useState(false);
   const moment = String(useLocalSearchParams<{ from?: string }>().from ?? 'direct');
   useEffect(() => track('pro_sheet_viewed', { moment }), [moment]);
   const titleIn = useRiseIn(550, 50);
@@ -70,7 +73,9 @@ export default function ProScreen() {
     });
     if (r.result === 'ok') {
       setBusy(null);
-      await done(p.welcome);
+      setNote(null);
+      await Promise.all([refresh(), refreshOffer()]);
+      setWelcome(true);
       return;
     }
     const line = buyLineFor(r);
@@ -160,6 +165,7 @@ export default function ProScreen() {
           ) : null}
         </View>
       </View>
+      {welcome ? <ProWelcome trialEnd={trialEnd} onDone={close} /> : null}
     </View>
   );
 }

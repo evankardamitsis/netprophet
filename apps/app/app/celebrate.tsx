@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { Celebration } from '../src/components/Celebration';
+import { ProWelcome } from '../src/components/ProWelcome';
 import { nextGroup } from '../src/lib/celebrate';
 
 const at = '2026-10-18T08:00:00Z';
@@ -20,12 +21,14 @@ const SAMPLES: Record<string, CelebrationItem[]> = {
 
 /**
  * Development builds only: the full-screen moments on sample data, for the founder's review.
- * `/celebrate?kind=level` (the level-up move), `streaks` (σερί 3 and 5 queued together), `badge`, `record`.
+ * `/celebrate?kind=pro` (the welcome after buying Pro, on the free week), `/celebrate?kind=level` (the level-up move), `streaks` (σερί 3 and 5 queued together), `badge`, `record`.
  */
 export default function CelebratePreview() {
   const { kind } = useLocalSearchParams<{ kind?: string }>();
   const [n, setN] = useState(0);
   if (!__DEV__) return null;
+  const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  if (kind === 'pro') return <ProWelcome trialEnd={new Date(Date.now() + 7 * 86400000)} onDone={close} />;
   const group = nextGroup(SAMPLES[kind ?? 'level'] ?? SAMPLES.level!);
   return (
     <Celebration

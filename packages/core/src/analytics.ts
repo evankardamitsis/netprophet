@@ -12,6 +12,8 @@ export interface AnalyticsEvents {
   vote_cast: { match_id: string; side: 1 | 2 };
   result_card_seen: { outcome: 'correct' | 'wrong' | 'none'; points: number };
   pro_sheet_viewed: { moment: string };
+  /** the full-screen welcome after a Pro purchase */
+  pro_welcome_viewed: { trial: boolean };
   pro_cta_pressed: { price: string; moment: string };
   /** a Pro entry (card, pill, teaser or quiet line) tapped; moment says which, the sheet's pro_sheet_viewed follows */
   pro_entry_pressed: { moment: string };
