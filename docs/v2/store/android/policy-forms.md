@@ -19,22 +19,25 @@ the rest (check the converted prices once). Version for the first production rel
 
 All or some functionality is restricted: **Yes**, everything sits behind sign-in.
 
-Reviewers get a ready-made account (founder, 26 Oct): `review@monadlabs.gr` with a password the founder sets in
-the Supabase dashboard and types into this form. Only that address signs in with a password; everyone else uses
-the email code, Google or Apple, and the database refuses a password on any other account. The founder's setup
-steps are in `../review-notes.md` («Founder steps»).
+Reviewers get their own ready-made account (founder, 27 Oct): `play-review@monadlabs.gr`, with a password the founder
+sets in the Supabase dashboard and types into this form. It already has NetProphet Pro, because Google's reviewers
+cannot use free trials or buy. `review@monadlabs.gr` is Apple's and stays without Pro. Only these two addresses sign in
+with a password; everyone else uses the email code, Google or Apple, and the database refuses a password on any other
+account. The founder's setup steps are in `../review-notes.md` («The Play review account»).
 
-Fill in «Add instructions» (name «Sign-in»): Username `review@monadlabs.gr`, Password: the founder's, and:
+Fill in «Add instructions» (name «Sign-in»): Username `play-review@monadlabs.gr`, Password: the founder's, and in
+«Any other information required to access your app» (under 500 characters):
 
 ```
-On the first screen tap "Πάμε" (Let's go). Type the email review@monadlabs.gr: a password field appears for this
+On the first screen tap "Πάμε" (Let's go). Type the email play-review@monadlabs.gr: a password field appears for this
 address only. Type the password and tap "Σύνδεση" (Sign in). The account has finished setup and opens on the first
-tab. All features except NetProphet Pro are free and open. Pro (subscriptions with a 7-day free trial) is bought
-through Google Play Billing on the Pro screen (Me tab, or any "Pro" line). License testers are not charged.
-Questions: hello@monadlabs.gr
+tab. It already has NetProphet Pro, so every feature, paid ones included, is open. No 2-step verification, location
+or membership is needed. Questions: hello@monadlabs.gr
 ```
 
-Keep this the same as the App Review notes in the iOS package. After the review the founder changes the password;
+Tick «Sign in details in this declaration provide full access to all the features and content within this app».
+
+The steps match the App Review notes in the iOS package, apart from the address and Pro. After the review the founder changes the password;
 the next review needs the new one here.
 
 ## Ads

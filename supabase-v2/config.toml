@@ -29,7 +29,7 @@ enable_signup = true
 
 [auth.email]
 enable_signup = true
-# login is by one-time code. Passwords: only review@monadlabs.gr (store review), enforced by the
+# login is by one-time code. Passwords: only review@ and play-review@monadlabs.gr (store review), enforced by the
 # review_password_only guard on auth.users; sign-up stays open because the code sign-up needs it
 enable_confirmations = true
 otp_length = 6
