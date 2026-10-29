@@ -77,7 +77,7 @@ select is(tests.founding(:'e'::uuid), 0, 'the free week on «Ιδρυτικό μ
 select tests.store('cd7', 'RENEWAL', :'e'::uuid, 'pro_founding', '2027-01-04 12:00+02') is not null as x \gset
 select is(tests.founding(:'e'::uuid), 1, 'a free week started on 28/12 that turns paid on 4/1 counts from 28/12');
 select tests.store('cd8', 'INITIAL_PURCHASE', :'s'::uuid, 'pro_founding', '2026-11-05 10:00+02', 'NORMAL', 'SANDBOX') is not null as x \gset
-select is(tests.founding(:'s'::uuid), 0, 'a sandbox purchase by a player gives nothing');
+select is(tests.founding(:'s'::uuid), 1, 'a sandbox purchase by a player counts too (App Review)');
 
 -- a restore on a new login moves Pro, and the frame comes along
 select tests.as_service();

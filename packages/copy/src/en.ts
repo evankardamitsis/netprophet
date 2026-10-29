@@ -1278,6 +1278,8 @@ export const en: Copy = {
     soon: 'Soon',
     soonLine: 'Buying opens soon.',
     bought: 'Yours ✓',
+    boughtOn: 'Yours ✓ Your Baller is wearing it',
+    boughtLate: 'Payment done. Your Baller puts it on in a moment.',
     buyShort: 'Buy',
     close: 'Close',
     sheet: {

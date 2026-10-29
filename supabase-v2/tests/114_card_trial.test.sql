@@ -1,7 +1,7 @@
 -- The free week with a card (founder, 18 Oct): the store's trial arrives as INITIAL_PURCHASE with period_type TRIAL
 -- and is full Pro to the store's end; the charge on day 8 (RENEWAL) turns it into paid Pro; cancelling inside the
 -- week keeps it to its end, then EXPIRATION ends it; once had, it is never offered again. Our no-card week is gone.
--- A sandbox purchase unlocks staff only. price_eur is the purchased price in EUR, never RevenueCat's USD.
+-- A sandbox purchase gives what it bought to anyone (App Review and TestFlight buy in the sandbox; 29 Oct). price_eur is the purchased price in EUR, never RevenueCat's USD.
 begin;
 select plan(13);
 
@@ -59,7 +59,7 @@ select api.apply_store_event(jsonb_build_object('event', jsonb_build_object(
 select tests.logout();
 select ok(not core.is_pro(:'b'::uuid), 'and the end of the week ends Pro');
 
--- sandbox: staff only
+-- sandbox: a player and staff alike
 select tests.as_service();
 select api.apply_store_event(jsonb_build_object('event', jsonb_build_object(
   'id', 'ct6', 'type', 'NON_RENEWING_PURCHASE', 'environment', 'SANDBOX', 'app_user_id', :'b', 'product_id', 'cos_fx_trophy')));
@@ -67,9 +67,9 @@ select api.apply_store_event(jsonb_build_object('event', jsonb_build_object(
   'id', 'ct7', 'type', 'INITIAL_PURCHASE', 'environment', 'SANDBOX', 'app_user_id', :'ed', 'product_id', 'pro_monthly',
   'expiration_at_ms', (extract(epoch from now() + interval '30 days') * 1000)::bigint)));
 select tests.logout();
-select ok(not exists (select 1 from core.user_cosmetics uc join core.cosmetic_items c on c.id = uc.item_id
-                       where uc.user_id = :'b'::uuid and c.key = 'fx_trophy'), 'a sandbox purchase never unlocks a player');
-select is((select note from core.purchases where event_id = 'ct6'), 'sandbox', 'it is kept, marked');
+select ok(exists (select 1 from core.user_cosmetics uc join core.cosmetic_items c on c.id = uc.item_id
+                   where uc.user_id = :'b'::uuid and c.key = 'fx_trophy'), 'a sandbox purchase unlocks a player (App Review)');
+select is((select environment from core.purchases where event_id = 'ct6' and applied), 'SANDBOX', 'it is applied and kept as sandbox');
 select ok(core.is_pro(:'ed'::uuid), 'staff can test with sandbox purchases');
 
 select * from finish();

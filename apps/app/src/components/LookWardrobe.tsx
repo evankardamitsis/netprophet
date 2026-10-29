@@ -21,6 +21,9 @@ import { colors, fonts, text } from '../theme';
  * sense to see everything there").
  */
 const STG_MS = 450;
+/** after a purchase the webhook was slow: ask the wardrobe again this often, this many times (two minutes) */
+const LATE_MS = 5000;
+const LATE_TRIES = 24;
 
 export interface WardrobeHandle {
   /** the next (1) or previous (-1) thing in the open tab, for a swipe on the stage */
@@ -44,6 +47,12 @@ export const LookWardrobe = forwardRef<WardrobeHandle, Props>(function LookWardr
   /** per tab: the thing picked (undefined: the one you wear) */
   const [picks, setPicks] = useState<Partial<Record<LookCategory, string | null>>>({});
   const [sheet, setSheet] = useState<BuySheet | null>(null);
+  /** what the open sheet sells, to put on once it is bought */
+  const buying = useRef<{ category: LookCategory; key: string } | null>(null);
+  const waiting = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (waiting.current) clearTimeout(waiting.current);
+  }, []);
   const cta = usePress();
 
   useFocusEffect(
@@ -94,6 +103,7 @@ export const LookWardrobe = forwardRef<WardrobeHandle, Props>(function LookWardr
         onToast(ok ? t.look.toast : t.look.error);
       });
     } else if (action.kind === 'buy' && sel.item) {
+      buying.current = { category: sel.category, key: sel.key ?? '' };
       setSheet(buySheetOf(sel.item, t));
     }
   };
@@ -144,9 +154,24 @@ export const LookWardrobe = forwardRef<WardrobeHandle, Props>(function LookWardr
           const fresh = await refresh();
           return fresh?.items.some((i) => i.key === key && i.owned) ?? false;
         }}
-        onBought={() => {
-          onPlay('jump');
-          onToast(t.look.bought);
+        onBought={(landed) => {
+          const item = buying.current;
+          if (!item) return;
+          // bought means worn: Baller puts it on the moment the wardrobe has it (founder, 29 Oct)
+          const putOn = () =>
+            void equip(item.category, item.key).then((ok) => {
+              onPlay('jump');
+              onToast(ok ? t.look.boughtOn : t.look.bought);
+            });
+          if (landed) return putOn();
+          onToast(t.look.boughtLate);
+          let tries = 0;
+          const again = async () => {
+            const fresh = await refresh().catch(() => null);
+            if (fresh?.items.some((i) => i.key === item.key && i.owned)) return putOn();
+            if (++tries < LATE_TRIES) waiting.current = setTimeout(() => void again(), LATE_MS);
+          };
+          waiting.current = setTimeout(() => void again(), LATE_MS);
         }}
       />
     </View>
