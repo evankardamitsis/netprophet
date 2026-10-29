@@ -72,6 +72,32 @@ export async function askForPushOnce(api: Api): Promise<void> {
   }
 }
 
+/** notifications already allowed on this phone (never prompts); false where there are none */
+export async function pushAllowed(): Promise<boolean> {
+  const Notifications = notifications();
+  if (!Notifications) return false;
+  try {
+    return (await Notifications.getPermissionsAsync()).status === 'granted';
+  } catch {
+    return false;
+  }
+}
+
+/** a button asked for them (the Pro guide): ask now, even if the first-vote ask came before; true when allowed */
+export async function askForPush(api: Api): Promise<boolean> {
+  const Notifications = notifications();
+  if (!Notifications) return false;
+  try {
+    await AsyncStorage.setItem(ASKED_KEY, '1');
+    const { status } = await Notifications.requestPermissionsAsync();
+    track('push_permission', { granted: status === 'granted' });
+    if (status === 'granted') await register(api, Notifications);
+    return status === 'granted';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * You have seen your results: the «Βγήκαν αποτελέσματα» pushes leave the notification centre and the app icon has no
  * number. Other pushes (a claim decision, a reaction) stay. A no-op on the web and the simulator.

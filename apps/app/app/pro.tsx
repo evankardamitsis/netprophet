@@ -14,6 +14,7 @@ import { buyLineFor } from '../src/lib/storeTypes';
 import { legalUrl } from '../src/lib/legalLinks';
 import { safeOpen } from '../src/lib/openUrl';
 import { fmt } from '../src/lib/votes';
+import { ProTour } from '../src/components/ProTour';
 import { ProWelcome } from '../src/components/ProWelcome';
 import { alpha, colors, fonts } from '../src/theme';
 
@@ -50,9 +51,15 @@ export default function ProScreen() {
   const [awaiting, setAwaiting] = useState(false);
   const api = useApi();
   const [note, setNote] = useState<string | null>(null);
-  /** the full-screen welcome, only after buying (not after restoring) */
+  /** the full-screen welcome, only after buying (not after restoring), then the guide to what opened */
   const [welcome, setWelcome] = useState(false);
-  const moment = String(useLocalSearchParams<{ from?: string }>().from ?? 'direct');
+  const [tour, setTour] = useState(false);
+  const params = useLocalSearchParams<{ from?: string; preview?: string }>();
+  const moment = String(params.from ?? 'direct');
+  // development only: /pro?preview=welcome opens the welcome and the guide without buying
+  useEffect(() => {
+    if (__DEV__ && params.preview === 'welcome') setWelcome(true);
+  }, [params.preview]);
   useEffect(() => track('pro_sheet_viewed', { moment }), [moment]);
   const titleIn = useRiseIn(550, 50);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -192,7 +199,8 @@ export default function ProScreen() {
           ) : null}
         </View>
       </View>
-      {welcome ? <ProWelcome trialEnd={trialEnd} onDone={close} /> : null}
+      {welcome && !tour ? <ProWelcome trialEnd={trialEnd} onDone={() => setTour(true)} /> : null}
+      {tour ? <ProTour onDone={close} /> : null}
     </View>
   );
 }
