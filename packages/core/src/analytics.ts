@@ -14,6 +14,8 @@ export interface AnalyticsEvents {
   pro_sheet_viewed: { moment: string };
   /** the full-screen welcome after a Pro purchase */
   pro_welcome_viewed: { trial: boolean };
+  /** the guide after the welcome: the step seen (1 to 4), or done / skipped with the step it ended on */
+  pro_tour: { step: number; action: 'view' | 'done' | 'skip' };
   pro_cta_pressed: { price: string; moment: string };
   /** a Pro entry (card, pill, teaser or quiet line) tapped; moment says which, the sheet's pro_sheet_viewed follows */
   pro_entry_pressed: { moment: string };
