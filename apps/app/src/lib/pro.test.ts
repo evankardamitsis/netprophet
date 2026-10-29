@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { activeLine, buyLine, planCards, priceLine, proPrice, proStatusLine, restoreLine, trialLine } from './pro';
+import { buyNote, activeLine, buyLine, planCards, priceLine, proPrice, proStatusLine, restoreLine, trialLine } from './pro';
 import { restoreOutcome } from './storeTypes';
 
 const t = getCopy('el');
@@ -35,29 +35,28 @@ describe('plan cards', () => {
       title: 'Ιδρυτικό μέλος',
       price: '49,99€',
       note: 'τον πρώτο χρόνο, μετά 69,99€/χρόνο',
-      perMonth: '4,17€ τον μήνα · μόνο μέχρι 31/12',
       renews: '69,99€',
       best: true,
     });
-    expect(cards[1]).toMatchObject({ title: 'Μηνιαίο', price: '8,99€', perMonth: null, renews: null, best: false });
+    expect(cards[1]).toMatchObject({ title: 'Μηνιαίο', price: '8,99€', renews: null, best: false });
   });
   it('the founding plan says 69,99 after the first year even if the server does not send it yet', () => {
     expect(planCards([{ product_id: 'pro_founding', price: 49.99, period: 'year' }], t)[0]).toMatchObject({ renews: '69,99€' });
   });
   it('the yearly plan after the founding offer', () => {
-    expect(planCards([{ product_id: 'pro_yearly', price: 69.99, period: 'year' }], t)[0]).toMatchObject({ price: '69,99€', perMonth: '5,83€ τον μήνα' });
+    expect(planCards([{ product_id: 'pro_yearly', price: 69.99, period: 'year' }], t)[0]).toMatchObject({ price: '69,99€', note: 'τον χρόνο' });
   });
 });
 
 describe('trialLine', () => {
   it('says what the free week costs today and after, with the date of the charge', () => {
     const card = planCards([{ product_id: 'pro_monthly', price: 8.99, period: 'month' }], t)[0]!;
-    expect(trialLine(card, t, new Date(2026, 9, 18))).toBe('Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.');
+    expect(trialLine(card, t, new Date(2026, 9, 18))).toBe('Σήμερα 0€. Από 25/10, 8,99€ τον μήνα.');
   });
   it('names the founding year and what follows it', () => {
     const card = planCards([{ product_id: 'pro_founding', price: 49.99, period: 'year', renews: 69.99 }], t)[0]!;
     expect(trialLine(card, t, new Date(2026, 9, 28))).toBe(
-      'Σήμερα 0€. Από 4/11, 49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο. Ακύρωσε πριν και δεν χρεώνεσαι.',
+      'Σήμερα 0€. Από 4/11, 49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.',
     );
   });
   it('without the free week: the price and what follows', () => {
@@ -114,5 +113,24 @@ describe('subscription terms on the Pro screen (App Store 3.1.2)', () => {
     expect(t.pro.renewal).toMatch(/ανανεώνεται αυτόματα/);
     expect(t.pro.renewal).toMatch(/ακυρώνεις/);
     expect(getCopy('en').pro.renewal).toMatch(/renews automatically/);
+  });
+});
+
+describe('buyNote: what the player reads after a purchase that did not go through', () => {
+  const t = getCopy('el');
+  it('says nothing after a purchase or a cancel', () => {
+    expect(buyNote({ result: 'ok', code: null }, t)).toBeNull();
+    expect(buyNote({ result: 'cancelled', code: null }, t)).toBeNull();
+  });
+  it('names what happened and what to do', () => {
+    expect(buyNote({ result: 'failed', code: 'PAYMENT_PENDING_ERROR' }, t)).toBe(t.pro.pending);
+    expect(buyNote({ result: 'failed', code: 'PRODUCT_ALREADY_PURCHASED_ERROR' }, t)).toBe(t.pro.owned);
+    expect(buyNote({ result: 'failed', code: 'NETWORK_ERROR' }, t)).toBe(t.pro.offline);
+    expect(buyNote({ result: 'failed', code: 'STORE_PROBLEM_ERROR' }, t)).toBe(t.pro.storeDown);
+    expect(buyNote({ result: 'unavailable', code: 'no_module' }, t)).toBe(t.pro.deviceUnavailable);
+  });
+  it('anything else carries the store code, so a screenshot says what failed', () => {
+    expect(buyNote({ result: 'failed', code: 'INVALID_CREDENTIALS_ERROR' }, t)).toBe(`${t.pro.notDone} (INVALID_CREDENTIALS_ERROR)`);
+    expect(buyNote({ result: 'failed', code: null }, t)).toBe(t.pro.notDone);
   });
 });

@@ -25,6 +25,8 @@ export interface BuyOutcome {
   result: BuyResult;
   /** RevenueCat's readable code («NETWORK_ERROR»), our own («product_not_found»), a StoreBlock, or null */
   code: string | null;
+  /** after «ok»: our database already had it when the wait ended (false: paid, the webhook is late) */
+  landed?: boolean;
 }
 
 /**
@@ -81,6 +83,7 @@ const RC_CODES: Record<string, string> = {
   '4': 'PURCHASE_INVALID_ERROR',
   '5': 'PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR',
   '6': 'PRODUCT_ALREADY_PURCHASED_ERROR',
+  '7': 'RECEIPT_ALREADY_IN_USE_ERROR',
   '10': 'NETWORK_ERROR',
   '11': 'INVALID_CREDENTIALS_ERROR',
   '12': 'UNEXPECTED_BACKEND_RESPONSE_ERROR',
@@ -117,17 +120,29 @@ export function purchaseErrorOutcome(e: unknown): BuyOutcome {
   return { result: 'failed', code };
 }
 
-/** What the paywall says after a purchase that did not go through. */
-export type BuyLine = 'none' | 'waitlist' | 'device' | 'failed';
+/**
+ * What the paywall says after a purchase that did not go through (founder, 29 Oct: "informing the user of what's
+ * happening"): waiting for approval (Ask to Buy, a bank check), already bought, no connection, the store not answering,
+ * or, for anything else, «Δεν ολοκληρώθηκε» with the store's code.
+ */
+export type BuyLine = 'none' | 'waitlist' | 'device' | 'pending' | 'owned' | 'offline' | 'store' | 'failed';
+
+const OWNED = new Set(['PRODUCT_ALREADY_PURCHASED_ERROR', 'RECEIPT_ALREADY_IN_USE_ERROR']);
+const OFFLINE = new Set(['NETWORK_ERROR', 'OFFLINE_CONNECTION_ERROR', 'PRODUCT_REQUEST_TIMED_OUT_ERROR', 'timeout']);
+const STORE = new Set(['STORE_PROBLEM_ERROR', 'product_not_found', 'PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR', 'CONFIGURATION_ERROR', 'UNEXPECTED_BACKEND_RESPONSE_ERROR', 'UNKNOWN_BACKEND_ERROR']);
 
 /**
  * «unavailable» joins the founding list only while payments are not open (no key in the build); a device without the
- * store hears so; every other end that is not a purchase or a cancel is «Δεν ολοκληρώθηκε» with the button to retry.
+ * store hears so; the rest say what happened, each with the button to retry.
  */
 export function buyLineFor(o: BuyOutcome): BuyLine {
   if (o.result === 'ok' || o.result === 'cancelled') return 'none';
   if (o.result === 'unavailable' && o.code === 'no_key') return 'waitlist';
   if (o.result === 'unavailable' && deviceBlocked(o.code)) return 'device';
+  if (o.code === 'PAYMENT_PENDING_ERROR') return 'pending';
+  if (o.code && OWNED.has(o.code)) return 'owned';
+  if (o.code && OFFLINE.has(o.code)) return 'offline';
+  if (o.code && STORE.has(o.code)) return 'store';
   return 'failed';
 }
 

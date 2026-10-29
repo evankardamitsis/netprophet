@@ -26,6 +26,7 @@ import {
 const KEY = cleanKey(Platform.OS === 'android' ? process.env.EXPO_PUBLIC_RC_ANDROID_KEY : process.env.EXPO_PUBLIC_RC_IOS_KEY);
 
 type RNP = typeof import('react-native-purchases').default;
+type PurchasesPackage = import('react-native-purchases').PurchasesPackage;
 let mod: RNP | null | undefined;
 /** the native side refused configure (the module is not in this binary): nothing will sell */
 let configureBroken = false;
@@ -151,18 +152,34 @@ export async function buy(productId: string, userId: string): Promise<BuyOutcome
     }
     if (productId.startsWith('pro_')) {
       step = 'offerings';
-      const offerings = await P.getOfferings();
       // a Play subscription is «pro:monthly»-style (product:base plan); match on our id either way
-      const pkg = Object.values(offerings.all)
-        .flatMap((o) => o.availablePackages)
-        .find((x) => x.product.identifier === productId || x.product.identifier.startsWith(`${productId}:`));
-      if (!pkg) {
-        // a store or RevenueCat setup gap, not the player's device: says «Δεν ολοκληρώθηκε», and we hear of it
-        note('offerings', 'product_not_found', productId);
-        return { result: 'failed', code: 'product_not_found' };
+      const mine = (id: string) => id === productId || id.startsWith(`${productId}:`);
+      let pkg: PurchasesPackage | undefined;
+      try {
+        const offerings = await P.getOfferings();
+        pkg = Object.values(offerings.all)
+          .flatMap((o) => o.availablePackages)
+          .find((x) => mine(x.product.identifier));
+      } catch (e) {
+        // the offerings did not come (App Review, 28 Oct: «Δεν ολοκληρώθηκε» with nothing bought): ask the store
+        // for the product itself below
+        note('offerings', storeErrorCode(e), productId);
       }
-      step = 'purchase';
-      await P.purchasePackage(pkg);
+      if (pkg) {
+        step = 'purchase';
+        await P.purchasePackage(pkg);
+      } else {
+        step = 'products';
+        const products = await P.getProducts([productId], P.PRODUCT_CATEGORY.SUBSCRIPTION);
+        const product = products.find((x) => mine(x.identifier));
+        if (!product) {
+          // a store or RevenueCat setup gap, not the player's device: says «Δεν ολοκληρώθηκε», and we hear of it
+          note('products', 'product_not_found', productId);
+          return { result: 'failed', code: 'product_not_found' };
+        }
+        step = 'purchase';
+        await P.purchaseStoreProduct(product);
+      }
     } else {
       step = 'products';
       const [product] = await P.getProducts([productId], P.PRODUCT_CATEGORY.NON_SUBSCRIPTION);

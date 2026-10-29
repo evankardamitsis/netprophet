@@ -117,9 +117,17 @@ describe('buyLineFor', () => {
     [{ result: 'unavailable', code: 'no_module' }, 'device'],
     [{ result: 'unavailable', code: 'expo_go' }, 'device'],
     [{ result: 'unavailable', code: 'PURCHASE_NOT_ALLOWED_ERROR' }, 'device'],
+    // said plainly: waiting for approval, already bought, no connection, the store not answering
+    [{ result: 'failed', code: 'PAYMENT_PENDING_ERROR' }, 'pending'],
+    [{ result: 'failed', code: 'PRODUCT_ALREADY_PURCHASED_ERROR' }, 'owned'],
+    [{ result: 'failed', code: 'RECEIPT_ALREADY_IN_USE_ERROR' }, 'owned'],
+    [{ result: 'failed', code: 'NETWORK_ERROR' }, 'offline'],
+    [{ result: 'failed', code: 'OFFLINE_CONNECTION_ERROR' }, 'offline'],
+    [{ result: 'failed', code: 'STORE_PROBLEM_ERROR' }, 'store'],
+    [{ result: 'failed', code: 'product_not_found' }, 'store'],
+    [{ result: 'failed', code: 'CONFIGURATION_ERROR' }, 'store'],
     // anything else is «Δεν ολοκληρώθηκε» with a retry
     [{ result: 'unavailable', code: 'no_user' }, 'failed'],
-    [{ result: 'failed', code: 'product_not_found' }, 'failed'],
     [{ result: 'failed', code: 'INVALID_CREDENTIALS_ERROR' }, 'failed'],
     [{ result: 'failed', code: null }, 'failed'],
   ] as const)('%j -> %s', (o, want) => {

@@ -61,22 +61,27 @@ const WAIT_TRIES = 8;
 
 /**
  * Buy a product (`pro_monthly`, `pro_founding`, `cos_bg_hard`…). Resolves after the store and, for a bought item,
- * once `landed()` says our database has it (the webhook), or after about twelve seconds of asking.
+ * once `landed()` says our database has it (the webhook), or after about twelve seconds of asking; `landed` in the
+ * outcome says which. `paid()` runs the moment the store says yes, so the screen can say what it waits for.
  */
-export function usePurchase(): { ready: boolean; buy: (productId: string, landed: () => Promise<boolean>) => Promise<BuyOutcome> } {
+export function usePurchase(): {
+  ready: boolean;
+  buy: (productId: string, landed: () => Promise<boolean>, paid?: () => void) => Promise<BuyOutcome>;
+} {
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
   const run = useCallback(
-    async (productId: string, landed: () => Promise<boolean>): Promise<BuyOutcome> => {
+    async (productId: string, landed: () => Promise<boolean>, paid?: () => void): Promise<BuyOutcome> => {
       if (!userId) return { result: 'unavailable', code: 'no_user' };
       const r = await buy(productId, userId);
       if (r.result !== 'ok') return r;
+      paid?.();
       for (let i = 0; i < WAIT_TRIES; i++) {
-        if (await landed().catch(() => false)) return r;
+        if (await landed().catch(() => false)) return { ...r, landed: true };
         await new Promise((res) => setTimeout(res, WAIT_MS));
       }
-      // paid, the webhook is late: the next refresh shows it
-      return r;
+      // paid, the webhook is late: the screen says so and keeps asking
+      return { ...r, landed: false };
     },
     [userId],
   );

@@ -1,7 +1,7 @@
 import type { Copy } from '@netprophet/copy';
 import { PRO_PRICE_CENTS_PER_MONTH } from '@netprophet/core';
 import type { ProState } from '@netprophet/db';
-import type { RestoreResult } from './storeTypes';
+import { buyLineFor, type BuyOutcome, type RestoreResult } from './storeTypes';
 import { fmt } from './votes';
 
 /** Pro (prototype V2, the pass sheet): the price line and what the screen says about your Pro. */
@@ -53,7 +53,6 @@ export interface PlanCard {
   /** «τον πρώτο χρόνο, μετά 69,99€/χρόνο» */
   note: string;
   /** «4,17€ τον μήνα» for a yearly plan, «4,17€ τον μήνα · μόνο μέχρι 31/12» for the founding one */
-  perMonth: string | null;
   /** «69,99€»: what the plan costs after its first year, when that is not its price (the founding plan) */
   renews: string | null;
   /** the yearly or founding plan carries «Καλύτερη τιμή» */
@@ -68,10 +67,36 @@ function thenLine(card: PlanCard, t: Copy): string {
   return fmt(then, { price: card.price, renews: card.renews ?? card.price });
 }
 
-/** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.»: what the free week costs, said plainly */
+/** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα.»: what the free week costs, said plainly */
 export function trialLine(card: PlanCard, t: Copy, now: Date = new Date()): string {
   const d = new Date(now.getTime() + TRIAL_DAYS * 86_400_000);
   return fmt(t.pro.trialNote, { date: `${d.getDate()}/${d.getMonth() + 1}`, then: thenLine(card, t) });
+}
+
+/**
+ * What the Pro screen and the look sheet say after a purchase that did not go through; null for a purchase or a cancel.
+ * The founding list («waitlist») is the Pro screen's own. Anything unexplained carries the store's code, so a
+ * screenshot says what failed (App Review, 28 Oct).
+ */
+export function buyNote(o: BuyOutcome, t: Copy): string | null {
+  const p = t.pro;
+  switch (buyLineFor(o)) {
+    case 'none':
+    case 'waitlist':
+      return null;
+    case 'device':
+      return p.deviceUnavailable;
+    case 'pending':
+      return p.pending;
+    case 'owned':
+      return p.owned;
+    case 'offline':
+      return p.offline;
+    case 'store':
+      return p.storeDown;
+    default:
+      return o.code ? `${p.notDone} (${o.code})` : p.notDone;
+  }
 }
 
 /** what the Pro screen says after «Επαναφορά αγορών» */
@@ -109,13 +134,11 @@ export function planCards(
       // the founding plan always says what follows its first year (founder, 22 Oct: 49,99 then 69,99)
       const after = x.renews ?? (founding ? FOUNDING_RENEWS_EUR : x.price);
       const renews = Math.round(after * 100) !== Math.round(x.price * 100) ? euro(after) : null;
-      const perMonth = x.period === 'year' ? fmt(p.perMonth, { price: euro(Math.round((x.price / 12) * 100) / 100) }) : null;
       return {
         productId: x.product_id,
         title: p[x.product_id as 'pro_monthly' | 'pro_yearly' | 'pro_founding'] ?? x.product_id,
         price: euro(x.price),
         note: founding ? fmt(p.foundingNote, { renews: renews ?? euro(x.price) }) : x.period === 'year' ? p.yearlyNote : p.monthlyNote,
-        perMonth: founding && perMonth ? `${perMonth} · ${p.foundingUntil}` : perMonth,
         renews,
         best: x.period === 'year',
       };
