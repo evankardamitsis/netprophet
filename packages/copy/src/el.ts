@@ -738,18 +738,14 @@ export const el = {
       pro_monthly: 'Μηνιαίο',
       /** «49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο» (founder, 22 Oct) */
       foundingNote: 'τον πρώτο χρόνο, μετά {renews}/χρόνο',
-      /** after «4,17€ τον μήνα»: the founding plan is sold until 31/12 */
-      foundingUntil: 'μόνο μέχρι 31/12',
       yearlyNote: 'τον χρόνο',
-      monthlyNote: 'τον μήνα, ακυρώνεις όποτε θες',
-      /** «4,17€ τον μήνα» */
-      perMonth: '{price} τον μήνα',
+      monthlyNote: 'τον μήνα',
       best: 'Καλύτερη τιμή',
     },
     /** the blue button while the free week is yours (founder, 18 Oct: the store's trial, with a card) */
     trial: 'Ξεκίνα τη δωρεάν εβδομάδα',
-    /** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.» */
-    trialNote: 'Σήμερα 0€. Από {date}, {then}. Ακύρωσε πριν και δεν χρεώνεσαι.',
+    /** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα.» (then `renewal`, on the same line) */
+    trialNote: 'Σήμερα 0€. Από {date}, {then}.',
     /** what the plan costs after the week */
     trialThen: { pro_monthly: '{price} τον μήνα', pro_yearly: '{price} τον χρόνο', pro_founding: '{price} τον πρώτο χρόνο, μετά {renews}/χρόνο' },
     /** without the free week: «49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.»; the renewal sentence is `renewal` */
@@ -760,6 +756,16 @@ export const el = {
     buy: 'Συνέχεια · {price}',
     unavailable: 'Οι πληρωμές ανοίγουν σύντομα. Σε κρατάμε στη λίστα με την τιμή του ιδρυτικού μέλους.',
     finishing: 'Ολοκληρώνεται…',
+    /** the button while the store's sheet is on its way, then while our server turns Pro on after the payment */
+    opening: 'Ανοίγει το κατάστημα…',
+    activating: 'Ενεργοποιείται το Pro…',
+    /** paid, our server has not heard yet (the screen keeps asking and shows the welcome when it lands) */
+    paidLate: 'Η πληρωμή πέρασε. Το Pro ανοίγει σε λίγο, δεν χρειάζεται να κάνεις κάτι.',
+    /** Ask to Buy or a bank check: the store holds the purchase */
+    pending: 'Η αγορά περιμένει έγκριση. Ανοίγει μόλις εγκριθεί.',
+    owned: 'Το έχεις ήδη αγοράσει. Πάτα «Επαναφορά αγορών» και γυρίζει πίσω.',
+    offline: 'Δεν υπάρχει σύνδεση. Δες το ίντερνετ σου και ξαναδοκίμασε.',
+    storeDown: 'Το κατάστημα δεν απάντησε. Ξαναδοκίμασε σε λίγο.',
     /** a purchase the store did not finish (any error but a cancel): the button stays for another try */
     notDone: 'Δεν ολοκληρώθηκε. Πάτα ξανά για να το ξαναδοκιμάσεις.',
     /** only when this phone cannot buy at all (no store here, or purchases turned off in its settings) */
@@ -768,7 +774,7 @@ export const el = {
     retry: 'Ξαναδοκίμασε',
     welcome: 'Καλώς ήρθες στο Pro',
     /** App Store 3.1.1 and 3.1.2: under the plans, what a subscription does and restoring (drafts for the founder) */
-    renewal: 'Η συνδρομή ανανεώνεται αυτόματα στο τέλος κάθε περιόδου, εκτός αν την ακυρώσεις τουλάχιστον 24 ώρες πριν. Την ακυρώνεις όποτε θες από τις συνδρομές του λογαριασμού σου στο κατάστημα.',
+    renewal: 'Η συνδρομή ανανεώνεται αυτόματα, ακυρώνεις όποτε θες από το κατάστημα.',
     restore: 'Επαναφορά αγορών',
     restoring: 'Γίνεται επαναφορά…',
     restored: 'Έγινε. Ό,τι είχες αγοράσει είναι ξανά εδώ.',
@@ -1462,7 +1468,6 @@ export const el = {
     soonLine: 'Οι αγορές ανοίγουν σύντομα.',
     bought: 'Δικό σου ✓',
     buyShort: 'Αγόρασε',
-    buyFailed: 'Η αγορά δεν ολοκληρώθηκε. Δοκίμασε ξανά.',
     close: 'Κλείσιμο',
     sheet: {
       frame: 'Κορνίζα {name}',
