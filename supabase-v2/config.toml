@@ -69,6 +69,10 @@ port = 54424
 [analytics]
 port = 54427
 
+# the app calls this with the signed-in user's token, just before deleting an account made with Apple
+[functions.apple-revoke]
+verify_jwt = true
+
 # RevenueCat calls this with its own shared secret (checked in the function), not a Supabase JWT
 [functions.revenuecat-webhook]
 verify_jwt = false

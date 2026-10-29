@@ -33,6 +33,12 @@ interface AuthState {
   signInWithGoogle(): Promise<void>;
   /** iOS only (App Store guideline 4.8): the native Sign in with Apple sheet, then Supabase with its identity token */
   signInWithApple(): Promise<void>;
+  /**
+   * Before deleting an account made with Apple (App Store 5.1.1(v)): Apple's sheet once more for a fresh code, which the
+   * apple-revoke function trades for the user's token and revokes. 'skipped' when the account has no Apple sign-in or
+   * this is not iOS; 'failed' never blocks the delete.
+   */
+  revokeApple(): Promise<'done' | 'skipped' | 'cancelled' | 'failed'>;
   signOut(): Promise<void>;
 }
 
@@ -185,6 +191,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch {
           // the onboarding prefill still has the kept name
+        }
+      },
+      async revokeApple() {
+        const providers = (session?.user.app_metadata?.providers as string[] | undefined) ?? [session?.user.app_metadata?.provider];
+        if (!supabase || Platform.OS !== 'ios' || !providers.includes('apple')) return 'skipped';
+        let code: string | null;
+        try {
+          const credential = await AppleAuthentication.signInAsync({ requestedScopes: [] });
+          code = credential.authorizationCode;
+        } catch (err) {
+          if ((err as { code?: string }).code === 'ERR_REQUEST_CANCELED') return 'cancelled';
+          return 'failed';
+        }
+        if (!code) return 'failed';
+        try {
+          const { error } = await supabase.functions.invoke('apple-revoke', { body: { code } });
+          return error ? 'failed' : 'done';
+        } catch {
+          return 'failed';
         }
       },
       async signOut() {

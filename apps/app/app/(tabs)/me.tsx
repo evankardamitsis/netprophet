@@ -761,7 +761,8 @@ function Friends({ v }: { v: MeView }) {
 
 /**
  * «Ρυθμίσεις», closed until tapped, at the bottom: «Πώς παίζεις» (hand and tournaments, out of the first run since
- * 19 Oct), sounds, the push switches, blocked people, Αποσύνδεση and deleting the account
+ * 19 Oct), sounds, the push switches, blocked people and Αποσύνδεση; «Διαγραφή λογαριασμού» shows under the title
+ * even while it is closed
  */
 /** the address «Γράψε μας» opens (the one the delete error already names) */
 const CONTACT_EMAIL = 'hello@monadlabs.gr';
@@ -845,9 +846,10 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
           <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.auth.signOut}</Text>
           </Pressable>
-          <DeleteAccount />
         </>
       ) : null}
+      {/* always in sight, not behind the closed card (App Store 5.1.1(v), review of 28 Oct: the reviewer never opened it) */}
+      <DeleteAccount />
     </View>
   );
 }
@@ -959,7 +961,7 @@ function PushRows({ pro }: { pro: boolean }) {
 function DeleteAccount() {
   const t = useCopy();
   const api = useApi();
-  const { signOut } = useAuth();
+  const { signOut, revokeApple } = useAuth();
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -967,6 +969,13 @@ function DeleteAccount() {
     setBusy(true);
     setFailed(false);
     try {
+      // an account made with Apple: Apple confirms once more and the server cancels the app's link to that Apple ID
+      // (App Store 5.1.1(v)); closing Apple's sheet stops here, an Apple failure never blocks the delete
+      if (api && (await revokeApple()) === 'cancelled') {
+        setBusy(false);
+        setAsking(false);
+        return;
+      }
       if (api) await api.deleteMyAccount();
       await signOut();
     } catch {
