@@ -198,8 +198,13 @@ grant execute on function api.apply_store_event(jsonb) to service_role;
 do $$
 declare r record;
 begin
+  -- apply_store_event answers the webhook only (core.is_service): this block speaks as it, for this transaction
+  perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  perform set_config('request.jwt.claim.role', 'service_role', true);
   for r in select event_id, raw from core.purchases where note = 'sandbox' and not applied order by created_at loop
     delete from core.purchases where event_id = r.event_id;
     perform api.apply_store_event(r.raw);
   end loop;
+  perform set_config('request.jwt.claims', '', true);
+  perform set_config('request.jwt.claim.role', '', true);
 end $$;

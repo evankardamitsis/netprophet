@@ -27,6 +27,15 @@
         "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && pnpm --filter @netprophet/app exec expo start --web --port 8083 --clear"
       ],
       "port": 8083
+    },
+    {
+      "name": "app-web-guest",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && EXPO_PUBLIC_DEV_GUEST=1 pnpm --filter @netprophet/app exec expo start --web --port 8084"
+      ],
+      "port": 8084
     }
   ]
 }
