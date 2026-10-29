@@ -1467,6 +1467,10 @@ export const el = {
     soon: 'Σύντομα',
     soonLine: 'Οι αγορές ανοίγουν σύντομα.',
     bought: 'Δικό σου ✓',
+    /** right after a purchase: the item is on Baller already */
+    boughtOn: 'Δικό σου ✓ Ο Baller σου το φοράει',
+    /** the store said yes, the item is still on its way to the account */
+    boughtLate: 'Η πληρωμή πέρασε. Ο Baller σου το φοράει σε λίγο.',
     buyShort: 'Αγόρασε',
     close: 'Κλείσιμο',
     sheet: {

@@ -13,7 +13,7 @@ const OUT_MS = 400;
 
 /**
  * «Αγόρασε · 1,99 €» opens this: what the item is and its price, and the sheet's one blue button that buys it through
- * the store (product `cos_<key>`; founder, 17 Oct). Until the store keys are set the button says «Σύντομα», is off,
+ * the store (product `cos_<key>`; founder, 17 Oct), and Baller puts it on straight away. Until the store keys are set the button says «Σύντομα», is off,
  * and the sheet says so: nothing pretends to sell. After a purchase it waits for the item to land in the wardrobe.
  */
 export function LookBuySheet({
@@ -26,7 +26,8 @@ export function LookBuySheet({
   onClose: () => void;
   /** true once the wardrobe has the item (asked again after a purchase until the webhook lands) */
   owned: (key: string) => Promise<boolean>;
-  onBought: () => void;
+  /** the store said yes; landed: the wardrobe has it already */
+  onBought: (landed: boolean) => void;
 }) {
   const t = useCopy();
   const purchase = usePurchase();
@@ -59,7 +60,7 @@ export function LookBuySheet({
     const r = await purchase.buy(`cos_${sheet.key}`, () => owned(sheet.key), () => setPaid(true));
     setBusy(false);
     if (r.result === 'ok') {
-      onBought();
+      onBought(r.landed === true);
       close();
       return;
     }
