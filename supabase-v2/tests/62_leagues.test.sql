@@ -28,7 +28,13 @@ select id, case when g in (2, 3) then 180 else 210 - g * 10 end, 'correct', 'mat
        core.month_key(now() - interval '40 days'), 'lg-' || g,
        now() - interval '40 days' - case when g = 3 then interval '1 hour' else interval '0' end
   from pl where g <= 19;
-select is(core.league_tick(), 21, 'the close runs over both groups');
+-- groups of earlier months the seed left open (its votes are dated a few days back, so early in a month they belong
+-- to the month before) close in the same run: count them apart
+select coalesce(sum((select count(*) from core.league_members m where m.league_id = l.id)), 0)::int as others
+  from core.leagues l
+ where l.month_key < core.month_key() and l.closed_at is null
+   and not exists (select 1 from core.league_members m join pl on pl.id = m.user_id where m.league_id = l.id) \gset
+select is(core.league_tick() - :others, 21, 'the close runs over both groups');
 select is((select final_rank from core.league_members where user_id = (select id from pl where g = 3)), 2,
           'a tie goes to who got there first');
 select is((select outcome from core.league_members where user_id = (select id from pl where g = 1)), 'promoted', 'top 5 go up');

@@ -462,6 +462,9 @@ export interface PlayerTraits {
   is_me: boolean;
   can_vote: boolean;
   voters: number;
+  /** my votes on this player and the most I may give (three, founder 2 Nov 2026); absent before that migration */
+  my_votes?: number;
+  max_votes?: number;
   traits: TraitRow[];
 }
 

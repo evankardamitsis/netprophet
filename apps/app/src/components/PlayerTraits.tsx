@@ -6,17 +6,19 @@ import type { TraitRow } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import type { TraitsState } from '../lib/data';
 import { runJpop, usePopIn, usePress, useStgIn } from '../lib/motion';
-import { TRAIT_MAX, hasVoted, shownTraits, splitTraits, traitGender, traitLabel, type TraitErrorKind } from '../lib/traits';
+import { TRAIT_MAX, barWidth, maxVotes, myVotes, saidTraits, shownTraits, splitTraits, topCount, traitGender, traitLabel, votesFull, type TraitErrorKind } from '../lib/traits';
+import { fmt } from '../lib/votes';
 import { colors, ease, fonts, motion } from '../theme';
 
 /** a tap: the chip jpops and a «+1» floats up */
 const JPOP_MS = 400;
 
 /**
- * «Πώς παίζει» on a player's profile. Founder, 22 Oct 2026: everyone signed in votes (it was only people who had
- * played them, so most people saw six rows of 0 they could not tap). The phrases are chips: tap one to give it your
- * vote (✓ and a «+1»), tap again to take it back. A count shows only once someone voted; the most voted come first.
- * Add your own, see yours waiting for review. Not on your own profile.
+ * «Πώς παίζει» on a player's profile. Founder, 2 Nov 2026: you see what the others said, your vote gets a clear ✓,
+ * three at most. Two parts: «Τι λένε οι άλλοι», the phrases people voted with a lime bar and the count (most voted
+ * first), and «Εσύ τι λες;», the phrases as chips: tap to vote (the chip turns ink with ✓, a «+1», a toast, and the bar
+ * above grows), tap again to take it back. With three picked the rest rest until you take one back. Add your own
+ * (it is one of the three), see yours waiting for review. Not on your own profile.
  */
 export function PlayerTraits({
   state,
@@ -34,56 +36,123 @@ export function PlayerTraits({
   if (!traits || traits.is_me) return null;
   const { pending } = splitTraits(traits.traits);
   const shown = shownTraits(traits);
-  if (shown.length === 0 && pending.length === 0) return null;
+  const said = saidTraits(traits);
+  if (!traits.can_vote && said.length === 0) return null;
   const gender = traitGender(traits.gender, first);
+  const top = topCount(said);
+  const used = myVotes(traits);
+  const full = votesFull(traits);
   const say = (kind: TraitErrorKind) =>
     onToast(
       kind === 'bad_label'
         ? k.badLabel
         : kind === 'too_many_pending'
           ? k.tooMany
-          : kind === 'rate_limited'
-            ? k.rateLimited
-            : kind === 'not_allowed'
-              ? k.notAllowed
-              : k.failed,
+          : kind === 'too_many_votes'
+            ? k.full
+            : kind === 'rate_limited'
+              ? k.rateLimited
+              : kind === 'not_allowed'
+                ? k.notAllowed
+                : k.failed,
     );
-  const tap = async (id: string) => {
-    const kind = await vote(id);
+  const tap = async (row: TraitRow) => {
+    // three picked: the others wait, nothing goes to the server
+    if (!row.mine && full) return onToast(k.full);
+    const kind = await vote(row.id);
     if (kind) say(kind);
+    else onToast(row.mine ? k.unvoted : k.voted);
   };
   return (
     <Animated.View style={[styles.card, enter]}>
-      <Text style={styles.head}>{greekCaps(k.title)}</Text>
-      {traits.can_vote ? <Text style={styles.voteNote}>{hasVoted(traits) ? k.countedNote : k.tapNote}</Text> : null}
-      <View style={styles.chips}>
-        {shown.map((row, i) => (
-          <Chip key={row.id} row={row} label={traitLabel(row, gender)} index={i} canVote={traits.can_vote} onPress={() => void tap(row.id)} />
-        ))}
+      <View style={styles.headRow}>
+        <Text style={styles.head}>{greekCaps(k.title)}</Text>
+        {traits.voters > 0 ? (
+          <Text style={styles.voters}>{traits.voters === 1 ? k.voters.one : fmt(k.voters.many, { n: traits.voters })}</Text>
+        ) : null}
       </View>
-      {pending.map((row) => (
-        <Pending key={row.id} label={traitLabel(row, gender)} />
-      ))}
+
+      <Text style={styles.sub}>{k.said}</Text>
+      {said.length === 0 ? (
+        <Text style={styles.none}>{k.saidNone}</Text>
+      ) : (
+        <View style={styles.said}>
+          {said.map((row, i) => (
+            <SaidRow key={row.id} label={traitLabel(row, gender)} n={row.count ?? 0} top={top} mine={row.mine} index={i} />
+          ))}
+        </View>
+      )}
+
       {traits.can_vote ? (
-        <Add
-          onSubmit={async (text) => {
-            const kind = await suggest(text);
-            if (kind) say(kind);
-            else onToast(k.sent);
-            return kind === null;
-          }}
-        />
+        <>
+          <View style={styles.rule} />
+          <View style={styles.headRow}>
+            <Text style={styles.sub}>{k.yours}</Text>
+            <Text style={[styles.used, used > 0 && styles.usedOn]}>{fmt(k.yoursCount, { n: Math.min(used, maxVotes(traits)) })}</Text>
+          </View>
+          <Text style={styles.note}>{k.yoursNote}</Text>
+          <View style={styles.chips}>
+            {shown.map((row, i) => (
+              <Chip
+                key={row.id}
+                row={row}
+                label={traitLabel(row, gender)}
+                index={i}
+                resting={full && !row.mine}
+                onPress={() => void tap(row)}
+              />
+            ))}
+          </View>
+          {pending.map((row) => (
+            <Pending key={row.id} label={traitLabel(row, gender)} />
+          ))}
+          <Add
+            onSubmit={async (text) => {
+              if (full) {
+                onToast(k.full);
+                return false;
+              }
+              const kind = await suggest(text);
+              if (kind) say(kind);
+              else onToast(k.sent);
+              return kind === null;
+            }}
+          />
+        </>
       ) : null}
-      <Text style={styles.note}>{k.footer}</Text>
     </Animated.View>
   );
 }
 
-function Chip({ row, label, index, canVote, onPress }: { row: TraitRow; label: string; index: number; canVote: boolean; onPress: () => void }) {
+/** one phrase people voted: the words, a lime bar that grows to its share of the leader, the count */
+function SaidRow({ label, n, top, mine, index }: { label: string; n: number; top: number; mine: boolean; index: number }) {
+  const enter = useStgIn(motion.revealDurShort, 300 + Math.min(index, 8) * motion.stagger);
+  const width = useSharedValue(0);
+  const target = barWidth(n, top);
+  useEffect(() => {
+    width.value = withTiming(target, { duration: motion.revealDur, easing: ease });
+  }, [target, width]);
+  const bar = useAnimatedStyle(() => ({ width: `${width.value}%` }));
+  return (
+    <Animated.View style={[styles.saidRow, enter]} accessible accessibilityLabel={`${label}, ${n}`}>
+      <View style={styles.saidTop}>
+        <Text style={styles.saidLabel}>
+          {mine ? '✓ ' : ''}
+          {label}
+        </Text>
+        <Text style={styles.saidN}>{n}</Text>
+      </View>
+      <View style={styles.track}>
+        <Animated.View style={[styles.fill, bar]} />
+      </View>
+    </Animated.View>
+  );
+}
+
+function Chip({ row, label, index, resting, onPress }: { row: TraitRow; label: string; index: number; resting: boolean; onPress: () => void }) {
   const k = useCopy().traits;
   const enter = usePopIn(motion.revealDurShort, 300 + Math.min(index, 8) * motion.stagger);
   const press = usePress();
-  const n = row.count ?? 0;
 
   const jpop = useSharedValue(1);
   const flash = useSharedValue(1);
@@ -104,29 +173,21 @@ function Chip({ row, label, index, canVote, onPress }: { row: TraitRow; label: s
     transform: [{ translateY: -flash.value * 22 }],
   }));
 
-  const body = (
-    <Animated.View style={[styles.chip, n > 0 && styles.chipVoted, row.mine && styles.chipMine, canVote ? press.style : null]}>
-      {row.mine ? <Text style={styles.chipTick}>✓</Text> : null}
-      <Text style={styles.chipText}>{label}</Text>
-      {n > 0 ? <Text style={styles.chipN}>{n}</Text> : null}
-    </Animated.View>
-  );
   return (
-    <Animated.View style={[enter, jpopStyle]}>
-      {canVote ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ selected: row.mine }}
-          accessibilityLabel={n > 0 ? `${label}, ${n}` : label}
-          onPress={onPress}
-          onPressIn={press.onPressIn}
-          onPressOut={press.onPressOut}
-        >
-          {body}
-        </Pressable>
-      ) : (
-        body
-      )}
+    <Animated.View style={[enter, jpopStyle, resting && styles.resting]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ selected: row.mine, disabled: resting }}
+        accessibilityLabel={label}
+        onPress={onPress}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+      >
+        <Animated.View style={[styles.chip, row.mine && styles.chipMine, press.style]}>
+          {row.mine ? <Text style={[styles.chipTick, styles.chipTextMine]}>✓</Text> : null}
+          <Text style={[styles.chipText, row.mine && styles.chipTextMine]}>{label}</Text>
+        </Animated.View>
+      </Pressable>
       <Animated.Text style={[styles.flash, flashStyle]} pointerEvents="none">
         {k.plusOne}
       </Animated.Text>
@@ -207,7 +268,23 @@ function SubmitButton({ label, ready, busy, onPress }: { label: string; ready: b
 
 const styles = StyleSheet.create({
   card: { paddingVertical: 16, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 8 },
+  headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   head: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.ink },
+  voters: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
+  sub: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.ink },
+  none: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
+  said: { gap: 10, paddingTop: 2 },
+  saidRow: { gap: 4 },
+  saidTop: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
+  saidLabel: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
+  saidN: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 22, color: colors.ink },
+  // others' votes: lime is what happened
+  track: { height: 10, borderRadius: 5, backgroundColor: colors.paper, overflow: 'hidden' },
+  fill: { height: 10, borderRadius: 5, backgroundColor: colors.lime },
+  rule: { height: 1, marginVertical: 8, backgroundColor: colors.fog },
+  used: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
+  usedOn: { color: colors.ink },
+  resting: { opacity: 0.4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4 },
   chip: {
     minHeight: 44,
@@ -220,12 +297,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  // someone said it: lime is what happened
-  chipVoted: { backgroundColor: colors.lime, borderColor: colors.lime },
-  chipMine: { borderColor: colors.ink },
+  // my vote: ink with ✓
+  chipMine: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipTick: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.ink },
   chipText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
-  chipN: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 22, paddingBottom: 4, marginBottom: -4, color: colors.ink },
+  chipTextMine: { color: colors.paper },
   flash: { position: 'absolute', right: 6, top: -8, fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 22, paddingBottom: 4, marginBottom: -4, color: colors.ink },
   pending: {
     minHeight: 50,
@@ -261,6 +337,5 @@ const styles = StyleSheet.create({
   },
   submit: { minHeight: 48, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.blue, justifyContent: 'center' },
   submitText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white },
-  voteNote: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.ink },
   note: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerTraits } from '@netprophet/db';
-import { applyTraitVote, barWidth, cleanLabel, hasVoted, mockPlayerTraits, shareWidth, shownTraits, splitTraits, topCount, traitErrorKind, traitGender, traitLabel } from './traits';
+import { applyTraitVote, barWidth, cleanLabel, maxVotes, mockPlayerTraits, myVotes, saidTraits, votesFull, shareWidth, shownTraits, splitTraits, topCount, traitErrorKind, traitGender, traitLabel } from './traits';
 
 const sample = (): PlayerTraits => mockPlayerTraits('p1', 'f');
 
@@ -31,11 +31,11 @@ describe('traits', () => {
   it('moves the count with my tap, both ways, once', () => {
     const on = applyTraitVote(sample(), 'mock-4', true);
     expect(on.traits[3]).toMatchObject({ mine: true, count: 10 });
-    expect(hasVoted(on)).toBe(true);
+    expect(myVotes(on)).toBe(1);
     expect(applyTraitVote(on, 'mock-4', true).traits[3]!.count).toBe(10);
     const off = applyTraitVote(on, 'mock-4', false);
     expect(off.traits[3]).toMatchObject({ mine: false, count: 9 });
-    expect(hasVoted(off)).toBe(false);
+    expect(myVotes(off)).toBe(0);
   });
 
   it('keeps my pending phrases apart and untouched by taps', () => {
@@ -45,7 +45,25 @@ describe('traits', () => {
     expect(shown).toHaveLength(6);
     expect(pending.map((x) => x.id)).toEqual(['x']);
     expect(applyTraitVote(p, 'x', false)).toEqual(p);
-    expect(hasVoted(p)).toBe(false);
+    // my own phrase is one of my three
+    expect(myVotes(p)).toBe(1);
+  });
+
+  it('counts three votes at most, the server first', () => {
+    let p = sample();
+    expect(maxVotes(p)).toBe(3);
+    for (const id of ['mock-1', 'mock-2', 'mock-3']) p = applyTraitVote(p, id, true);
+    expect(myVotes(p)).toBe(3);
+    expect(votesFull(p)).toBe(true);
+    expect(votesFull(applyTraitVote(p, 'mock-2', false))).toBe(false);
+    expect(myVotes({ ...sample(), my_votes: 5 })).toBe(5);
+  });
+
+  it('lists what the others said, most voted first, never a zero', () => {
+    const p = sample();
+    p.traits[5] = { ...p.traits[5]!, count: 0 };
+    p.traits[2] = { ...p.traits[2]!, count: 30 };
+    expect(saidTraits(p).map((x) => x.id)).toEqual(['mock-3', 'mock-1', 'mock-2', 'mock-4', 'mock-5']);
   });
 
   it('cleans the typed phrase like the database', () => {
