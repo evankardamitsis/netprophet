@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -103,6 +103,30 @@ export default function MeScreen() {
   // «Τα νούμερά σου» is the same screen with ?page=stats (founder, 14 Oct: Εγώ down to a few rows; 19 Oct: one row)
   const { page } = useLocalSearchParams<{ page?: string }>();
   const statsPage = mePageOf(page) === 'numbers';
+  // same screen, so the scroll stays put: «Τα νούμερά σου» opens at the top, ‹ goes back to where you were on Εγώ
+  const scrollY = useRef(0);
+  const meY = useRef(0);
+  const wasStats = useRef(statsPage);
+  // the Εγώ rows come back a moment later, so the way back waits until the page is tall enough
+  const restoreY = useRef<number | null>(null);
+  const viewH = useRef(0);
+  useLayoutEffect(() => {
+    if (wasStats.current === statsPage) return;
+    wasStats.current = statsPage;
+    if (statsPage) {
+      meY.current = scrollY.current;
+      restoreY.current = null;
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    } else {
+      restoreY.current = meY.current;
+    }
+  }, [statsPage]);
+  const onContentSize = (_w: number, h: number) => {
+    const y = restoreY.current;
+    if (y === null || h - viewH.current < y - 2) return;
+    restoreY.current = null;
+    scrollRef.current?.scrollTo({ y, animated: false });
+  };
   const sections = meSections({
     levelBar: has('level_bar'),
     quests: has('daily_quests'),
@@ -131,6 +155,14 @@ export default function MeScreen() {
     <View style={styles.screen}>
       <ScrollView
         ref={scrollRef}
+        onScroll={(e) => {
+          scrollY.current = e.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={32}
+        onContentSizeChange={onContentSize}
+        onLayout={(e) => {
+          viewH.current = e.nativeEvent.layout.height;
+        }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && view !== null} onRefresh={refresh} tintColor={colors.ink} />}
