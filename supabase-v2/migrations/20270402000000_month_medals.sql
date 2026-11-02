@@ -41,9 +41,20 @@ as $$
 $$;
 revoke all on function core.is_staff_user(uuid) from public;
 
+-- the store review accounts (review_password_only, play_review_account) play like anyone but never take a prize:
+-- in October 2026 play-review@ finished 2nd and would have taken a real player's medal
+create or replace function core.is_review_account(p_user uuid)
+returns boolean
+language sql stable security definer set search_path = core, pg_temp
+as $$
+  select exists (select 1 from auth.users
+                  where id = p_user and lower(trim(coalesce(email, ''))) in ('review@monadlabs.gr', 'play-review@monadlabs.gr'))
+$$;
+revoke all on function core.is_review_account(uuid) from public;
+
 -- ---------------------------------------------------------------------------
 -- The prizes of one closed group, from its final ranks: staff and players without points are left out, the rest
--- keep their order and the first three win. Gold also brings the crown, all three the Frame. Safe to run again.
+-- keep their order and the first three win (store review accounts are left out like staff). Gold also brings the crown, all three the Frame. Safe to run again.
 -- ---------------------------------------------------------------------------
 create or replace function core.month_medals_award(p_league uuid)
 returns int
@@ -61,7 +72,7 @@ begin
       from (select m.user_id, m.final_rank, m.final_points as points
               from core.league_members m
              where m.league_id = v_l.id and m.final_rank is not null and coalesce(m.final_points, 0) > 0
-               and not core.is_staff_user(m.user_id)) x
+               and not core.is_staff_user(m.user_id) and not core.is_review_account(m.user_id)) x
      order by place
      limit 3
   loop

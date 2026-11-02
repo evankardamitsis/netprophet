@@ -4,7 +4,7 @@
 -- only, honour the switch and mark each medal once; the backfill rule gives the same result from the final ranks.
 \set ON_ERROR_STOP on
 begin;
-select plan(27);
+select plan(29);
 
 -- a past month nobody else uses: an admin on top, an editor 3rd, four players (one without points)
 create temp table mp as
@@ -92,6 +92,20 @@ select is(api.admin_medal_emails_sent(:'ids'::uuid[]), 0, 'marking again changes
 select is((select count(*)::int from jsonb_array_elements(api.admin_medal_emails_due()) x where x ->> 'email' like 'mm-%'), 0,
           'each medal is emailed once');
 select tests.logout();
+
+-- a store review account plays but never takes a prize: the player behind it gets gold
+create temp table mr as
+select * from (values
+  ('r', tests.create_user('play-review@monadlabs.gr'), 300),
+  ('p', tests.create_user('mm-p@test.local'), 100)) v(k, id, pts);
+grant select on mr to public;
+select core.league_join(id, '2020-02') from mr order by pts desc;
+insert into core.points_ledger (user_id, delta, reason, ref_type, ref_id, month_key, idempotency_key)
+select id, pts, 'correct', 'match', gen_random_uuid(), '2020-02', 'mr-' || k from mr;
+select (select league_id from core.league_members where user_id = (select id from mr where k = 'p')) as lr \gset
+select is(core.league_close(:'lr'::uuid), 2, 'a group with a review account closes');
+select is((select array_agg(mr.k || mm.place order by mm.place) from core.month_medals mm join mr on mr.id = mm.user_id),
+          array['p1'], 'the review account is skipped, the player gets gold');
 
 select * from finish();
 rollback;
