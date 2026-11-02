@@ -752,6 +752,10 @@ export type Database = {
         Args: { p_player_id: string };
         Returns: Json;
       };
+      get_player_pro: {
+        Args: { p_player: string };
+        Returns: Json;
+      };
       get_players_home: {
         Args: { p_limit?: number };
         Returns: Json;

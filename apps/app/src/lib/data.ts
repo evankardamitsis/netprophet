@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber, matchesLoosely } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -35,6 +35,7 @@ import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
 import { onMomentsAction } from './useMoments';
 import { toScoutView, type ScoutView } from './scout';
+import { mockPlayerProTeaser } from './playerPro';
 import { myMatchOf, type MyMatchView } from './myMatch';
 import { avatarByKey, defaultAvatarFor, playerAvatar, type AvatarLook, type DefaultAvatar } from './avatar';
 import { applyTraitVote, cleanLabel, mockMyTraits, mockPlayerTraits, traitErrorKind, type TraitErrorKind } from './traits';
@@ -858,6 +859,48 @@ export interface ScoutState {
 }
 
 /** «Ο αντίπαλος πριν το ματς» for your match; the database refuses anything but your own upcoming match with Pro. */
+/**
+ * A player's card, the Pro part (api.get_player_pro; founder, 2 Nov 2026): Pro gets everything we know about them,
+ * a free player the counts to tease it. The guest sees the teaser. Nothing on your own card.
+ */
+export type PlayerProState =
+  | { kind: 'loading' }
+  | { kind: 'pro'; view: ScoutView; hasPlayer: boolean }
+  | { kind: 'free'; teaser: PlayerProTeaser; hasPlayer: boolean }
+  | { kind: 'none' };
+
+export function usePlayerPro(playerId: string, isMe: boolean): PlayerProState {
+  const t = useCopy();
+  const api = useApi();
+  const [state, setState] = useState<PlayerProState>({ kind: 'loading' });
+  useEffect(() => {
+    let live = true;
+    if (isMe) {
+      setState({ kind: 'none' });
+      return undefined;
+    }
+    setState({ kind: 'loading' });
+    if (!api) {
+      setState({ kind: 'free', teaser: mockPlayerProTeaser(), hasPlayer: true });
+      return undefined;
+    }
+    Promise.all([api.getPlayerPro(playerId), areasFor(true)])
+      .then(([r, areas]) => {
+        if (!live) return;
+        setState(
+          r.pro
+            ? { kind: 'pro', view: toScoutView(r.player, areas, t), hasPlayer: r.has_player }
+            : { kind: 'free', teaser: r.teaser, hasPlayer: r.has_player },
+        );
+      })
+      .catch(() => live && setState({ kind: 'none' }));
+    return () => {
+      live = false;
+    };
+  }, [api, playerId, isMe, t]);
+  return state;
+}
+
 export function useScout(matchId: string): ScoutState {
   const t = useCopy();
   const api = useApi();

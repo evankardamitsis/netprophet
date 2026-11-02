@@ -821,6 +821,21 @@ export interface Scout {
   opponents: ScoutPlayer[];
 }
 
+/** a player's card, the Pro part (api.get_player_pro; founder, 2 Nov 2026: Pro sees everything on every card) */
+export type PlayerPro =
+  | { pro: true; has_player: boolean; player: ScoutPlayer }
+  /** free: counts only, never a result, shown with the values locked */
+  | { pro: false; has_player: boolean; teaser: PlayerProTeaser };
+
+export interface PlayerProTeaser {
+  matches: number;
+  /** matches between you and them (0 without a player of your own) */
+  meetings: number;
+  surfaces: { surface: 'clay' | 'hard' | 'grass' | 'carpet'; matches: number }[];
+  deciding: number;
+  tiebreaks: number;
+}
+
 /** The Pro screen (api.get_pro). Pro belongs to the account, whichever platform paid for it. */
 export interface ProState {
   pro: boolean;

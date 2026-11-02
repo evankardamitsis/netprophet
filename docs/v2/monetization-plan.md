@@ -19,7 +19,7 @@
 ### 1. Pro subscription (core; replaces the Season Pass)
 Pro is "your season assistant". It sells real value to the player, not just more numbers.
 1. **Your tournaments in one place:** every tournament for your level and area, entry deadlines, and alerts when the draw and your match time are out. **This gets built first.** It uses the match sources we already ingest.
-2. **Scouting before your own match:** form, history, surfaces, record against people you know. Only for your own match, so votes stay fair.
+2. **Scouting:** form, history, surfaces, record against people you know. Before your own match as «Ο αντίπαλος πριν το ματς», and on every player's card (founder, 2 Nov 2026: Pro sees everything on every card; the free card shows the real counts with the results locked). It shows information only: no points, ranking or outcome.
 3. **Analysis of your game:** where you win and where you lose, e.g. third sets, surfaces, left-handers.
 4. **Your real level numbers:** how they move and the distance to the next tier.
 5. **Recognition:** a card for every win, a season recap, a profile worth showing.

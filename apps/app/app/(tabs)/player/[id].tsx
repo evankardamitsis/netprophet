@@ -4,7 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanima
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import { PlayerTraits } from '../../../src/components/PlayerTraits';
-import { ProTeaser } from '../../../src/components/ProEntries';
+import { PlayerProCard } from '../../../src/components/PlayerProCard';
 import { FitText } from '../../../src/components/FitText';
 import { LastMatchRow } from '../../../src/components/LastMatchRow';
 import { FormDots } from '../../../src/components/PlayerListRow';
@@ -12,7 +12,7 @@ import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { useClaimLater, usePlayer, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
+import { useClaimLater, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
 import { canClaimHere, claimHereLabel, claimHereToast } from '../../../src/lib/claimLater';
 import { runJpop, useGrowIn, usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../../src/lib/motion';
 import type { ProfileView } from '../../../src/lib/players';
@@ -21,8 +21,8 @@ import { colors, fonts } from '../../../src/theme';
 /**
  * A player's profile (prototype V2, the `over` view): dark hero card with level, follow, name,
  * area · direction, this year's record and the last five; then the next match and the last matches.
- * then «Πώς παίζει» (traits, anyone signed in votes). The header and tab bar stay; no tab is highlighted.
- * Head-to-head and gifts come later.
+ * then the Pro part (everything we know for Pro, a locked teaser with the real counts for everyone else; founder,
+ * 2 Nov 2026) and «Πώς παίζει» (traits, anyone signed in votes). The header and tab bar stay; no tab is highlighted.
  */
 const JPOP_MS = 400;
 
@@ -122,6 +122,7 @@ export default function PlayerScreen() {
 function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => void; onToast: (text: string) => void }) {
   const t = useCopy();
   const traits = useTraits(p.id, null);
+  const pro = usePlayerPro(p.id, p.isMe);
   const hero = useStgIn(450, 0);
   const nameIn = useRiseIn(550, 70);
   const subIn = useRiseIn(550, 150);
@@ -171,7 +172,7 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
         )}
       </Animated.View>
 
-      {p.isMe ? null : <ProTeaser />}
+      {p.isMe ? null : <PlayerProCard state={pro} first={p.first} gender={p.gender} />}
 
       {p.isMe ? null : <PlayerTraits state={traits} first={p.first} onToast={onToast} />}
     </>

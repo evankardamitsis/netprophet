@@ -826,10 +826,6 @@ export const el = {
       meTrial: '7 μέρες δωρεάν',
       meBenefits: ['Δες τον αντίπαλό σου', 'Ειδοποιήσεις για κλήρωση και ώρα', 'Τα στατιστικά σου'],
       meCta: 'Δες το Pro ›',
-      /** the player card: what Pro adds, locked */
-      teaserTag: 'Με Pro',
-      teaserRows: ['Όλα τα ματς', 'Κόντρα σας', 'Ανά επιφάνεια'],
-      teaserLabel: 'Με Pro: όλα τα ματς, κόντρα σας, ανά επιφάνεια',
       /** the quiet lines at the moment Pro helps */
       opponent: 'Δες τον αντίπαλό σου με Pro ›',
       result: 'Δες πώς πας φέτος: τα στατιστικά σου με Pro ›',
@@ -843,6 +839,24 @@ export const el = {
       ladderRows: ['Η θέση σου ανά μήνα', 'Οι πόντοι σου ανά μήνα', 'Ο καλύτερος μήνας σου'],
       ladderLabel: 'Η πορεία σου μήνα με μήνα, με Pro',
     },
+  },
+  /**
+   * A player's card, the Pro part (founder, 2 Nov 2026: Pro sees everything on every card; the free card teases it
+   * with the real counts and the values locked)
+   */
+  playerPro: {
+    tag: 'PRO',
+    title: 'Όλα για {who}',
+    sub: 'Νίκες και ήττες σε κάθε επιφάνεια, στο τρίτο σετ, στα tie-break και μεταξύ σας.',
+    all: 'Όλα τα ματς',
+    meetings: 'Μεταξύ σας',
+    deciding: 'Στο τρίτο σετ',
+    tiebreaks: 'Με tie-break',
+    matches: { one: '1 ματς', many: '{n} ματς' },
+    cta: 'Δες τα όλα με Pro ›',
+    label: 'Δες όλα τα νούμερα με Pro',
+    /** a Pro player sees the report under this */
+    proTitle: 'Όλα όσα ξέρουμε',
   },
   /** Pro «Η σεζόν σου» (17 Oct 2026, drafts for the founder): the month recap and a card for every win */
   season: {
@@ -935,7 +949,6 @@ export const el = {
     you: 'Εσύ',
     none: 'Τίποτα ακόμα',
     noCommon: 'Δεν έχετε παίξει με τους ίδιους ακόμα.',
-    fair: 'Το βλέπεις μόνο για το δικό σου ματς, ώστε οι ψήφοι να μένουν δίκαιες.',
     notYours: 'Αυτό δεν είναι δικό σου ματς.',
     over: 'Αυτό το ματς έχει παιχτεί.',
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
