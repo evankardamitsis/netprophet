@@ -21,11 +21,26 @@ export const el = {
     league: {
       up: '↑ Ανεβαίνουν κατηγορία',
       down: '↓ Αλλάζουν κατηγορία',
-      foot: 'Οι 3 πρώτοι παίρνουν κορνίζα και badge.',
+      foot: 'Οι 3 πρώτοι παίρνουν μετάλλιο, κορνίζα και badge.',
       /** full-screen moment: «ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ», «3ος», then the reward line */
       label: 'Κατάταξη · {tier}',
       award: 'Frame Κορυφαίος του μήνα και badge',
+      /** with a month medal (2 Nov 2026): «Χρυσό μετάλλιο, Frame και badge» */
+      medalAward: '{medal}, Frame και badge',
       next: 'Κατηγορία τον άλλο μήνα: {tier}',
+    },
+    /**
+     * Month medals (founder, 2 Nov 2026): the top 3 of each Κατηγορία group when the month closes, staff left out.
+     * Earned, never sold. The trophy shelf on Εγώ and on a player's page; hidden without medals.
+     */
+    medals: {
+      title: 'Μετάλλια',
+      /** by place: 1 gold, 2 silver, 3 bronze */
+      names: ['Χρυσό μετάλλιο', 'Ασημένιο μετάλλιο', 'Χάλκινο μετάλλιο'] as string[],
+      /** the place on the medal */
+      place: '{n}η θέση',
+      /** what a screen reader says for one medal: «Χρυσό μετάλλιο, Οκτώβριος 2026, Χάλκινη» */
+      aria: '{medal}, {month}, {tier}',
     },
     /** the big position on the card, «4ος» */
     position: '{n}ος',
@@ -687,6 +702,9 @@ export const el = {
     /** for everyone (21 Oct): the tournaments you follow */
     followedPush: 'Τουρνουά που ακολουθείς',
     followedPushLine: 'Η κλήρωση, το αυριανό πρόγραμμα και ο τελικός. Ποτέ από τις 23:00 ως τις 08:00.',
+    /** the winners' email when the month closes (2 Nov 2026), on unless switched off */
+    medalEmail: 'Email για τα μετάλλια',
+    medalEmailLine: 'Όταν μπαίνεις στους 3 πρώτους της Κατηγορίας σου.',
     /** Pro pushes (21 Oct), saved on the account, on unless switched off; never 23:00 to 08:00 */
     tournamentsPush: 'Τα τουρνουά σου',
     tournamentsPushLine: 'Η κλήρωση μόλις βγει, η μέρα και η ώρα σου, κάθε αλλαγή και οι δηλώσεις που κλείνουν. Ποτέ από τις 23:00 ως τις 08:00.',

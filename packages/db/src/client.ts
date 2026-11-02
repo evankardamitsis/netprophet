@@ -33,6 +33,7 @@ import type {
   MyTraits,
   PlayerCard,
   PlayerProfile,
+  MonthMedal,
   PlayerTraits,
   PendingConfirmation,
   Reactions,
@@ -212,6 +213,8 @@ export function rpc(client: NetprophetClient) {
     getPlayersHome: (limit = 60) => call<PlayersHome>(client, 'get_players_home', { p_limit: limit }),
     findPlayers: (query: string, limit = 20) => call<PlayerCard[]>(client, 'find_players', { p_query: query, p_limit: limit }),
     getPlayer: (playerId: string) => call<PlayerProfile>(client, 'get_player', { p_player_id: playerId }),
+    /** the trophy shelf: my month medals, or those of the account that holds a player (never which account) */
+    getMedals: (playerId?: string) => call<MonthMedal[]>(client, 'get_medals', playerId ? { p_player_id: playerId } : {}),
     suggestPlayers: (limit = 30) => call<SuggestedPlayer[]>(client, 'suggest_players', { p_limit: limit }),
     followPlayers: (playerIds: string[]) => call<number>(client, 'follow_players', { p_player_ids: playerIds, p_source: 'onboarding' }),
     setClaimStatus: (status: 'skipped' | 'creation_requested') => call<string>(client, 'set_claim_status', { p_status: status }),

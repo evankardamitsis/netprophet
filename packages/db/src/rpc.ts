@@ -339,8 +339,22 @@ export interface LeagueCelebrationPayload {
   position: number;
   movement: 'promote' | 'relegate' | 'stay';
   next_tier: LeagueTier;
-  /** top 3 with points: the Κορυφαίος του μήνα frame and badge */
+  /** a month medal (top 3 with points, staff left out): the Κορυφαίος του μήνα frame and badge */
   award: boolean;
+  /** the month medal won: 1 gold, 2 silver, 3 bronze; null or missing without one (moments before 2 Nov 2026) */
+  medal?: MedalPlace | null;
+}
+
+/** a month medal's place: 1 gold, 2 silver, 3 bronze */
+export type MedalPlace = 1 | 2 | 3;
+
+/** one medal on the trophy shelf (api.get_medals), newest month first */
+export interface MonthMedal {
+  /** the month, «2026-10» */
+  month: string;
+  place: MedalPlace;
+  /** the Κατηγορία the medal was won in */
+  tier: LeagueTier;
 }
 
 /** a user's game level (core gameLevel): the level, points inside it, its span and what is missing for the next */

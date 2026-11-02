@@ -152,6 +152,18 @@ export const cosmetics = {
     beanieCuff: '#5E3878',
     beaniePom: '#F3F5EE',
   },
+  /**
+   * The month medals on the trophy shelf (founder, 2 Nov 2026): gold, silver and bronze faces with a deeper rim.
+   * Earned, so the ribbon is lime (colors.lime).
+   */
+  medal: {
+    gold: '#E4C25A',
+    goldRim: '#8C6A12',
+    silver: '#C9D1C4',
+    silverRim: '#6E7A72',
+    bronze: '#B87333',
+    bronzeRim: '#6E3F17',
+  },
   /** the confetti win effect */
   confetti: ['#D9F03F', '#F3F5EE', '#9DB0FF', '#F2D36B'],
   /** the win effects (founder, 17 Oct: "more cheers that actually do stuff") */

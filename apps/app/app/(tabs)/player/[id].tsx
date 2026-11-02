@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
+import { TrophyShelf } from '../../../src/components/TrophyShelf';
 import { PlayerTraits } from '../../../src/components/PlayerTraits';
 import { PlayerProCard } from '../../../src/components/PlayerProCard';
 import { FitText } from '../../../src/components/FitText';
@@ -12,7 +13,7 @@ import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { useClaimLater, useIsStaff, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
+import { useClaimLater, useIsStaff, useMedals, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
 import { canClaimHere, claimHereLabel, claimHereToast } from '../../../src/lib/claimLater';
 import { runJpop, useGrowIn, usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../../src/lib/motion';
 import type { ProfileView } from '../../../src/lib/players';
@@ -126,6 +127,8 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
   const staff = useIsStaff();
   const [asFree, setAsFree] = useState(false);
   const pro = usePlayerPro(p.id, p.isMe, staff && asFree);
+  // the trophy shelf of the account that holds this player (2 Nov 2026); away without medals
+  const medals = useMedals(p.claimed || p.isMe ? p.id : undefined);
   const hero = useStgIn(450, 0);
   const nameIn = useRiseIn(550, 70);
   const subIn = useRiseIn(550, 150);
@@ -158,6 +161,8 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
           <FormDots form={p.form} on={colors.lime} off={colors.inkLine} size={14} gap={5} baseDelay={450} />
         </Animated.View>
       </Animated.View>
+
+      {p.claimed || p.isMe ? <TrophyShelf medals={medals} /> : null}
 
       {p.next ? (
         <Animated.View style={[styles.next, nextIn]}>

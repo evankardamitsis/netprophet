@@ -1,6 +1,7 @@
 import type { Copy } from '@netprophet/copy';
 import { POINTS } from '@netprophet/core';
 import type { Ladder, LadderRow, LadderScope, LeagueCelebration } from '@netprophet/db';
+import { medalName } from './medals';
 import { fmt } from './votes';
 
 /**
@@ -128,7 +129,8 @@ export function leagueCelebrationView(c: LeagueCelebration, t: Copy): { label: s
   return {
     label: fmt(l.league.label, { tier: l.tiers[p.tier] }),
     title: fmt(l.position, { n: p.position }),
-    reward: p.award ? l.league.award : fmt(l.league.next, { tier: l.tiers[p.next_tier] }),
+    // a month medal (2 Nov 2026) names itself first: «Χρυσό μετάλλιο, Frame και badge»
+    reward: p.medal ? fmt(l.league.medalAward, { medal: medalName(p.medal, t) }) : p.award ? l.league.award : fmt(l.league.next, { tier: l.tiers[p.next_tier] }),
   };
 }
 
