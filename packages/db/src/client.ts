@@ -202,7 +202,8 @@ export function rpc(client: NetprophetClient) {
     /** a share card of one of your own wins */
     winCard: (matchId: string) => call<WinCard>(client, 'win_card', { p_match: matchId }),
     getScout: (matchId: string) => call<Scout>(client, 'get_scout', { p_match_id: matchId }),
-    getPlayerPro: (playerId: string) => call<PlayerPro>(client, 'get_player_pro', { p_player: playerId }),
+    /** asFree: the free card even with Pro (staff preview, «Δες το σαν free») */
+    getPlayerPro: (playerId: string, asFree = false) => call<PlayerPro>(client, 'get_player_pro', { p_player: playerId, p_as_free: asFree }),
     joinProWaitlist: () => call<boolean>(client, 'join_pro_waitlist', {}),
     adminGrantPro: (userId: string, days = 30) => call<{ id: string; ends_at: string }>(client, 'admin_grant_pro', { p_user_id: userId, p_days: days }),
     getResults: (days = 14, limit = 60, tournament: string | null = null, query: string | null = null) =>

@@ -12,6 +12,8 @@ import { colors, ease, fonts, motion } from '../theme';
 
 /** a tap: the chip jpops and a «+1» floats up */
 const JPOP_MS = 400;
+/** after the third vote the chips fold, once the ✓ and the toast have been seen */
+const FOLD_MS = 1200;
 
 /**
  * «Πώς παίζει» on a player's profile. Founder, 2 Nov 2026: you see what the others said, your vote gets a clear ✓,
@@ -19,6 +21,8 @@ const JPOP_MS = 400;
  * first), and «Εσύ τι λες;», the phrases as chips: tap to vote (the chip turns ink with ✓, a «+1», a toast, and the bar
  * above grows), tap again to take it back. With three picked the rest rest until you take one back. Add your own
  * (it is one of the three), see yours waiting for review. Not on your own profile.
+ * Once you have voted, «Εσύ τι λες;» folds away and only ΠΩΣ ΠΑΙΖΕΙ stays, yours marked ✓ (founder, 2 Nov 2026):
+ * folded when the card opens with your votes in, and on its own a moment after your third; «Άλλαξε ›» opens it again.
  */
 export function PlayerTraits({
   state,
@@ -33,6 +37,22 @@ export function PlayerTraits({
   const k = t.traits;
   const enter = useStgIn(450, 250);
   const { traits, vote, suggest } = state;
+  const used0 = traits ? myVotes(traits) : 0;
+  // folded once you have voted; null until the first answer arrives, so a card that loads with votes starts folded
+  const [open, setOpen] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (traits && open === null) setOpen(used0 === 0);
+  }, [traits, open, used0]);
+  const full0 = traits ? votesFull(traits) : false;
+  const wasFull = useRef(full0);
+  useEffect(() => {
+    // the third vote just went in: fold a moment later; taking one back never folds
+    const reached = full0 && !wasFull.current;
+    wasFull.current = full0;
+    if (!reached) return undefined;
+    const id = setTimeout(() => setOpen(false), FOLD_MS);
+    return () => clearTimeout(id);
+  }, [full0]);
   if (!traits || traits.is_me) return null;
   const { pending } = splitTraits(traits.traits);
   const shown = shownTraits(traits);
@@ -83,7 +103,21 @@ export function PlayerTraits({
         </View>
       )}
 
-      {traits.can_vote ? (
+      {traits.can_vote && open === false ? (
+        <>
+          <View style={styles.rule} />
+          <Pressable accessibilityRole="button" onPress={() => setOpen(true)} style={styles.foldHit}>
+            <View style={styles.headRow}>
+              <Text style={styles.sub}>{k.yours}</Text>
+              <Text style={[styles.used, used > 0 && styles.usedOn]}>
+                {fmt(k.yoursCount, { n: Math.min(used, maxVotes(traits)) })} · {k.change}
+              </Text>
+            </View>
+          </Pressable>
+        </>
+      ) : null}
+
+      {traits.can_vote && open !== false ? (
         <>
           <View style={styles.rule} />
           <View style={styles.headRow}>
@@ -282,6 +316,7 @@ const styles = StyleSheet.create({
   track: { height: 10, borderRadius: 5, backgroundColor: colors.paper, overflow: 'hidden' },
   fill: { height: 10, borderRadius: 5, backgroundColor: colors.lime },
   rule: { height: 1, marginVertical: 8, backgroundColor: colors.fog },
+  foldHit: { minHeight: 44, justifyContent: 'center' },
   used: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   usedOn: { color: colors.ink },
   resting: { opacity: 0.4 },

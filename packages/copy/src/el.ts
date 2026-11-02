@@ -608,6 +608,8 @@ export const el = {
     numbersLine: 'Σερί, ψήφοι, ματς και η σεζόν σου',
     /** under «Τα στατιστικά σου» on «Τα νούμερά σου» */
     statsLine: 'Τα ματς σου, σε νούμερα',
+    /** the kicker on the ink card of «Τα στατιστικά σου»: your matches, apart from the game */
+    statsKicker: 'Στο γήπεδο',
     /** dev builds only: the drawn avatars for review */
     avatarsDev: 'Τα avatar (δοκιμή)',
     /** staff only, in Ρυθμίσεις: the store's state on this phone (never the key) */
@@ -657,6 +659,7 @@ export const el = {
     stats: {
       correct: 'Σωστές ψήφοι',
       points: 'Πόντοι αυτόν τον μήνα',
+      total: 'Πόντοι από την αρχή',
     },
     votes: {
       title: 'Οι ψήφοι σου',
@@ -863,6 +866,9 @@ export const el = {
    * with the real counts and the values locked)
    */
   playerPro: {
+    /** staff only, on a player card: switch to the free card and back */
+    asFree: 'Δες το σαν free',
+    asPro: 'Δες το σαν Pro',
     tag: 'PRO',
     title: 'Όλα για {who}',
     sub: 'Νίκες και ήττες σε κάθε επιφάνεια, στο τρίτο σετ, στα tie-break και μεταξύ σας.',
@@ -1231,6 +1237,8 @@ export const el = {
     yours: 'Εσύ τι λες;',
     yoursNote: 'Διάλεξε μέχρι 3.',
     yoursCount: '{n} από 3',
+    /** folded «Εσύ τι λες;»: opens the chips again */
+    change: 'Άλλαξε ›',
     voted: 'Μέτρησε ✓ Η ψήφος σου μπήκε στο «Τι λένε οι άλλοι».',
     unvoted: 'Την πήρες πίσω.',
     full: 'Έχεις ήδη 3. Βγάλε ένα για να διαλέξεις άλλο.',

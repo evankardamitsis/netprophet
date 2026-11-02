@@ -565,7 +565,7 @@ export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | n
   }, [api, user]);
   if (!api) return { me: MOCK_ME, raw: null, refresh };
   return {
-    me: raw ? { streak: raw.game.streak, points: raw.game.total_points, initials: meInitials(raw, email), sport: raw.profile.primary_sport, pro: raw.pro === true } : null,
+    me: raw ? { streak: raw.game.streak, points: raw.game.month_points, initials: meInitials(raw, email), sport: raw.profile.primary_sport, pro: raw.pro === true } : null,
     raw,
     refresh,
   };
@@ -869,7 +869,7 @@ export type PlayerProState =
   | { kind: 'free'; teaser: PlayerProTeaser; hasPlayer: boolean }
   | { kind: 'none' };
 
-export function usePlayerPro(playerId: string, isMe: boolean): PlayerProState {
+export function usePlayerPro(playerId: string, isMe: boolean, asFree = false): PlayerProState {
   const t = useCopy();
   const api = useApi();
   const [state, setState] = useState<PlayerProState>({ kind: 'loading' });
@@ -884,7 +884,7 @@ export function usePlayerPro(playerId: string, isMe: boolean): PlayerProState {
       setState({ kind: 'free', teaser: mockPlayerProTeaser(), hasPlayer: true });
       return undefined;
     }
-    Promise.all([api.getPlayerPro(playerId), areasFor(true)])
+    Promise.all([api.getPlayerPro(playerId, asFree), areasFor(true)])
       .then(([r, areas]) => {
         if (!live) return;
         setState(
@@ -897,7 +897,7 @@ export function usePlayerPro(playerId: string, isMe: boolean): PlayerProState {
     return () => {
       live = false;
     };
-  }, [api, playerId, isMe, t]);
+  }, [api, playerId, isMe, asFree, t]);
   return state;
 }
 
