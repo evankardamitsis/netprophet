@@ -28,6 +28,8 @@ export const el = {
       /** with a month medal (2 Nov 2026): «Χρυσό μετάλλιο, Frame και badge» */
       medalAward: '{medal}, Frame και badge',
       next: 'Κατηγορία τον άλλο μήνα: {tier}',
+      /** the month close with a medal or award and a move up: «Χρυσό μετάλλιο, Frame και badge · Ανεβαίνεις στην Ασημένια» */
+      moveUp: 'Ανεβαίνεις στην {tier}',
     },
     /**
      * Month medals (founder, 2 Nov 2026): the top 3 of each Κατηγορία group when the month closes, staff left out.
@@ -44,6 +46,8 @@ export const el = {
     },
     /** the big position on the card, «4ος» */
     position: '{n}ος',
+    /** the same for a woman: «4η» */
+    positionF: '{n}η',
     points: 'πόντοι',
     streak: 'Σωστές στη σειρά',
     streakPill: 'σερί',
@@ -1320,11 +1324,11 @@ export const el = {
     titles: { 3: 'Τρία στη σειρά!', 5: 'Πέντε στη σειρά!', 7: 'Επτά στη σειρά!', 10: 'Το δέκα το καλό' } as Record<number, string>,
     rewards: {
       freeze: 'Πάρε και μια Ασφάλεια για τις δύσκολες μέρες',
-      frame: 'Κορνίζα «{name}»',
-      both: 'Ασφάλεια και κορνίζα',
+      frame: 'Frame «{name}»',
+      both: 'Ασφάλεια και Frame',
       gear: '«{name}» για τον παίκτη σου',
       /** two milestones in one go (3 and 5 from one batch of results): every gift, joined */
-      short: { freeze: 'Ασφάλεια', frame: 'Κορνίζα «{name}»', gear: '{name}' },
+      short: { freeze: 'Ασφάλεια', frame: 'Frame «{name}»', gear: '{name}' },
       join: ' + ',
       none: 'Συνέχισε έτσι',
     },
@@ -1373,9 +1377,9 @@ export const el = {
     background: 'Φόντο',
     got: 'Το κέρδισες',
     cosmetics: { bg_night: 'Βραδινό ματς', bg_clay: 'Χωμάτινο γήπεδο', bg_grass: 'Γρασίδι', frame_week: 'Της εβδομάδας', frame_friends: 'Παρέα' } as Record<string, string>,
-    rewardFrame: 'Frame {name}',
-    rewardBackground: 'Φόντο {name}',
-    rewardBadge: '+{n} στο badge {name}',
+    rewardFrame: 'Frame «{name}»',
+    rewardBackground: 'Φόντο «{name}»',
+    rewardBadge: '+{n} προς το badge «{name}»',
     toast: 'Αποστολή ✓ · {reward}',
     celebrationOne: 'Αποστολή ✓',
     celebrationMany: 'Αποστολές ✓',
@@ -1460,6 +1464,18 @@ export const el = {
       season_veteran: 'Βετεράνος σεζόν',
       month_top: 'Κορυφαίος του μήνα',
     } as Record<string, string>,
+    /** the same names for a woman; a badge missing here reads the same for everyone */
+    namesF: {
+      nice_player: 'Ωραία η παίχτρια',
+      gentleman: 'Η ευγενική',
+      beloved: 'Αγαπητή',
+      club_oracle: 'Μάντισσα του κλαμπ',
+      doubles_player: 'Η διπλίστρια',
+      steady: 'Σταθερή',
+      generous: 'Χουβαρντού',
+      season_veteran: 'Βετεράνα σεζόν',
+      month_top: 'Κορυφαία του μήνα',
+    } as Record<string, string>,
     /** the rule line: «5 / 25 / 100 {unit}» */
     units: {
       first_serve: 'ματς καταγεγραμμένα',
@@ -1478,6 +1494,18 @@ export const el = {
       generous: 'φορές που κέρασες',
       season_veteran: 'σεζόν με ενεργή δραστηριότητα',
       month_top: 'μήνες στην πρώτη τριάδα',
+    } as Record<string, string>,
+    /** the unit when the tier's count is 1 (only the badges whose first tier is 1) */
+    unitsOne: {
+      first_serve: 'ματς καταγεγραμμένο',
+      nice_player: 'αντίπαλος που επιβεβαίωσε το ματς σου',
+      upset: 'ανατροπή που είπες σωστά',
+      influencer: 'φίλος που έγινε μέλος και έπαιξε ματς',
+      whole_week: 'βδομάδα με ψήφο και τις 7 ημέρες',
+      doubles_player: 'διπλό ματς με επιβεβαίωση συμπαίκτη',
+      generous: 'φορά που κέρασες',
+      season_veteran: 'σεζόν με ενεργή δραστηριότητα',
+      month_top: 'μήνας στην πρώτη τριάδα',
     } as Record<string, string>,
     celebrationNew: 'Νέο badge',
     celebrationTier: 'Νέα βαθμίδα',

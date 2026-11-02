@@ -559,6 +559,11 @@ function meInitials(raw: MeResult, email: string | undefined): string {
   return initials(email);
 }
 
+/** the signed-in player's gender from the shared get_me (null when unknown); reads only, never fetches */
+export function useMyGender(): 'm' | 'f' | null {
+  return useSyncExternalStore(subscribeMe, currentMe, currentMe)?.profile.gender ?? null;
+}
+
 /** Streak and total points for the header. Null while loading in live mode. */
 export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | null; refresh: (opts?: MeRefresh) => Promise<void> } {
   const api = useApi();

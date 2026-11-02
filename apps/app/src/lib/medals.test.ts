@@ -49,11 +49,12 @@ describe('the month close moment', () => {
   });
 
   it('names the medal when there is one', () => {
-    expect(leagueCelebrationView(moment({ medal: 1 }), el).reward).toBe('Χρυσό μετάλλιο, Frame και badge');
+    expect(leagueCelebrationView(moment({ medal: 1 }), el).reward).toBe('Χρυσό μετάλλιο, Frame και badge · Ανεβαίνεις στην Ασημένια');
+    expect(leagueCelebrationView(moment({ medal: 3, movement: 'stay' }), el).reward).toBe('Χάλκινο μετάλλιο, Frame και badge');
   });
 
   it('keeps the old line for moments from before the medals', () => {
-    expect(leagueCelebrationView(moment({}), el).reward).toBe(el.ladder.league.award);
+    expect(leagueCelebrationView(moment({}), el).reward).toBe('Frame Κορυφαίος του μήνα και badge · Ανεβαίνεις στην Ασημένια');
   });
 
   it('staff on top get the next month line, no prize', () => {

@@ -9,10 +9,10 @@ const [log] = mockQuests().weekly as [QuestRow, QuestRow];
 
 describe('quests copy helpers', () => {
   it('names the reward the prototype way', () => {
-    expect(rewardLine(votes.reward, copy)).toBe('+5 στο badge Πολλά τα ψηφαλάκια');
-    expect(rewardLine(matches.reward, copy)).toBe('Φόντο Βραδινό ματς');
-    expect(rewardLine(log.reward, copy)).toBe('Frame Της εβδομάδας');
-    expect(toastLine(kudos.reward, copy)).toBe('Αποστολή ✓ · +1 στο badge Ο ευγενικός');
+    expect(rewardLine(votes.reward, copy)).toBe('+5 προς το badge «Πολλά τα ψηφαλάκια»');
+    expect(rewardLine(matches.reward, copy)).toBe('Φόντο «Βραδινό ματς»');
+    expect(rewardLine(log.reward, copy)).toBe('Frame «Της εβδομάδας»');
+    expect(toastLine(kudos.reward, copy)).toBe('Αποστολή ✓ · +1 προς το badge «Ο ευγενικός»');
   });
   it('chips: kind of reward, badge name, or done', () => {
     expect(chipText(votes, copy)).toBe('Πολλά τα ψηφαλάκια');
@@ -44,6 +44,6 @@ describe('feedbackAfterVote', () => {
   });
   it('a finished quest gives a toast, never the bar too', () => {
     const f = feedbackAfterVote(before, bump('daily_vote_3_cards', 3, true), copy);
-    expect(f).toEqual({ kind: 'toast', text: 'Αποστολή ✓ · +5 στο badge Πολλά τα ψηφαλάκια' });
+    expect(f).toEqual({ kind: 'toast', text: 'Αποστολή ✓ · +5 προς το badge «Πολλά τα ψηφαλάκια»' });
   });
 });

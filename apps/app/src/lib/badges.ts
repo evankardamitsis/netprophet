@@ -3,6 +3,9 @@ import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { colors } from '@netprophet/tokens';
 import { fmt } from './votes';
 
+/** the signed-in player's gender, as get_me gives it */
+export type Gender = 'm' | 'f' | null | undefined;
+
 export type BadgeSnapshot = Pick<GetBadgesResult, 'badges'>;
 
 const at = (b: BadgeRow, i: number): number => (b.thresholds as number[])[i]!;
@@ -79,8 +82,9 @@ export function tierStyle(tier: number): TierStyle {
   }
 }
 
-export function badgeName(key: string, t: Copy): string {
-  return t.badges.names[key] ?? key;
+/** the badge's name; a woman gets the feminine form where the Greek has one (null or unknown gender: the usual form) */
+export function badgeName(key: string, t: Copy, gender?: Gender): string {
+  return (gender === 'f' ? t.badges.namesF[key] : undefined) ?? t.badges.names[key] ?? key;
 }
 
 export function tierName(tier: number, t: Copy): string {
