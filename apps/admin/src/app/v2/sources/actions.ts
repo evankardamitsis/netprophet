@@ -47,6 +47,9 @@ export interface SourcePatch {
   /** the tournament is over: the app shows only its draws */
   finished?: boolean;
   season_start_year?: number | null;
+  /** yyyy-mm-dd, or '' to clear; the reads only ever widen them to cover the matches they find */
+  starts_on?: string;
+  ends_on?: string;
   /** yyyy-mm-dd, or '' to clear */
   entry_deadline?: string;
   /** '' clears */
@@ -59,12 +62,14 @@ const ENTRY_LINK_INVALID = 'The entry link must be a web address (https://...).'
 const entryFail = (e: unknown): ActionResult<never> =>
   e instanceof Error && e.message.includes('entry_link_invalid') ? { ok: false, message: ENTRY_LINK_INVALID } : fail(e);
 
-/** Add a tournament from the three things that matter: name, surface and the links. Dates fill themselves from the sheet. */
+/** Add a tournament from the three things that matter: name, surface and the links. Dates are optional: the reads widen them to cover the matches they find. */
 export async function createTournament(input: {
   name: string;
   surface: string;
   source_url: string;
   draw_url: string;
+  starts_on?: string;
+  ends_on?: string;
   entry_deadline?: string;
   entry_link?: string;
 }): Promise<ActionResult<{ id: string }>> {
@@ -77,6 +82,8 @@ export async function createTournament(input: {
         draw_url: input.draw_url.trim(),
         source_kind: sourceKind(input.source_url),
         ongoing: true,
+        starts_on: input.starts_on ?? '',
+        ends_on: input.ends_on ?? '',
         entry_deadline: input.entry_deadline ?? '',
         entry_link: (input.entry_link ?? '').trim(),
       },

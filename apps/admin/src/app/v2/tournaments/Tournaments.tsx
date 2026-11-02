@@ -293,6 +293,8 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
   const [surface, setSurface] = useState('');
   const [url, setUrl] = useState('');
   const [drawUrl, setDrawUrl] = useState('');
+  const [startsOn, setStartsOn] = useState('');
+  const [endsOn, setEndsOn] = useState('');
   const [entryDeadline, setEntryDeadline] = useState('');
   const [entryLink, setEntryLink] = useState('');
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
@@ -312,7 +314,7 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
   const check = () =>
     start(async () => {
       setPhase({ kind: 'checking' });
-      const created = await createTournament({ name, surface, source_url: url, draw_url: drawUrl, entry_deadline: entryDeadline, entry_link: entryLink });
+      const created = await createTournament({ name, surface, source_url: url, draw_url: drawUrl, starts_on: startsOn, ends_on: endsOn, entry_deadline: entryDeadline, entry_link: entryLink });
       if (!created.ok || !created.data) {
         setPhase({ kind: 'failed', text: `We couldn’t save the tournament: ${created.message}` });
         return;
@@ -394,6 +396,14 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
           <input className="v2-input" value={drawUrl} disabled={locked} placeholder="https://docs.google.com/spreadsheets/d/..." onChange={(e) => setDrawUrl(e.target.value)} />
         </label>
         <label className="v2-field">
+          Starts (optional)
+          <input className="v2-input" type="date" value={startsOn} disabled={locked} onChange={(e) => setStartsOn(e.target.value)} />
+        </label>
+        <label className="v2-field">
+          Ends (optional)
+          <input className="v2-input" type="date" value={endsOn} min={startsOn || undefined} disabled={locked} onChange={(e) => setEndsOn(e.target.value)} />
+        </label>
+        <label className="v2-field">
           Entry deadline (optional)
           <input className="v2-input" type="date" value={entryDeadline} disabled={locked} onChange={(e) => setEntryDeadline(e.target.value)} />
         </label>
@@ -433,6 +443,8 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
   const [surface, setSurface] = useState(t.surface ?? '');
   const [url, setUrl] = useState(t.source_url ?? '');
   const [drawUrl, setDrawUrl] = useState(t.draw_url ?? '');
+  const [startsOn, setStartsOn] = useState(t.starts_on ?? '');
+  const [endsOn, setEndsOn] = useState(t.ends_on ?? '');
   const [entryDeadline, setEntryDeadline] = useState(t.entry_deadline ?? '');
   const [entryLink, setEntryLink] = useState(t.entry_link ?? '');
   const [untimedLock, setUntimedLock] = useState(t.untimed_lock_time ?? DEFAULT_UNTIMED_LOCK);
@@ -507,7 +519,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
 
   const save = () =>
     run('save', async () => {
-      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_url: drawUrl, entry_deadline: entryDeadline, entry_link: entryLink, untimed_lock_time: untimedLock });
+      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_url: drawUrl, starts_on: startsOn, ends_on: endsOn, entry_deadline: entryDeadline, entry_link: entryLink, untimed_lock_time: untimedLock });
       setNote(r.ok ? null : { tone: 'problem', title: 'Could not save', detail: r.message });
       if (r.ok) {
         notify('Saved');
@@ -629,6 +641,14 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             <input className="v2-input" value={drawUrl} onChange={(e) => setDrawUrl(e.target.value)} />
           </label>
           <label className="v2-field">
+            Starts
+            <input className="v2-input" type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
+          </label>
+          <label className="v2-field">
+            Ends
+            <input className="v2-input" type="date" value={endsOn} min={startsOn || undefined} onChange={(e) => setEndsOn(e.target.value)} />
+          </label>
+          <label className="v2-field">
             Entry deadline (optional)
             <input className="v2-input" type="date" value={entryDeadline} onChange={(e) => setEntryDeadline(e.target.value)} />
           </label>
@@ -641,7 +661,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             <input className="v2-input" type="time" step={60} value={untimedLock} onChange={(e) => setUntimedLock(e.target.value)} />
           </label>
           <div className="v2-row">
-            <Secondary small busy={busy === 'save'} disabled={!idle || name.trim() === '' || !validLockTime(untimedLock) || (t.ongoing && url.trim() === '' && drawUrl.trim() === '')} onClick={save}>
+            <Secondary small busy={busy === 'save'} disabled={!idle || name.trim() === '' || !validLockTime(untimedLock) || (startsOn !== '' && endsOn !== '' && endsOn < startsOn) || (t.ongoing && url.trim() === '' && drawUrl.trim() === '')} onClick={save}>
               {busy === 'save' ? 'Saving…' : 'Save'}
             </Secondary>
             <Ghost onClick={() => setEditing(false)} disabled={!idle}>
