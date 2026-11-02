@@ -610,6 +610,8 @@ export const en: Copy = {
     soundsLine: 'Little sounds from your Baller. Quiet when your phone is on silent.',
     reactionsPush: 'Reactions to your matches',
     reactionsPushLine: 'We tell you when someone reacts to one of your matches. At most one notification per match every 3 hours.',
+    newTournamentsPush: 'New tournaments',
+    newTournamentsPushLine: 'As soon as a new tournament comes in with its schedule. Never from 23:00 to 08:00.',
     followedPush: 'Tournaments you follow',
     followedPushLine: "The draw, tomorrow's schedule and the final. Never from 23:00 to 08:00.",
     medalEmail: 'Medal emails',

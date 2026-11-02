@@ -1910,7 +1910,7 @@ export function usePlayStyle(): PlayStyleState {
 }
 
 /** the switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs ('medal_email' is the winners' email) */
-export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed' | 'medal_email';
+export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed' | 'new_tournaments' | 'medal_email';
 
 export interface PushPrefsState {
   on: (key: PushPrefKey) => boolean;
