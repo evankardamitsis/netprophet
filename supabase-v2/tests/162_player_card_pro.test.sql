@@ -27,7 +27,7 @@ select tests.login(:'free'::uuid);
 select api.get_player_pro(:'them'::uuid) as f \gset
 select tests.logout();
 select is((:'f'::jsonb ->> 'pro')::boolean, false, 'free: not Pro');
-select is(:'f'::jsonb -> 'teaser' - 'surfaces', '{"matches": 3, "meetings": 1, "deciding": 1, "tiebreaks": 1}'::jsonb, 'free: the counts');
+select is((:'f'::jsonb -> 'teaser') - 'surfaces', '{"matches": 3, "meetings": 1, "deciding": 1, "tiebreaks": 1}'::jsonb, 'free: the counts');
 select is(:'f'::jsonb -> 'teaser' -> 'surfaces', '[{"surface": "clay", "matches": 1}]'::jsonb, 'free: matches per surface, no result');
 select ok(not (:'f'::jsonb ? 'player'), 'free: no report at all');
 select ok(:'f'::text !~ '"(won|w|l|history|h2h|singles|sets)"', 'free: no win, loss, set or history anywhere');
