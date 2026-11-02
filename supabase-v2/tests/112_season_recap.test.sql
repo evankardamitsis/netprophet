@@ -55,10 +55,10 @@ insert into core.match_results (match_id, winner_side, sets) values (:'m0'::uuid
 -- points, σερί and the Ladder group
 insert into core.points_ledger (user_id, delta, reason, ref_type, ref_id, month_key, idempotency_key, created_at) values
   (:'u'::uuid, 40, 'correct', 'match', gen_random_uuid(), :'mon', 'ss-1', now()),
-  (:'u'::uuid, 10, 'correct', 'match', gen_random_uuid(), :'prev', 'ss-2', now() - interval '40 days'),
+  (:'u'::uuid, 10, 'correct', 'match', gen_random_uuid(), :'prev', 'ss-2', (:'dp'::date + time '12:00') at time zone 'Europe/Athens'),
   (:'w'::uuid, 50, 'correct', 'match', gen_random_uuid(), :'mon', 'ss-3', now());
 insert into core.streak_events (user_id, streak_before, streak_after, kind, created_at) values
-  (:'u'::uuid, 3, 4, 'correct', now()), (:'u'::uuid, 1, 2, 'correct', now()), (:'u'::uuid, 9, 10, 'correct', now() - interval '40 days');
+  (:'u'::uuid, 3, 4, 'correct', now()), (:'u'::uuid, 1, 2, 'correct', now()), (:'u'::uuid, 9, 10, 'correct', (:'dp'::date + time '12:00') at time zone 'Europe/Athens');
 insert into core.leagues (month_key, tier, group_no) values (:'mon', 'silver', 77) returning id as lg \gset
 insert into core.league_members (league_id, user_id) values (:'lg'::uuid, :'u'::uuid), (:'lg'::uuid, :'w'::uuid);
 
