@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } fro
 import { greekCaps } from '@netprophet/copy';
 import type { QuestRow } from '@netprophet/db';
 import { useCopy } from '../i18n';
+import { useMyGender } from '../lib/data';
 import { useStgIn } from '../lib/motion';
 import { fraction, questTitle, rewardLine } from '../lib/quests';
 import { fmt } from '../lib/votes';
@@ -18,6 +19,7 @@ const BAR_DELAY = 300;
  */
 export function FollowQuestCard({ row }: { row: QuestRow }) {
   const t = useCopy();
+  const gender = useMyGender();
   const k = t.players.followQuest;
   const enter = useStgIn(450, 300);
   const fill = useSharedValue(0);
@@ -39,7 +41,7 @@ export function FollowQuestCard({ row }: { row: QuestRow }) {
       <Text style={styles.reward}>
         {row.reward.kind === 'cosmetic'
           ? fmt(k.rewardFrame, { name: t.quests.cosmetics[row.reward.key] ?? row.reward.key })
-          : fmt(k.reward, { reward: rewardLine(row.reward, t) })}
+          : fmt(k.reward, { reward: rewardLine(row.reward, t, gender) })}
       </Text>
       <Text style={styles.why}>{k.why}</Text>
     </Animated.View>

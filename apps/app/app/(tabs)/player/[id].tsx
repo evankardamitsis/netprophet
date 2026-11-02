@@ -15,7 +15,7 @@ import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { useClaimLater, useFollowQuest, useIsStaff, useMedals, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
+import { useClaimLater, useFollowQuest, useIsStaff, useMedals, useMyGender, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
 import { canClaimHere, claimHereLabel, claimHereToast } from '../../../src/lib/claimLater';
 import { toastLine } from '../../../src/lib/quests';
 import { fmt } from '../../../src/lib/votes';
@@ -33,6 +33,7 @@ const JPOP_MS = 400;
 
 export default function PlayerScreen() {
   const t = useCopy();
+  const gender = useMyGender();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile, loading, error, notFound, refresh, toggleFollow } = usePlayer(String(id));
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
@@ -56,7 +57,7 @@ export default function PlayerScreen() {
     if (outcome === 'followed' && before && !before.done) {
       // the follow quest moved: its count in the toast, or the reward when this was the 10th
       const row = await followQuest.refresh();
-      if (row?.done) text = toastLine(row.reward, t);
+      if (row?.done) text = toastLine(row.reward, t, gender);
       else if (row) text = fmt(t.players.followQuest.toast, { text, n: row.progress, total: row.target });
     }
     setToast((p) => ({ text, n: (p?.n ?? 0) + 1 }));

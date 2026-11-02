@@ -8,7 +8,7 @@ import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { badgeName, earned, leftLine, locked, moreLine, pct, pickSelected, ruleLine, tierOfLine, tierStyle, tileTierLine } from '../../src/lib/badges';
-import { useBadges } from '../../src/lib/data';
+import { useBadges, useMyGender } from '../../src/lib/data';
 import { usePress, useStgIn } from '../../src/lib/motion';
 import { alpha, colors, fonts, text } from '../../src/theme';
 
@@ -107,6 +107,7 @@ export default function BadgesScreen() {
 /** the big card for the selected badge */
 function SelectedCard({ b, worn, onWear }: { b: BadgeRow; worn: boolean; onWear: () => void }) {
   const t = useCopy();
+  const gender = useMyGender();
   const st = tierStyle(b.tier);
   const enter = useStgIn(STG_MS, 80);
   const press = usePress();
@@ -115,7 +116,7 @@ function SelectedCard({ b, worn, onWear }: { b: BadgeRow; worn: boolean; onWear:
       key={b.key}
       style={[styles.sel, { backgroundColor: b.tier === 0 ? colors.white : st.bg, borderColor: st.border, borderWidth: st.borderWidth, borderStyle: st.dashed ? 'dashed' : 'solid' }, enter]}
     >
-      <Text style={styles.selName}>{badgeName(b.key, t)}</Text>
+      <Text style={styles.selName}>{badgeName(b.key, t, gender)}</Text>
       <View style={styles.selTier}>
         <BadgeDots tier={b.tier} size={16} border={2} color={b.tier === 0 ? colors.muted : st.dot} gap={4} />
         <Text style={styles.selTierText}>{tierOfLine(b, t)}</Text>
@@ -155,10 +156,11 @@ function GridCell({ width, selected, i, onPress, children }: { width: number; se
 
 function EarnedTile({ b }: { b: BadgeRow }) {
   const t = useCopy();
+  const gender = useMyGender();
   const st = tierStyle(b.tier);
   return (
     <View style={[styles.tile, { backgroundColor: st.bg, borderColor: st.border, borderWidth: st.borderWidth }]}>
-      <Text style={[styles.tileName, { color: st.text }]}>{badgeName(b.key, t)}</Text>
+      <Text style={[styles.tileName, { color: st.text }]}>{badgeName(b.key, t, gender)}</Text>
       <View style={styles.tileFoot}>
         <BadgeDots tier={b.tier} size={11} border={2} color={st.dot} gap={3} />
         <Text style={[styles.tileTier, { color: st.text }]} numberOfLines={1}>
@@ -171,10 +173,11 @@ function EarnedTile({ b }: { b: BadgeRow }) {
 
 function LockedTile({ b }: { b: BadgeRow }) {
   const t = useCopy();
+  const gender = useMyGender();
   const st = tierStyle(0);
   return (
     <View style={[styles.tile, { borderColor: st.border, borderWidth: st.borderWidth, borderStyle: 'dashed' }]}>
-      <Text style={[styles.tileName, { color: st.text }]}>{badgeName(b.key, t)}</Text>
+      <Text style={[styles.tileName, { color: st.text }]}>{badgeName(b.key, t, gender)}</Text>
       <View style={styles.lockedFoot}>
         <GrowBar value={pct(b)} height={6} track={colors.navLine} fill={colors.muted} delay={300} />
         <Text style={styles.lockedLeft}>{moreLine(b, t)}</Text>

@@ -11,7 +11,7 @@ const tile = (tab: 'frame' | 'background' | 'kit', key: string | null) => findTi
 describe('tiles', () => {
   it('frames and backgrounds start with the «Χωρίς …» tile, kits do not', () => {
     expect(tilesFor(look, 'frame')[0]).toMatchObject({ key: null, item: null });
-    expect(tileName(tilesFor(look, 'frame')[0]!, t)).toBe('Χωρίς frame');
+    expect(tileName(tilesFor(look, 'frame')[0]!, t)).toBe('Χωρίς Frame');
     expect(tileName(tilesFor(look, 'background')[0]!, t)).toBe('Χωρίς φόντο');
     expect(tilesFor(look, 'kit')[0]!.key).toBe('kit_black');
     expect(tilesFor(look, 'kit')).toHaveLength(6);
@@ -111,7 +111,7 @@ describe('the button', () => {
   });
   it('the buy sheet: words and price, per kind', () => {
     const gold = look.items.find((i) => i.key === 'frame_gold')!;
-    expect(buySheetOf(gold, t)).toMatchObject({ title: 'Κορνίζα Χρυσό', price: '1,99 €', note: 'Μόνο στυλ. Δεν δείχνει πόσο καλός είσαι.' });
+    expect(buySheetOf(gold, t)).toMatchObject({ title: 'Frame Χρυσό', price: '1,99 €', note: 'Μόνο στυλ. Δεν δείχνει πόσο καλός είσαι.' });
     const hard = look.items.find((i) => i.key === 'bg_hard')!;
     expect(buySheetOf(hard, t)).toMatchObject({ title: 'Φόντο Σκληρό γήπεδο', price: '0,99 €' });
     const pack = look.items.find((i) => i.key === 'kit_grass')!;

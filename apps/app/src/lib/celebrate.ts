@@ -115,7 +115,7 @@ export function badgeCelebrationView(c: BadgeCelebration, t: Copy, gender?: Gend
 export function groupView(group: Celebration[], t: Copy, gender?: Gender): CelebrationView {
   const quests = group.filter(isQuest);
   if (quests.length > 0) {
-    const v = questCelebrationView(quests.map((q) => ({ quest: q.payload.quest, reward: q.payload.reward })), t);
+    const v = questCelebrationView(quests.map((q) => ({ quest: q.payload.quest, reward: q.payload.reward })), t, gender);
     return { label: greekCaps(v.label), streak: null, tier: null, title: v.title, reward: v.reward };
   }
   if (isLevel(group[0]!)) return levelCelebrationView(group[0], t);
@@ -154,7 +154,7 @@ export function streakGroupView(list: StreakCelebration[], t: Copy): Celebration
       gifts.push(fmt(r.short.gear, { name: t.celebrate.gear[g] ?? g }));
     }
   }
-  // one gift (or none, or the old «Ασφάλεια και κορνίζα» pair): the single milestone's own line
+  // one gift (or none, or the old «Ασφάλεια και Frame» pair): the single milestone's own line
   const view = celebrationView({ ...top, payload: { ...top.payload, reward: { freeze, frame, gear } } }, t);
   const pair = gifts.length === 2 && freeze && frame !== null;
   return gifts.length > 1 && !pair ? { ...view, reward: gifts.join(r.join) } : view;

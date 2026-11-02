@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { QUEST_BAR_MS } from '../components/QuestBar';
 import { TOAST_MS } from '../components/Toast';
 import { useCopy } from '../i18n';
-import { useBadges, useQuests, type VoteErrorKind } from './data';
+import { useBadges, useMyGender, useQuests, type VoteErrorKind } from './data';
 import { useHudActions } from './hud';
 import { currentMe } from './meStore';
 import { mayHaveCelebrated, voteBurst, type GameSnapshot } from './postVote';
@@ -55,6 +55,7 @@ interface Opts {
 
 export function useVotePath({ vote, pushNote, toast, onSettled }: Opts): (matchId: string, side: Side) => Promise<CardPct> {
   const t = useCopy();
+  const gender = useMyGender();
   const unlocks = useUnlocks();
   const unlocksNow = useRef(unlocks);
   unlocksNow.current = unlocks;
@@ -79,7 +80,7 @@ export function useVotePath({ vote, pushNote, toast, onSettled }: Opts): (matchI
       // quests and badges that are not open yet say nothing
       const { has } = unlocksNow.current;
       const f = after
-        ? feedbackAfterVote(before.quests && gateQuests(before.quests, has), gateQuests(after, has), t, has('badges_shelf') ? { before: before.badges, after: badgesAfter } : undefined)
+        ? feedbackAfterVote(before.quests && gateQuests(before.quests, has), gateQuests(after, has), t, has('badges_shelf') ? { before: before.badges, after: badgesAfter } : undefined, gender)
         : null;
       if (f?.kind === 'toast') toast(f.text);
       else if (f) pushNote({ kind: 'bar', bar: { title: f.title, from: f.from, to: f.to, progress: f.progress, target: f.target } }, QUEST_BAR_MS);

@@ -121,7 +121,7 @@ export type BadgeBar = { kind: 'bar'; title: string; from: number; to: number; p
  * After a vote: a badge whose counter went up and is now exactly one short of its next tier shows the slim bar,
  * filling from where it was. The first such badge in the server's order.
  */
-export function badgeBarFeedback(before: BadgeSnapshot | null, after: BadgeSnapshot | null, t: Copy): BadgeBar | null {
+export function badgeBarFeedback(before: BadgeSnapshot | null, after: BadgeSnapshot | null, t: Copy, gender?: Gender): BadgeBar | null {
   if (!after) return null;
   const was = new Map((before?.badges ?? []).map((b) => [b.key, b]));
   for (const b of after.badges) {
@@ -129,7 +129,7 @@ export function badgeBarFeedback(before: BadgeSnapshot | null, after: BadgeSnaps
     if (b.tier >= 3 || left(b) !== 1 || b.counter <= (prev?.counter ?? 0)) continue;
     return {
       kind: 'bar',
-      title: fmt(t.badges.oneMore, { name: badgeName(b.key, t) }),
+      title: fmt(t.badges.oneMore, { name: badgeName(b.key, t, gender) }),
       from: prev && prev.tier === b.tier ? pct(prev) : 0,
       to: pct(b),
       progress: b.counter,

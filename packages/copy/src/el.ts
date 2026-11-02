@@ -21,7 +21,7 @@ export const el = {
     league: {
       up: '↑ Ανεβαίνουν κατηγορία',
       down: '↓ Αλλάζουν κατηγορία',
-      foot: 'Οι 3 πρώτοι παίρνουν μετάλλιο, κορνίζα και badge.',
+      foot: 'Οι 3 πρώτοι παίρνουν μετάλλιο, Frame και badge.',
       /** full-screen moment: «ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ», «3ος», then the reward line */
       label: 'Κατάταξη · {tier}',
       award: 'Frame Κορυφαίος του μήνα και badge',
@@ -1556,10 +1556,10 @@ export const el = {
   },
   look: {
     title: 'Εμφάνιση',
-    sub: 'Κορνίζες, φόντα, ρούχα και ρακέτα',
+    sub: 'Frames, φόντα, ρούχα και ρακέτα',
     isNew: 'Νέο',
     back: '‹ Εγώ',
-    tabs: { frame: 'Κορνίζες', background: 'Φόντα', kit: 'Ρούχα & ρακέτα', gear: 'Αξεσουάρ', win_effect: 'Πανηγυρισμός' },
+    tabs: { frame: 'Frames', background: 'Φόντα', kit: 'Ρούχα & ρακέτα', gear: 'Αξεσουάρ', win_effect: 'Πανηγυρισμός' },
     /** style and name live with Baller now (founder, 17 Oct) */
     ballerLink: 'Ο Baller σου ›',
     swipe: 'Σύρε τον Baller για το επόμενο',
@@ -1576,7 +1576,7 @@ export const el = {
     priceSpaced: '{price} €',
     worn: 'Φοριέται',
     wear: 'Βάλ’ το',
-    noFrame: 'Χωρίς frame',
+    noFrame: 'Χωρίς Frame',
     noBackground: 'Χωρίς φόντο',
     noGear: 'Χωρίς αξεσουάρ',
     noEffect: 'Χωρίς πανηγυρισμό',
@@ -1594,7 +1594,7 @@ export const el = {
     buyShort: 'Αγόρασε',
     close: 'Κλείσιμο',
     sheet: {
-      frame: 'Κορνίζα {name}',
+      frame: 'Frame {name}',
       background: 'Φόντο {name}',
       kit: 'Ρούχα & ρακέτα',
       lineFrame: 'Γύρω από τον παίκτη σου στο Εγώ.',
