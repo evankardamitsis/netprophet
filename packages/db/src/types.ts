@@ -736,16 +736,16 @@ export type Database = {
         Args: { p_token: string };
         Returns: Json;
       };
-      get_medals: {
-        Args: { p_player_id?: string };
-        Returns: Json;
-      };
       get_me: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
       get_me_page: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_medals: {
+        Args: { p_player_id?: string };
         Returns: Json;
       };
       get_my_kudos: {
