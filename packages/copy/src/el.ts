@@ -446,7 +446,9 @@ export const el = {
     followQuest: {
       kicker: 'Αποστολή',
       count: '{n}/{total}',
-      reward: 'Με τον 10ο: {reward}',
+      /** founder, 2 Nov 2026: «Κέρδισε το Frame "Παρέα"»; a badge when the frame is already yours */
+      rewardFrame: 'Κέρδισε το Frame «{name}»',
+      reward: 'Κέρδισε {reward}',
       why: 'Όσους ακολουθείς τους βρίσκεις πρώτους στα τουρνουά, στους «δικούς σου».',
       /** the toast after a follow: «Μπήκε στους φίλους σου · 5/10» */
       toast: '{text} · {n}/{total}',

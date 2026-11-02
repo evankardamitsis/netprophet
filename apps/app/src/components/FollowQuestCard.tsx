@@ -36,7 +36,11 @@ export function FollowQuestCard({ row }: { row: QuestRow }) {
       <View style={styles.track}>
         <Animated.View style={[styles.fill, fillStyle]} />
       </View>
-      <Text style={styles.reward}>{fmt(k.reward, { reward: rewardLine(row.reward, t) })}</Text>
+      <Text style={styles.reward}>
+        {row.reward.kind === 'cosmetic'
+          ? fmt(k.rewardFrame, { name: t.quests.cosmetics[row.reward.key] ?? row.reward.key })
+          : fmt(k.reward, { reward: rewardLine(row.reward, t) })}
+      </Text>
       <Text style={styles.why}>{k.why}</Text>
     </Animated.View>
   );

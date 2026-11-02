@@ -384,7 +384,8 @@ export const en: Copy = {
     followQuest: {
       kicker: 'Mission',
       count: '{n}/{total}',
-      reward: 'At the 10th: {reward}',
+      rewardFrame: 'Win the "{name}" frame',
+      reward: 'Win {reward}',
       why: 'The players you follow come first in tournaments, under "Yours".',
       toast: '{text} · {n}/{total}',
     },
