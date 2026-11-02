@@ -3,9 +3,11 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
+import type { QuestRow } from '@netprophet/db';
 import { TrophyShelf } from '../../../src/components/TrophyShelf';
 import { PlayerTraits } from '../../../src/components/PlayerTraits';
 import { PlayerProCard } from '../../../src/components/PlayerProCard';
+import { FollowQuestCard } from '../../../src/components/FollowQuestCard';
 import { FitText } from '../../../src/components/FitText';
 import { LastMatchRow } from '../../../src/components/LastMatchRow';
 import { FormDots } from '../../../src/components/PlayerListRow';
@@ -13,8 +15,10 @@ import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { useClaimLater, useIsStaff, useMedals, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
+import { useClaimLater, useFollowQuest, useIsStaff, useMedals, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
 import { canClaimHere, claimHereLabel, claimHereToast } from '../../../src/lib/claimLater';
+import { toastLine } from '../../../src/lib/quests';
+import { fmt } from '../../../src/lib/votes';
 import { runJpop, useGrowIn, usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../../src/lib/motion';
 import type { ProfileView } from '../../../src/lib/players';
 import { colors, fonts } from '../../../src/theme';
@@ -36,6 +40,7 @@ export default function PlayerScreen() {
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
   const [claimReport, setClaimReport] = useState<{ id: string; own: boolean } | null>(null);
   const later = useClaimLater();
+  const followQuest = useFollowQuest();
   const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
@@ -45,8 +50,15 @@ export default function PlayerScreen() {
   }, [toast]);
 
   const onFollow = async () => {
+    const before = followQuest.row;
     const outcome: FollowOutcome = await toggleFollow();
-    const text = outcome === 'followed' ? t.players.followed : outcome === 'unfollowed' ? t.players.unfollowed : t.players.followFailed;
+    let text = outcome === 'followed' ? t.players.followed : outcome === 'unfollowed' ? t.players.unfollowed : t.players.followFailed;
+    if (outcome === 'followed' && before && !before.done) {
+      // the follow quest moved: its count in the toast, or the reward when this was the 10th
+      const row = await followQuest.refresh();
+      if (row?.done) text = toastLine(row.reward, t);
+      else if (row) text = fmt(t.players.followQuest.toast, { text, n: row.progress, total: row.target });
+    }
     setToast((p) => ({ text, n: (p?.n ?? 0) + 1 }));
   };
 
@@ -81,7 +93,7 @@ export default function PlayerScreen() {
         </Pressable>
         {profile ? (
           <>
-            <Profile key={profile.id} p={profile} onFollow={onFollow} onToast={(text) => setToast((q) => ({ text, n: (q?.n ?? 0) + 1 }))} />
+            <Profile key={profile.id} p={profile} followQuest={followQuest.row} onFollow={onFollow} onToast={(text) => setToast((q) => ({ text, n: (q?.n ?? 0) + 1 }))} />
             {!profile.isMe ? (
               <View style={styles.quiet}>
                 {/* nobody holds this player and the account has none: claim it now (staff approve) */}
@@ -120,7 +132,7 @@ export default function PlayerScreen() {
   );
 }
 
-function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => void; onToast: (text: string) => void }) {
+function Profile({ p, followQuest, onFollow, onToast }: { p: ProfileView; followQuest: QuestRow | null; onFollow: () => void; onToast: (text: string) => void }) {
   const t = useCopy();
   const traits = useTraits(p.id, null);
   // staff only: «Δες το σαν free», the card exactly as a free player gets it (founder, 2 Nov 2026)
@@ -161,6 +173,8 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
           <FormDots form={p.form} on={colors.lime} off={colors.inkLine} size={14} gap={5} baseDelay={450} />
         </Animated.View>
       </Animated.View>
+
+      {!p.isMe && followQuest && !followQuest.done ? <FollowQuestCard row={followQuest} /> : null}
 
       {p.claimed || p.isMe ? <TrophyShelf medals={medals} /> : null}
 

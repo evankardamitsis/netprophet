@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber, matchesLoosely } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type MonthMedal, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type QuestRow, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type MonthMedal, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -250,7 +250,7 @@ let mockQuestState: GetQuestsResult = mockQuests();
 function mockQuestVote() {
   const bump = (q: GetQuestsResult['daily'][number]) =>
     (q.key === 'daily_vote_3_cards' || q.key === 'daily_vote_2_matches') && !q.done ? { ...q, progress: q.progress + 1, done: q.progress + 1 >= q.target } : q;
-  mockQuestState = { daily: mockQuestState.daily.map(bump), weekly: mockQuestState.weekly };
+  mockQuestState = { ...mockQuestState, daily: mockQuestState.daily.map(bump) };
 }
 
 /* badges in mock mode: a returning player's; a vote counts toward «Πολλά τα ψηφαλάκια» like the server */
@@ -287,6 +287,23 @@ export function useQuests(): { quests: GetQuestsResult | null; refresh: () => Pr
     void refresh();
   }, [refresh]);
   return { quests, refresh };
+}
+
+/** «Ακολούθησε 10 παίκτες»: the one-off quest the player card shows until it is done; the guest's follows move it */
+export function useFollowQuest(): { row: QuestRow | null; refresh: () => Promise<QuestRow | null> } {
+  const { quests, refresh: refreshAll } = useQuests();
+  const pick = (q: GetQuestsResult | null) => q?.once?.find((r) => r.key === 'follow_10_players') ?? null;
+  const refresh = useCallback(async () => pick(await refreshAll()), [refreshAll]);
+  return { row: pick(quests), refresh };
+}
+
+/* mock mode: a follow or an unfollow moves the guest's follow quest, never down (like the server's count) */
+export function mockFollowQuest(followed: boolean) {
+  if (!followed) return;
+  const once = (mockQuestState.once ?? []).map((q) =>
+    q.key === 'follow_10_players' && !q.done ? { ...q, progress: q.progress + 1, done: q.progress + 1 >= q.target } : q,
+  );
+  mockQuestState = { ...mockQuestState, once };
 }
 
 export type QuizErrorKind = 'failed' | 'expired';
@@ -1542,7 +1559,10 @@ export function usePlayer(id: string): PlayerState {
     if (!raw) return 'failed';
     const on = !raw.is_followed;
     setRaw({ ...raw, is_followed: on });
-    if (!api) return on ? 'followed' : 'unfollowed';
+    if (!api) {
+      mockFollowQuest(on);
+      return on ? 'followed' : 'unfollowed';
+    }
     try {
       if (on) await api.followPlayer(raw.id, 'friend', 'profile');
       else await api.unfollowPlayer(raw.id);

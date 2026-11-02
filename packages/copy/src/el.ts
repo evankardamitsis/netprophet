@@ -442,6 +442,15 @@ export const el = {
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
     notFound: 'Αυτός ο παίκτης δεν φαίνεται πια.',
     followFailed: 'Δεν έγινε. Ξαναδοκίμασε.',
+    /** «Ακολούθησε 10 παίκτες» on the player card until it is done (founder, 2 Nov 2026) */
+    followQuest: {
+      kicker: 'Αποστολή',
+      count: '{n}/{total}',
+      reward: 'Με τον 10ο: {reward}',
+      why: 'Όσους ακολουθείς τους βρίσκεις πρώτους στα τουρνουά, στους «δικούς σου».',
+      /** the toast after a follow: «Μπήκε στους φίλους σου · 5/10» */
+      toast: '{text} · {n}/{total}',
+    },
     /** an unclaimed player's profile, for an account with no player and no open request: the usual claim, staff approve */
     claimMe: { m: 'Αυτός είμαι εγώ', f: 'Αυτή είμαι εγώ' },
   },
@@ -1356,11 +1365,12 @@ export const el = {
       daily_vote_2_matches: 'Ψήφισε σε 2 ματς',
       weekly_log_2_matches: 'Πέρνα 2 αγώνες σου',
       weekly_vote_5_days: 'Ψήφισε 5 μέρες την εβδομάδα',
+      follow_10_players: 'Ακολούθησε 10 παίκτες',
     } as Record<string, string>,
     frame: 'Frame',
     background: 'Φόντο',
     got: 'Το κέρδισες',
-    cosmetics: { bg_night: 'Βραδινό ματς', bg_clay: 'Χωμάτινο γήπεδο', bg_grass: 'Γρασίδι', frame_week: 'Της εβδομάδας', frame_friends: 'Φίλοι' } as Record<string, string>,
+    cosmetics: { bg_night: 'Βραδινό ματς', bg_clay: 'Χωμάτινο γήπεδο', bg_grass: 'Γρασίδι', frame_week: 'Της εβδομάδας', frame_friends: 'Παρέα' } as Record<string, string>,
     rewardFrame: 'Frame {name}',
     rewardBackground: 'Φόντο {name}',
     rewardBadge: '+{n} στο badge {name}',

@@ -55,7 +55,16 @@ export const INVITE_QUEST: QuestDef = {
   reward: { cosmeticIds: ['frame_friends'], badgeId: 'influencer', badgeAmount: 1 },
 };
 
-export const ALL_QUESTS: readonly QuestDef[] = [...DAILY_QUESTS, ...WEEKLY_QUESTS, INVITE_QUEST];
+/** Follow 10 players, once: the circle that makes the app yours (founder, 2 Nov 2026). Progress is how many you follow. */
+export const FOLLOW_QUEST: QuestDef = {
+  id: 'follow_10_players',
+  window: 'lifetime',
+  target: 10,
+  triggers: [{ event: 'players_followed', mode: 'count' }],
+  reward: { cosmeticIds: ['frame_friends'], badgeId: 'influencer', badgeAmount: 1 },
+};
+
+export const ALL_QUESTS: readonly QuestDef[] = [...DAILY_QUESTS, ...WEEKLY_QUESTS, INVITE_QUEST, FOLLOW_QUEST];
 
 export function windowKeyFor(window: QuestWindow, at: Instant): string {
   if (window === 'daily') return dayKey(at);
@@ -128,6 +137,8 @@ export function applyQuestEvent(
         days = [...days, day];
         current += 1;
       }
+    } else if (trigger.mode === 'count') {
+      current = Math.max(current, event.value ?? 0);
     } else {
       current = Math.max(current, trigger.value ?? 0);
     }

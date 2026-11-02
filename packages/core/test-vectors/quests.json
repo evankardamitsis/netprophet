@@ -855,6 +855,151 @@
             "completed": []
           },
           "name": "invite: sent after done does not go backwards"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "follow_10_players",
+                "window": "lifetime",
+                "target": 10,
+                "triggers": [
+                  {
+                    "event": "players_followed",
+                    "mode": "count"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "follow_10_players",
+                "windowKey": "all",
+                "current": 4,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "players_followed",
+              "at": "2026-11-02T10:00:00Z",
+              "value": 7
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "follow_10_players",
+                "windowKey": "all",
+                "current": 7,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "follow_10_players",
+                "from": 4,
+                "to": 7,
+                "target": 10
+              }
+            ],
+            "completed": []
+          }
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "follow_10_players",
+                "window": "lifetime",
+                "target": 10,
+                "triggers": [
+                  {
+                    "event": "players_followed",
+                    "mode": "count"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "follow_10_players",
+                "windowKey": "all",
+                "current": 7,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "players_followed",
+              "at": "2026-11-02T11:00:00Z",
+              "value": 6
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "follow_10_players",
+                "windowKey": "all",
+                "current": 7,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [],
+            "completed": []
+          }
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "follow_10_players",
+                "window": "lifetime",
+                "target": 10,
+                "triggers": [
+                  {
+                    "event": "players_followed",
+                    "mode": "count"
+                  }
+                ]
+              }
+            ],
+            "stored": [],
+            "event": {
+              "type": "players_followed",
+              "at": "2026-11-02T12:00:00Z",
+              "value": 14
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "follow_10_players",
+                "windowKey": "all",
+                "current": 10,
+                "days": [],
+                "doneAt": "2026-11-02T12:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "follow_10_players",
+                "from": 0,
+                "to": 10,
+                "target": 10
+              }
+            ],
+            "completed": [
+              "follow_10_players"
+            ]
+          }
         }
       ]
     }
