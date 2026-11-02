@@ -65,12 +65,24 @@ export function feedbackAfterVote(
   return { kind: 'bar', title: questTitle(q.key, t), from: fraction(was.get(q.key) ?? { progress: 0, target: q.target }), to: fraction(q), progress: q.progress, target: q.target };
 }
 
+/** the lines for several rewards: the same badge sums into one line (5 + 3 is «+8 …»), a repeated cosmetic shows once */
+export function rewardLines(rewards: QuestReward[], t: Copy): string[] {
+  const merged: QuestReward[] = [];
+  for (const r of rewards) {
+    const same = merged.findIndex((m) => m.kind === r.kind && m.key === r.key);
+    const m = merged[same];
+    if (m && m.kind === 'badge' && r.kind === 'badge') merged[same] = { ...m, amount: m.amount + r.amount };
+    else if (same < 0) merged.push(r);
+  }
+  return merged.map((r) => rewardLine(r, t));
+}
+
 /** the quest celebrations queued together, as one: label, title, reward lines joined */
 export function questCelebrationView(rewards: { quest: string; reward: QuestReward }[], t: Copy): { label: string; title: string; reward: string } {
   const one = rewards.length === 1;
   return {
     label: one ? t.quests.celebrationOne : t.quests.celebrationMany,
     title: one ? questTitle(rewards[0]!.quest, t) : fmt(t.quests.titleMany, { n: rewards.length }),
-    reward: rewards.map((r) => rewardLine(r.reward, t)).join(' · '),
+    reward: rewardLines(rewards.map((r) => r.reward), t).join(' · '),
   };
 }

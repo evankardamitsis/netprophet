@@ -7,7 +7,7 @@ import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import { router } from 'expo-router';
 import { celebrationTitleSize, groupView, isLeague, isLevel } from '../lib/celebrate';
-import { useMyBaller } from '../lib/data';
+import { useMyBaller, useMyGender } from '../lib/data';
 import { colors, fonts, motion } from '../theme';
 import { LEVEL_UP_AT } from '../lib/levelUp';
 import { useEntrance, useFadeUpIn, useSlamIn } from '../lib/motion';
@@ -32,7 +32,7 @@ const DIM_IN = { from: { opacity: 0 }, to: { opacity: 1 } };
 
 export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDone: () => void }) {
   const t = useCopy();
-  const v = groupView(items, t);
+  const v = groupView(items, t, useMyGender());
   // the month closed: «Η σεζόν σου ›» opens that month's recap (a quiet link; «Συνέχεια» stays the one blue)
   const league = items[0] && isLeague(items[0]) ? items[0].payload.month : null;
   const titleSize = celebrationTitleSize(v.title);

@@ -123,14 +123,16 @@ export function boardItems(ladder: Ladder, t: Copy): BoardItem[] {
 }
 
 /** the month-close moment: «ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ», «3ος», then the Frame and badge or next month's league */
-export function leagueCelebrationView(c: LeagueCelebration, t: Copy): { label: string; title: string; reward: string } {
+export function leagueCelebrationView(c: LeagueCelebration, t: Copy, gender?: 'm' | 'f' | null): { label: string; title: string; reward: string } {
   const l = t.ladder;
   const p = c.payload;
+  // a medal or the award on the way up says the move too: «Χρυσό μετάλλιο, Frame και badge · Ανεβαίνεις στην Ασημένια»
+  const up = p.movement === 'promote' ? ` · ${fmt(l.league.moveUp, { tier: l.tiers[p.next_tier] })}` : '';
   return {
     label: fmt(l.league.label, { tier: l.tiers[p.tier] }),
-    title: fmt(l.position, { n: p.position }),
+    title: fmt(gender === 'f' ? l.positionF : l.position, { n: p.position }),
     // a month medal (2 Nov 2026) names itself first: «Χρυσό μετάλλιο, Frame και badge»
-    reward: p.medal ? fmt(l.league.medalAward, { medal: medalName(p.medal, t) }) : p.award ? l.league.award : fmt(l.league.next, { tier: l.tiers[p.next_tier] }),
+    reward: p.medal ? fmt(l.league.medalAward, { medal: medalName(p.medal, t) }) + up : p.award ? l.league.award + up : fmt(l.league.next, { tier: l.tiers[p.next_tier] }),
   };
 }
 

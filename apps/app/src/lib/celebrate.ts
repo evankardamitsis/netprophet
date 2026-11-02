@@ -10,7 +10,7 @@ import type {
   StreakCelebration,
   UnlockCelebration,
 } from '@netprophet/db';
-import { badgeName } from './badges';
+import { badgeName, type Gender } from './badges';
 import { questCelebrationView } from './quests';
 import { leagueCelebrationView } from './ladder';
 import { hasMoment } from './unlockLadder';
@@ -83,8 +83,8 @@ export function unlockCelebrationView(c: UnlockCelebration, t: Copy): Celebratio
 }
 
 /** the month closed: «ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ», «3ος», then the Frame and badge or next month's league */
-export function leagueView(c: LeagueCelebration, t: Copy): CelebrationView {
-  const v = leagueCelebrationView(c, t);
+export function leagueView(c: LeagueCelebration, t: Copy, gender?: Gender): CelebrationView {
+  const v = leagueCelebrationView(c, t, gender);
   return { label: greekCaps(v.label), streak: null, tier: null, title: v.title, reward: v.reward };
 }
 
@@ -94,33 +94,34 @@ export function celebrationTitleSize(title: string): number {
 }
 
 /** «Νέο badge» / «Νέα βαθμίδα», the badge's name, then «Βαθμίδα Χάλκινο» (gold also names the Frame Level) */
-export function badgeCelebrationView(c: BadgeCelebration, t: Copy): CelebrationView {
+export function badgeCelebrationView(c: BadgeCelebration, t: Copy, gender?: Gender): CelebrationView {
   const { badge, tier } = c.payload;
   const tierName = t.badges.tiers[tier - 1] ?? '';
-  // «Στη σειρά» counts your best σερί: the tier names its number («Χάλκινη Βαθμίδα · 5 σωστές ψήφοι στη σειρά»), so
-  // it never reads as the σερί you have now
-  const at = badge === 'in_a_row' ? BADGES.find((d) => d.id === badge)?.thresholds[tier - 1] : undefined;
+  // every tier names its count («Χάλκινη Βαθμίδα · 1 μήνας στην πρώτη τριάδα»), so a tier never reads as a medal and
+  // «Στη σειρά» never reads as the σερί you have now; a count of 1 takes the singular unit
+  const at = BADGES.find((d) => d.id === badge)?.thresholds[tier - 1];
+  const unit = at === 1 ? t.badges.unitsOne[badge] : t.badges.units[badge];
   const base = fmt(tier >= 3 ? t.badges.rewardGold : t.badges.reward, { tier: tierName });
   return {
     label: greekCaps(c.payload.new ? t.badges.celebrationNew : t.badges.celebrationTier),
     streak: null,
     tier,
-    title: badgeName(badge, t),
-    reward: at === undefined ? base : fmt(t.badges.rewardAt, { tier: base, n: at, unit: t.badges.units[badge] ?? '' }),
+    title: badgeName(badge, t, gender),
+    reward: at === undefined || !unit ? base : fmt(t.badges.rewardAt, { tier: base, n: at, unit }),
   };
 }
 
 /** the same full-screen moment for a group: quests without the pill (prototype), a σερί milestone with it */
-export function groupView(group: Celebration[], t: Copy): CelebrationView {
+export function groupView(group: Celebration[], t: Copy, gender?: Gender): CelebrationView {
   const quests = group.filter(isQuest);
   if (quests.length > 0) {
     const v = questCelebrationView(quests.map((q) => ({ quest: q.payload.quest, reward: q.payload.reward })), t);
     return { label: greekCaps(v.label), streak: null, tier: null, title: v.title, reward: v.reward };
   }
   if (isLevel(group[0]!)) return levelCelebrationView(group[0], t);
-  if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t);
+  if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t, gender);
   if (isUnlock(group[0]!)) return unlockCelebrationView(group[0], t);
-  if (isLeague(group[0]!)) return leagueView(group[0], t);
+  if (isLeague(group[0]!)) return leagueView(group[0], t, gender);
   // a milestone in the group wins; a record alone plays its own moment, the highest if a batch brought two
   const milestones = group.filter(isStreak);
   if (milestones.length > 0) return streakGroupView(milestones, t);
