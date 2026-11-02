@@ -1,13 +1,13 @@
--- Earned cosmetics are earnable: every active earned item has a way in, Φίλοι (no way in until invites) is off the
--- wardrobe, a quest can only give an item the wardrobe shows, and the weekly quests land their frame and background.
--- Πρώτη γενιά came back on 22 Oct with its rule (Pro «Ιδρυτικό μέλος» by 31/12, 150_cosmetics_decisions).
+-- Earned cosmetics are earnable: every active earned item has a way in, a quest can only give an item the wardrobe
+-- shows, and the weekly quests land their frame and background. Πρώτη γενιά came back on 22 Oct with its rule (Pro
+-- «Ιδρυτικό μέλος» by 31/12, 150_cosmetics_decisions); Φίλοι came back on 2 Nov as Παρέα, with «Ακολούθησε 10 παίκτες».
 \set ON_ERROR_STOP on
 begin;
 select plan(12);
 
--- Φίλοι is off until invites ship; Πρώτη γενιά is on again (the store gives it)
+-- both are on again: Πρώτη γενιά (the store gives it) and Παρέα (the follow quest gives it)
 select is((select array_agg(key order by key) from core.cosmetic_items where key in ('frame_founding', 'frame_friends') and not active),
-          array['frame_friends'], 'Φίλοι is off until something gives it, Πρώτη γενιά is back');
+          null::text[], 'Πρώτη γενιά and Παρέα are both in the wardrobe');
 
 -- every active earned item is given by something: a σερί milestone, a badge, the month close, Pro «Ιδρυτικό μέλος»
 -- (api.apply_store_event) or an active quest
@@ -32,9 +32,10 @@ select is((select count(*)::int from core.quest_defs q, jsonb_array_elements_tex
 -- the wardrobe
 select tests.create_user('ec-u@test.local') as u \gset
 select tests.login(:'u'::uuid);
-select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'key' = 'frame_friends'),
-          0, 'the wardrobe does not show Φίλοι');
-select throws_ok($$select api.equip_item('frame', 'frame_friends')$$, 'P0002', 'not_found', 'and it cannot be worn');
+select is((select i ->> 'owned' from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'key' = 'frame_friends'),
+          'false', 'the wardrobe shows Παρέα, not owned yet');
+select is((select i ->> 'earn_rule' from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'key' = 'frame_friends'),
+          'Το κερδίζεις όταν ακολουθήσεις 10 παίκτες', 'and says how to earn it');
 select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i
             where i ->> 'kind' = 'earned' and (i ->> 'price_eur' is not null or coalesce(i ->> 'earn_rule', '') = '')),
           0, 'earned items reach the app with their rule and no price');

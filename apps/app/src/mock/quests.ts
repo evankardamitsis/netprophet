@@ -4,6 +4,7 @@ import type { GetQuestsResult } from '@netprophet/db';
  * the first vote shows the slim bar, the second finishes both vote quests (the toast) */
 export function mockQuests(): GetQuestsResult {
   return {
+    once: [{ key: 'follow_10_players', target: 10, progress: 3, done: false, reward: { kind: 'cosmetic', key: 'frame_friends', category: 'frame' } }],
     daily: [
       { key: 'daily_vote_3_cards', target: 3, progress: 1, done: false, reward: { kind: 'badge', key: 'many_votes', amount: 5 } },
       { key: 'daily_kudos_1', target: 1, progress: 0, done: false, reward: { kind: 'badge', key: 'gentleman', amount: 1 } },

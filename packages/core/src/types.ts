@@ -153,17 +153,23 @@ export type QuestEventType =
   | 'match_logged'
   | 'active_day'
   | 'friend_invited'
-  | 'friend_activated';
+  | 'friend_activated'
+  | 'players_followed';
 
 export interface QuestEvent {
   type: QuestEventType;
   at: Instant;
+  /** count triggers: the number as it is now (e.g. how many players you follow) */
+  value?: number;
 }
 
 export type QuestTrigger = {
   event: QuestEventType;
-  /** inc: +1 per event. distinct_day: +1 per different Athens day. at_least: progress becomes max(progress, value). */
-  mode: 'inc' | 'distinct_day' | 'at_least';
+  /**
+   * inc: +1 per event. distinct_day: +1 per different Athens day. at_least: progress becomes max(progress, value).
+   * count: progress becomes max(progress, the event's value), so an unfollow and a follow again never count twice.
+   */
+  mode: 'inc' | 'distinct_day' | 'at_least' | 'count';
   value?: number;
 };
 

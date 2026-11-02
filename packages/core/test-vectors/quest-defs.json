@@ -8,6 +8,7 @@
     { "id": "daily_vote_2_matches", "window": "daily", "target": 2, "triggers": [{ "event": "vote_match", "mode": "inc" }], "reward": { "cosmeticIds": ["bg_night", "bg_clay"], "badgeId": "many_votes", "badgeAmount": 3 } },
     { "id": "weekly_log_2_matches", "window": "weekly", "target": 2, "triggers": [{ "event": "match_logged", "mode": "inc" }], "reward": { "cosmeticIds": ["frame_week"], "badgeId": "first_serve", "badgeAmount": 1 } },
     { "id": "weekly_vote_5_days", "window": "weekly", "target": 5, "triggers": [{ "event": "active_day", "mode": "distinct_day" }], "reward": { "cosmeticIds": ["bg_grass"], "badgeId": "many_votes", "badgeAmount": 5 } },
-    { "id": "invite_friend", "window": "lifetime", "target": 2, "triggers": [{ "event": "friend_invited", "mode": "at_least", "value": 1 }, { "event": "friend_activated", "mode": "at_least", "value": 2 }], "reward": { "cosmeticIds": ["frame_friends"], "badgeId": "influencer", "badgeAmount": 1 } }
+    { "id": "invite_friend", "window": "lifetime", "target": 2, "triggers": [{ "event": "friend_invited", "mode": "at_least", "value": 1 }, { "event": "friend_activated", "mode": "at_least", "value": 2 }], "reward": { "cosmeticIds": ["frame_friends"], "badgeId": "influencer", "badgeAmount": 1 } },
+    { "id": "follow_10_players", "window": "lifetime", "target": 10, "triggers": [{ "event": "players_followed", "mode": "count" }], "reward": { "cosmeticIds": ["frame_friends"], "badgeId": "influencer", "badgeAmount": 1 } }
   ]
 }

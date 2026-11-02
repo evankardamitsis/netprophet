@@ -172,10 +172,11 @@ export interface QuestRow {
   reward: QuestReward;
 }
 
-/** api.get_quests: today's quests and this week's */
+/** api.get_quests: today's quests and this week's, and the one-off ones (e.g. «Ακολούθησε 10 παίκτες») */
 export interface GetQuestsResult {
   daily: QuestRow[];
   weekly: QuestRow[];
+  once?: QuestRow[];
 }
 
 /** «Οι ερωτήσεις της ημέρας»: a player named on a card; the text tokens {p1}, {p1.o}, {p1.ton}... refer to players[0] */
