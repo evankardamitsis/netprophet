@@ -17,7 +17,7 @@ import { ScoutReport } from './ScoutReport';
  * the result of each locked, one paper button on ink (the screen's blue stays free). Shown on every visit, not only
  * once a day: this is where the player looks. Nothing on your own card.
  */
-export function PlayerProCard({ state, first, gender }: { state: PlayerProState; first: string; gender: 'm' | 'f' | null }) {
+export function PlayerProCard({ state, first, gender, preview = false }: { state: PlayerProState; first: string; gender: 'm' | 'f' | null; preview?: boolean }) {
   const t = useCopy();
   const enter = useStgIn(motion.revealDur, 200);
   if (state.kind === 'pro') {
@@ -36,17 +36,18 @@ export function PlayerProCard({ state, first, gender }: { state: PlayerProState;
   if (state.kind !== 'free') return null;
   const rows = teaserRows(state.teaser, state.hasPlayer, t);
   if (rows.length === 0) return null;
-  return <Teaser rows={rows} title={teaserTitle(first, gender, t)} />;
+  return <Teaser rows={rows} title={teaserTitle(first, gender, t)} preview={preview} />;
 }
 
-function Teaser({ rows, title }: { rows: TeaserRow[]; title: string }) {
+/** preview: staff looking as free, so the trial line shows as a new free player sees it */
+function Teaser({ rows, title, preview }: { rows: TeaserRow[]; title: string; preview: boolean }) {
   const t = useCopy();
   const p = t.playerPro;
   const pro = useIsPro();
   const { offer } = useProOffer();
   const press = usePress(0.98);
   const enter = useStgIn(motion.revealDur, 200);
-  const trial = showsTrial(pro, offer?.trial_available);
+  const trial = preview || showsTrial(pro, offer?.trial_available);
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${title}. ${p.label}`} onPress={() => openProEntry('player')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
       <Animated.View style={[styles.card, enter, press.style]}>

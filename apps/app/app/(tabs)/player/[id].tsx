@@ -12,7 +12,7 @@ import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { useClaimLater, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
+import { useClaimLater, useIsStaff, usePlayer, usePlayerPro, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
 import { canClaimHere, claimHereLabel, claimHereToast } from '../../../src/lib/claimLater';
 import { runJpop, useGrowIn, usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../../src/lib/motion';
 import type { ProfileView } from '../../../src/lib/players';
@@ -122,7 +122,10 @@ export default function PlayerScreen() {
 function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => void; onToast: (text: string) => void }) {
   const t = useCopy();
   const traits = useTraits(p.id, null);
-  const pro = usePlayerPro(p.id, p.isMe);
+  // staff only: «Δες το σαν free», the card exactly as a free player gets it (founder, 2 Nov 2026)
+  const staff = useIsStaff();
+  const [asFree, setAsFree] = useState(false);
+  const pro = usePlayerPro(p.id, p.isMe, staff && asFree);
   const hero = useStgIn(450, 0);
   const nameIn = useRiseIn(550, 70);
   const subIn = useRiseIn(550, 150);
@@ -172,7 +175,13 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
         )}
       </Animated.View>
 
-      {p.isMe ? null : <PlayerProCard state={pro} first={p.first} gender={p.gender} />}
+      {!p.isMe && staff && (pro.kind === 'pro' || asFree) ? (
+        <Pressable accessibilityRole="button" onPress={() => setAsFree((x) => !x)} style={styles.previewHit}>
+          <Text style={styles.preview}>{asFree ? t.playerPro.asPro : t.playerPro.asFree}</Text>
+        </Pressable>
+      ) : null}
+
+      {p.isMe ? null : <PlayerProCard state={pro} first={p.first} gender={p.gender} preview={staff && asFree} />}
 
       {p.isMe ? null : <PlayerTraits state={traits} first={p.first} onToast={onToast} />}
     </>
@@ -226,6 +235,8 @@ const FIRST_PAD = 14;
 const SUR_PAD = 8;
 
 const styles = StyleSheet.create({
+  previewHit: { minHeight: 44, alignSelf: 'flex-end', justifyContent: 'center' },
+  preview: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft },
   quiet: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 8 },
   reportHit: { minHeight: 44, alignSelf: 'center', justifyContent: 'center' },
   report: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft, textDecorationLine: 'underline' },

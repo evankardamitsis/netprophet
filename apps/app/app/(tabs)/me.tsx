@@ -167,7 +167,7 @@ export default function MeScreen() {
               <Text style={styles.statsTitle}>{t.me.numbers}</Text>
             </Section>
             <Section i={next()}>
-              <NavRow title={t.me.statsPage} sub={t.me.statsLine} onPress={() => router.push('/match-stats?from=me')} />
+              <MatchStatsCard />
             </Section>
             <Section i={next()}>
               <NavRow title={t.season.title} sub={t.season.sub} onPress={() => router.push('/season?from=me')} />
@@ -217,6 +217,35 @@ function NavRow({ title, sub, onPress }: { title: string; sub?: string; onPress:
           {sub ? <Text style={styles.lookSub}>{sub}</Text> : null}
         </View>
         <Text style={styles.lookMark}>›</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/**
+ * «Τα στατιστικά σου» on «Τα νούμερά σου»: an ink card, so your matches read apart from the game's numbers below
+ * (founder, 2 Nov 2026: the numbers inside the game and the analytics of your matches are two different things).
+ */
+function MatchStatsCard() {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${t.me.statsPage}. ${t.me.statsLine}`}
+      onPress={() => router.push('/match-stats?from=me')}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+    >
+      <Animated.View style={[styles.matchStats, press.style]}>
+        <Text style={styles.matchStatsKicker}>{greekCaps(t.me.statsKicker)}</Text>
+        <View style={styles.matchStatsRow}>
+          <View style={styles.lookText}>
+            <Text style={styles.matchStatsTitle}>{t.me.statsPage}</Text>
+            <Text style={styles.matchStatsSub}>{t.me.statsLine}</Text>
+          </View>
+          <Text style={styles.matchStatsMark}>›</Text>
+        </View>
       </Animated.View>
     </Pressable>
   );
@@ -711,8 +740,8 @@ function Score({ v }: { v: MeView }) {
     <View style={styles.block}>
       <Text style={styles.heading}>{t.me.score}</Text>
       <View style={styles.tiles}>
-        {v.stats.map((s) => (
-          <View key={s.label} style={styles.tile}>
+        {v.stats.map((s, i) => (
+          <View key={s.label} style={[styles.tile, i === v.stats.length - 1 && i % 2 === 0 && styles.tileWide]}>
             <Text style={styles.tileValue}>{s.value}</Text>
             <Text style={styles.tileLabel}>{s.label}</Text>
           </View>
@@ -1129,6 +1158,13 @@ const styles = StyleSheet.create({
   heading: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, paddingBottom: 6, marginBottom: -6, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tile: { width: '48.5%', padding: 14, borderRadius: 18, backgroundColor: colors.white, gap: 2 },
+  tileWide: { width: '100%' },
+  matchStats: { padding: 18, borderRadius: 22, backgroundColor: colors.ink, gap: 10 },
+  matchStatsKicker: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.72, color: colors.mist },
+  matchStatsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  matchStatsTitle: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 28, color: colors.paper },
+  matchStatsSub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
+  matchStatsMark: { fontFamily: fonts.bodyBold, fontSize: 22, color: colors.paper },
   tileValue: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 7, marginBottom: -7, color: colors.ink },
   tileLabel: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   votes: { padding: 16, borderRadius: 22, backgroundColor: colors.ink, gap: 4 },
