@@ -1,5 +1,15 @@
 import { createSign } from 'node:crypto';
-import { levelFromDraws, parseAthensTennis, parseDraws, parseSheet, type Draw } from '@netprophet/ingest';
+import {
+  isTournamentSoftware,
+  levelFromDraws,
+  parseAthensTennis,
+  parseDraws,
+  parseSheet,
+  parseTournamentSoftwareDay,
+  tournamentSoftwareBase,
+  tournamentSoftwareDays,
+  type Draw,
+} from '@netprophet/ingest';
 import { runRows } from './ingestRows';
 
 /**
@@ -137,6 +147,7 @@ export async function rowsForTournament(
 ) {
   if (!t.source_url) throw new Error('this tournament has no source URL');
   if (isAthensTennis(t.source_url)) return runRows(parseAthensTennis(await fetchSite(t.source_url)));
+  if (isTournamentSoftware(t.source_url)) return runRows(await fetchTournamentSoftware(t.source_url));
   const tabs = await fetchSheetTabs(t.source_url);
   let known = draws ?? null;
   if (!known && t.draw_url) known = await drawsForTournament({ draw_url: t.draw_url, season_start_year: t.season_start_year }).catch(() => null);
@@ -155,9 +166,46 @@ export function isAthensTennis(url: string): boolean {
   return /^https?:\/\/(www\.)?athenstennis\.gr\//i.test(url.trim());
 }
 
-/** the source kind a link means: an organiser's site page, else a Google Sheet */
+/** the source kind a link means: an organiser's site page (athenstennis.gr, tournamentsoftware.com), else a Google Sheet */
 export function sourceKind(url: string): 'site' | 'sheet' {
-  return isAthensTennis(url) ? 'site' : 'sheet';
+  return isAthensTennis(url) || isTournamentSoftware(url) ? 'site' : 'sheet';
+}
+
+const UA = 'NetProphet/2 (+https://netprophetapp.com)';
+
+/**
+ * A tournamentsoftware.com tournament (founder, 2 Nov 2026: ITF Masters MT200 at Queens): its cookie page first, where
+ * we save the necessary cookies only, then the Matches page for the day selector, then every day's fragment.
+ */
+async function fetchTournamentSoftware(url: string) {
+  const base = tournamentSoftwareBase(url);
+  const origin = new URL(base).origin;
+  const path = new URL(base).pathname;
+  const save = await fetch(`${origin}/cookiewall/Save`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { 'user-agent': UA, 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ ReturnUrl: `${path}/Matches`, SettingsOpen: 'false', CookiePurposes: '1' }).toString(),
+    cache: 'no-store',
+  });
+  const cookie = save.headers
+    .getSetCookie()
+    .map((c) => c.split(';')[0])
+    .join('; ');
+  const get = async (u: string, fragment = false) => {
+    const res = await fetch(u, {
+      headers: { 'user-agent': UA, accept: 'text/html', cookie, ...(fragment ? { 'x-requested-with': 'XMLHttpRequest' } : {}) },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(`the page answered ${res.status}`);
+    if (res.url.includes('/cookiewall')) throw new Error('the site kept asking about cookies');
+    return res.text();
+  };
+  const days = tournamentSoftwareDays(await get(`${base}/Matches`));
+  if (days.length === 0) throw new Error('the Matches page has no days');
+  const out = [];
+  for (const d of days) out.push(...parseTournamentSoftwareDay(await get(`${base}/Matches/MatchesInDay?date=${d}`, true), d));
+  return out;
 }
 
 async function fetchSite(url: string): Promise<string> {

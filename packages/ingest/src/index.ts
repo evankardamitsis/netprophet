@@ -7,4 +7,5 @@ export * from './sheetExport';
 export * from './text';
 export * from './draw';
 export * from './athensTennis';
+export * from './tournamentSoftware';
 export * from './levelFromDraws';
