@@ -10,7 +10,7 @@ import { colors, fonts, text } from '../theme';
 
 /**
  * Pro made visible, never pushy and never advantage (founder, 22 Oct 2026): a quiet line at the moment Pro helps, the
- * header's small entry, Εγώ's card and the locked teaser on a player's card. All of them sell information, alerts and
+ * header's small entry, Εγώ's card and Κατάταξη's locked section (a player's card has its own, PlayerProCard). All of them sell information, alerts and
  * convenience; none shows to a Pro player (rules and the once-a-day rest are in lib/proEntries).
  */
 
@@ -89,15 +89,6 @@ export function MeProCard() {
       </Animated.View>
     </Pressable>
   );
-}
-
-/**
- * A player's card, below what the free card shows: one compact block of what Pro adds (all matches, head to head, by
- * surface), greyed and locked. A tap opens Pro. Not on your own card, where those numbers are «Τα στατιστικά σου».
- */
-export function ProTeaser() {
-  const e = useCopy().pro.entries;
-  return <LockedBlock moment="player" head={e.teaserTag} rows={e.teaserRows} label={e.teaserLabel} />;
 }
 
 /**
