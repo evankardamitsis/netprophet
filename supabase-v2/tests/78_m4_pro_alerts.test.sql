@@ -11,7 +11,8 @@ update core.players set claimed_by_user_id = :'pro'::uuid where id = :'pp'::uuid
 update core.players set claimed_by_user_id = :'free'::uuid where id = :'fp'::uuid;
 insert into core.entitlements (user_id, source, status) values (:'pro'::uuid, 'gift', 'active');
 insert into core.push_tokens (token, user_id, platform) values ('ExponentPushToken[pro]', :'pro'::uuid, 'ios'), ('ExponentPushToken[free]', :'free'::uuid, 'ios');
-insert into core.tournaments (sport_id, name, source) values ('tennis', 'Alert Open', 'import') returning id as t \gset
+-- already announced: its «Νέο τουρνουά» push is not what this counts (165_new_tournament_push)
+insert into core.tournaments (sport_id, name, source, announced_at) values ('tennis', 'Alert Open', 'import', now()) returning id as t \gset
 
 select core.ingest_run(:'t'::uuid, jsonb_build_array(jsonb_build_object('fingerprint', 'al-1', 'date', current_date + 2, 'time', '10:00',
   'discipline', 'MS', 'level', 'OPEN', 'side1', jsonb_build_array(jsonb_build_object('player_id', :'pp')),

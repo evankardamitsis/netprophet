@@ -995,6 +995,7 @@ function PushRows({ pro }: { pro: boolean }) {
           { key: 'reminders' as const, title: t.me.remindersPush, line: t.me.remindersPushLine },
         ]
       : []),
+    { key: 'new_tournaments', title: t.me.newTournamentsPush, line: t.me.newTournamentsPushLine },
     { key: 'followed', title: t.me.followedPush, line: t.me.followedPushLine },
     { key: 'reactions', title: t.me.reactionsPush, line: t.me.reactionsPushLine },
     // an email, not a push, but the same account switches (2 Nov 2026)

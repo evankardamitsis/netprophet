@@ -715,6 +715,8 @@ export const el = {
     reactionsPush: 'Αντιδράσεις στα ματς σου',
     reactionsPushLine: 'Σου λέμε όταν κάποιος αντιδρά σε ματς σου. Το πολύ μία ειδοποίηση ανά ματς κάθε 3 ώρες.',
     /** for everyone (21 Oct): the tournaments you follow */
+    newTournamentsPush: 'Νέα τουρνουά',
+    newTournamentsPushLine: 'Μόλις μπαίνει ένα νέο τουρνουά με το πρόγραμμά του. Ποτέ από τις 23:00 ως τις 08:00.',
     followedPush: 'Τουρνουά που ακολουθείς',
     followedPushLine: 'Η κλήρωση, το αυριανό πρόγραμμα και ο τελικός. Ποτέ από τις 23:00 ως τις 08:00.',
     /** the winners' email when the month closes (2 Nov 2026), on unless switched off */
