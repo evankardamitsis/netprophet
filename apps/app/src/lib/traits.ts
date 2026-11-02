@@ -8,6 +8,8 @@ import type { MyTraits, PlayerTraits, TraitRow } from '@netprophet/db';
 
 export const TRAIT_MIN = 3;
 export const TRAIT_MAX = 40;
+/** votes per person per player (the database enforces it; founder, 2 Nov 2026) */
+export const TRAIT_VOTES_MAX = 3;
 
 /** the gender to word the phrases in: the player's own, else from the first name */
 export function traitGender(known: 'm' | 'f' | null, firstName: string): NameGender {
@@ -35,8 +37,11 @@ export function topCount(list: TraitRow[]): number {
 
 /** the tap, before the database answers: my vote on or off, the count with it */
 export function applyTraitVote(p: PlayerTraits, traitId: string, on: boolean): PlayerTraits {
+  const row = p.traits.find((t) => t.id === traitId);
+  const changes = row !== undefined && !row.pending && row.mine !== on;
   return {
     ...p,
+    my_votes: changes ? Math.max(0, myVotes(p) + (on ? 1 : -1)) : p.my_votes,
     traits: p.traits.map((t) =>
       t.id === traitId && !t.pending && t.mine !== on ? { ...t, mine: on, count: Math.max(0, (t.count ?? 0) + (on ? 1 : -1)) } : t,
     ),
@@ -49,15 +54,31 @@ export function cleanLabel(raw: string): string | null {
   return s.length >= TRAIT_MIN && s.length <= TRAIT_MAX ? s : null;
 }
 
-/** the note under the chips: «Πάτα ό,τι ισχύει.» until I have voted, then «Μέτρησε η ψήφος σου…» */
-export function hasVoted(p: PlayerTraits): boolean {
-  return p.traits.some((t) => t.mine && !t.pending);
+/** how many votes I gave this player (the server's count; my ticks when it has not said) */
+export function myVotes(p: PlayerTraits): number {
+  return p.my_votes ?? p.traits.filter((t) => t.mine).length;
 }
 
-export type TraitErrorKind = 'not_allowed' | 'bad_label' | 'too_many_pending' | 'rate_limited' | 'failed';
+export function maxVotes(p: PlayerTraits): number {
+  return p.max_votes ?? TRAIT_VOTES_MAX;
+}
+
+/** all my votes used: the other phrases rest until I take one back */
+export function votesFull(p: PlayerTraits): boolean {
+  return myVotes(p) >= maxVotes(p);
+}
+
+/** «Τι λένε οι άλλοι»: the approved phrases someone voted, the most voted first */
+export function saidTraits(p: PlayerTraits): TraitRow[] {
+  return p.traits.filter((t) => !t.pending && (t.count ?? 0) > 0).sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
+}
+
+export type TraitErrorKind = 'not_allowed' | 'bad_label' | 'too_many_pending' | 'too_many_votes' | 'rate_limited' | 'failed';
 
 export function traitErrorKind(code: string): TraitErrorKind {
-  return code === 'not_allowed' || code === 'bad_label' || code === 'too_many_pending' || code === 'rate_limited' ? code : 'failed';
+  return code === 'not_allowed' || code === 'bad_label' || code === 'too_many_pending' || code === 'too_many_votes' || code === 'rate_limited'
+    ? code
+    : 'failed';
 }
 
 /**

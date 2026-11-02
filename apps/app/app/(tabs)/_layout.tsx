@@ -33,17 +33,17 @@ export default function TabsLayout() {
               tabBar={(props) => <TabBar {...props} resultsAt={raw?.results_at ?? null} />}
               screenOptions={{ header: () => <Header me={me} /> }}
             >
-              {/* Τουρνουά is the home (founder, 22 Oct, mockup D): four tabs, Τουρνουά · Αποτελέσματα · Κατάταξη · Εγώ */}
+              {/* Τουρνουά is the home (founder, 22 Oct, mockup D); Παίκτες is a tab again (2 Nov):
+                  Τουρνουά · Αποτελέσματα · Παίκτες · Κατάταξη · Εγώ */}
               <Tabs.Screen name="index" options={{ title: t.tabs.tournaments }} />
               <Tabs.Screen name="results" options={{ title: t.tabs.results }} />
+              <Tabs.Screen name="players" options={{ title: t.tabs.players }} />
               <Tabs.Screen name="ladder" options={{ title: t.tabs.ladder }} />
               <Tabs.Screen name="me" options={{ title: t.tabs.me }} />
               {/* every tournament, «Όλα τα τουρνουά ›» from the home; no longer a tab */}
               <Tabs.Screen name="tournaments" options={{ title: t.tabs.tournaments, href: null }} />
-              {/* player search opens from Τουρνουά */}
               {/* «Περισσότερα ›» under the home's three votes: every match of the day, Τουρνουά lit */}
               <Tabs.Screen name="all-matches" options={{ title: t.home.all.title, href: null }} />
-              <Tabs.Screen name="players" options={{ title: t.tabs.players, href: null }} />
               <Tabs.Screen name="badges" options={{ title: t.badges.title, href: null }} />
               <Tabs.Screen name="tournament/[id]" options={{ title: t.tournaments.title, href: null }} />
               {/* a player's profile keeps the header and tab bar, with no tab highlighted (prototype) */}

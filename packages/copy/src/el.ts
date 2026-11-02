@@ -1192,9 +1192,17 @@ export const el = {
   traits: {
     title: 'Πώς παίζει',
     plusOne: '+1',
-    tapNote: 'Πάτα ό,τι ισχύει. Ψηφίζουν όλοι.',
-    countedNote: 'Μέτρησε η ψήφος σου ✓ Πάτα ξανά για να την πάρεις πίσω.',
-    footer: 'Το βγάζουν οι ψήφοι όλων στο NetProphet. Ποιος ψήφισε δεν φαίνεται.',
+    /** what the others said (founder, 2 Nov 2026: you see what other people voted) */
+    said: 'Τι λένε οι άλλοι',
+    saidNone: 'Κανείς δεν έχει πει κάτι ακόμα. Ξεκίνα εσύ.',
+    voters: { one: '1 ψήφισε', many: '{n} ψήφισαν' },
+    /** your vote: three at most, a clear ✓ when it counts */
+    yours: 'Εσύ τι λες;',
+    yoursNote: 'Διάλεξε μέχρι 3.',
+    yoursCount: '{n} από 3',
+    voted: 'Μέτρησε ✓ Η ψήφος σου μπήκε στο «Τι λένε οι άλλοι».',
+    unvoted: 'Την πήρες πίσω.',
+    full: 'Έχεις ήδη 3. Βγάλε ένα για να διαλέξεις άλλο.',
     add: '+ Πρόσθεσε κάτι δικό σου',
     placeholder: 'Με δικά σου λόγια',
     submit: 'Πρόσθεσε',

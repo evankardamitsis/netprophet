@@ -20,13 +20,13 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
  * as its label plus an equal share of what is left, so the labels sit evenly whatever their length. The open tab is a
  * paper pill that slides from tab to tab with the spring; a light tick on every change. Εγώ is a tab again (mockup D,
  * 22 Oct) and still opens from the header avatar too.
- * Until the Ladder unlocks it is left out (the route stays). A lime dot on «Αποτελέσματα» while a result newer than your
+ * Παίκτες is a tab again (founder, 2 Nov 2026). Until the Ladder unlocks it is left out (the route stays). A lime dot on «Αποτελέσματα» while a result newer than your
  * last visit is waiting (lime: something happened); opening the tab clears it.
  */
-const IN_BAR = ['index', 'results', 'ladder', 'me'];
+const IN_BAR = ['index', 'results', 'players', 'ladder', 'me'];
 /**
  * screens opened from a tab keep that tab lit: every tournament screen (the list, one tournament, a held name's run,
- * its path and its draw) and player search and «Όλα τα ματς σήμερα» belong to Τουρνουά, the home (mockup D, 22 Oct); badges to Εγώ
+ * its path and its draw) and «Όλα τα ματς σήμερα» belong to Τουρνουά, the home (mockup D, 22 Oct); badges to Εγώ
  */
 const LIT_BY: Record<string, string> = {
   tournaments: 'index',
@@ -34,7 +34,6 @@ const LIT_BY: Record<string, string> = {
   'tournament-player': 'index',
   'tournament-path': 'index',
   'tournament-draw': 'index',
-  players: 'index',
   'all-matches': 'index',
   badges: 'me',
 };
@@ -157,7 +156,7 @@ function TabItem({
       style={styles.tab}
     >
       <Animated.View style={[styles.item, press.style]}>
-        <Animated.Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} style={[styles.label, fg]}>
+        <Animated.Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.label, fg]}>
           {label}
         </Animated.Text>
         {dot ? <Dot /> : null}
@@ -172,12 +171,13 @@ function Dot() {
 }
 
 const styles = StyleSheet.create({
-  bar: { paddingTop: 6, paddingHorizontal: 8, backgroundColor: colors.ink },
+  bar: { paddingTop: 6, paddingHorizontal: 6, backgroundColor: colors.ink },
   row: { flexDirection: 'row' },
   // grows from the label's own width, so the space between labels is even
   tab: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' },
   pill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: 999, backgroundColor: colors.paper },
-  item: { minHeight: 44, paddingHorizontal: 10, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
+  // five tabs fit a 375pt phone (2 Nov): tighter sides and 13pt labels
+  item: { minHeight: 44, paddingHorizontal: 6, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 7, height: 7, borderRadius: 999, backgroundColor: colors.lime },
-  label: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18 },
+  label: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17 },
 });
