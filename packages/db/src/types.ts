@@ -480,6 +480,14 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_medal_emails_due: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_medal_emails_sent: {
+        Args: { p_ids: string[] };
+        Returns: number;
+      };
       admin_merge_duplicates: {
         Args: { p_pairs: Json; p_confidence?: string };
         Returns: Json;
@@ -726,6 +734,10 @@ export type Database = {
       };
       get_match_link: {
         Args: { p_token: string };
+        Returns: Json;
+      };
+      get_medals: {
+        Args: { p_player_id?: string };
         Returns: Json;
       };
       get_me: {

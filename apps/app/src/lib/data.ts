@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber, matchesLoosely } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type MonthMedal, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -1884,8 +1884,8 @@ export function usePlayStyle(): PlayStyleState {
   return { hand, tour, saving, failed, save };
 }
 
-/** the push switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs */
-export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed';
+/** the switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs ('medal_email' is the winners' email) */
+export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed' | 'medal_email';
 
 export interface PushPrefsState {
   on: (key: PushPrefKey) => boolean;
@@ -2225,4 +2225,32 @@ export function useBallers(ids: string[]): Record<string, OtherBaller> {
     };
   }, [api, key]);
   return map;
+}
+
+/**
+ * The trophy shelf (founder, 2 Nov 2026): my month medals, or with a player id those of the account that holds that
+ * player. Null while loading; empty for the guest, on a failure and without medals (the shelf then stays away).
+ */
+export function useMedals(playerId?: string): MonthMedal[] | null {
+  const api = useApi();
+  const [rows, setRows] = useState<MonthMedal[] | null>(api ? null : []);
+  useEffect(() => {
+    if (!api) {
+      setRows([]);
+      return undefined;
+    }
+    let live = true;
+    api
+      .getMedals(playerId)
+      .then((r) => {
+        if (live) setRows(r);
+      })
+      .catch(() => {
+        if (live) setRows([]);
+      });
+    return () => {
+      live = false;
+    };
+  }, [api, playerId]);
+  return rows;
 }

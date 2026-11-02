@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { TrophyShelf } from '../../src/components/TrophyShelf';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { QuestsSheet } from '../../src/components/QuestsSheet';
 import { PlayStyleRow } from '../../src/components/PlayStyleRow';
@@ -16,7 +17,7 @@ import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
-import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, usePushPrefs, type PushPrefKey } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, usePushPrefs, useMedals, type PushPrefKey } from '../../src/lib/data';
 import { useStoreDiagnostics } from '../../src/lib/purchase';
 import { diagLines } from '../../src/lib/storeTypes';
 import { fmt } from '../../src/lib/votes';
@@ -112,6 +113,8 @@ export default function MeScreen() {
     proCard: pro.state?.pro === false,
   });
   const myAvatar = useMyAvatar();
+  // the trophy shelf under the hero, only with medals (2 Nov 2026)
+  const medals = useMedals();
   const avatarRefresh = myAvatar.refresh;
   useFocusEffect(
     useCallback(() => {
@@ -142,6 +145,7 @@ export default function MeScreen() {
                   <>
                     <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} pro={isPro} />
                     <NotMeRow />
+                    <TrophyShelf medals={medals} style={styles.shelf} />
                   </>
                 ) : s === 'proCard' ? (
                   <MeProCard />
@@ -932,6 +936,8 @@ function PushRows({ pro }: { pro: boolean }) {
       : []),
     { key: 'followed', title: t.me.followedPush, line: t.me.followedPushLine },
     { key: 'reactions', title: t.me.reactionsPush, line: t.me.reactionsPushLine },
+    // an email, not a push, but the same account switches (2 Nov 2026)
+    { key: 'medal_email', title: t.me.medalEmail, line: t.me.medalEmailLine },
   ];
   return (
     <>
@@ -1146,6 +1152,7 @@ const styles = StyleSheet.create({
   nextBox: { gap: 4 },
   nextText: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.ink },
   linkHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  shelf: { marginTop: 12 },
   notMeHit: { minHeight: 44, alignSelf: 'center', justifyContent: 'center' },
   notMe: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft, textDecorationLine: 'underline' },
   deleteLink: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.inkSoft },

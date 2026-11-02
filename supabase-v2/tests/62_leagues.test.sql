@@ -49,7 +49,7 @@ select is((select count(*)::int from core.cosmetic_items
           'the seven new things are in the wardrobe');
 select is((select payload from core.feed_inbox where user_id = (select id from pl where g = 1) and payload ->> 'type' = 'league')
             - 'month',
-          '{"type": "league", "tier": "bronze", "position": 1, "movement": "promote", "next_tier": "silver", "award": true}'::jsonb,
+          '{"type": "league", "tier": "bronze", "position": 1, "movement": "promote", "next_tier": "silver", "award": true, "medal": 1}'::jsonb,
           'the winner gets the moment');
 select ok(not exists (select 1 from core.feed_inbox where user_id in (select id from pl where g in (20, 21)) and payload ->> 'type' = 'league'),
           'no points, no moment');

@@ -1,6 +1,6 @@
 /**
  * The one layout every v2 email uses: the Supabase sign-in code emails (generated into supabase-v2/templates by
- * emailTemplates.test.ts), the Team invite and the 08:30 staff email (both through Resend).
+ * emailTemplates.test.ts), the Team invite, the 08:30 staff email and the month medal email (all through Resend).
  *
  * Email-client safe on purpose: tables, inline styles, bgcolor attributes, 600px wide, hosted PNG logos with their
  * background baked in (Gmail and Outlook block SVG and data URIs, and a transparent logo vanishes in dark mode).
@@ -60,6 +60,19 @@ export const block = {
     items.map((i) => `<li style="margin:0 0 6px">${i}</li>`).join('') +
     `</ul>`,
   link: (href: string, text: string) => `<a href="${esc(href)}" style="color:${colors.blue};text-decoration:underline">${esc(text)}</a>`,
+  /** the one blue action: a pill button built from a table cell, so Outlook draws it too */
+  button: (href: string, text: string) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px"><tr>` +
+    `<td bgcolor="${colors.blue}" style="background-color:${colors.blue};border-radius:999px">` +
+    `<a href="${esc(href)}" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:700;color:${colors.paper};text-decoration:none;border-radius:999px">${esc(text)}</a>` +
+    `</td></tr></table>`,
+  /** something earned: ink text on a lime panel (lime means earned), a bold line and a quieter one under it */
+  earned: (title: string, sub: string) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px"><tr>` +
+    `<td bgcolor="${colors.lime}" style="background-color:${colors.lime};border-radius:12px;padding:16px 24px">` +
+    `<p style="margin:0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:700;color:${colors.ink}">${esc(title)}</p>` +
+    `<p style="margin:4px 0 0;font-family:${FONT};font-size:15px;line-height:21px;color:${colors.ink}">${esc(sub)}</p>` +
+    `</td></tr></table>`,
 };
 
 export interface EmailParts {
