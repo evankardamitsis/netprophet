@@ -1,6 +1,6 @@
 -- api.get_player_pro: Pro gets the full report on any player's card; free gets counts only, never a result.
 begin;
-select plan(10);
+select plan(13);
 
 select tests.create_user('pc-free@test.local') as free \gset
 select tests.create_user('pc-pro@test.local') as pro \gset
@@ -39,6 +39,14 @@ select is((:'p'::jsonb ->> 'pro')::boolean, true, 'Pro: Pro');
 select is((:'p'::jsonb -> 'player' -> 'h2h' ->> 'w')::int, 1, 'Pro: μεταξύ σας, from my side');
 select is((:'p'::jsonb -> 'player' ->> 'history_count')::int, 3, 'Pro: every match');
 select ok((:'p'::jsonb -> 'player') ? 'singles', 'Pro: the numbers');
+
+-- «Δες το σαν free»: Pro asks for the free card and gets exactly the teaser
+select tests.login(:'pro'::uuid);
+select api.get_player_pro(:'them'::uuid, true) as pf \gset
+select tests.logout();
+select is((:'pf'::jsonb ->> 'pro')::boolean, false, 'as free: Pro sees the free card');
+select ok(not (:'pf'::jsonb ? 'player'), 'as free: no report');
+select is((:'pf'::jsonb -> 'teaser' ->> 'matches')::int, 3, 'as free: the real counts');
 
 update core.players set is_minor = true where id = :'them'::uuid;
 select tests.login(:'pro'::uuid);

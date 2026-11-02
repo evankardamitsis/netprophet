@@ -514,6 +514,7 @@ export const en: Copy = {
     numbers: 'Your numbers',
     numbersLine: 'Streak, votes, matches and your season',
     statsLine: 'Your matches, in numbers',
+    statsKicker: 'On court',
     avatarsDev: 'Avatars (test)',
     storeDiag: {
       title: 'Purchases: diagnostics',
@@ -558,6 +559,7 @@ export const en: Copy = {
     stats: {
       correct: 'Correct votes',
       points: 'Points this month',
+      total: 'Points all time',
     },
     votes: {
       title: 'Your votes',
@@ -718,6 +720,9 @@ export const en: Copy = {
     settingsLine: 'Alerts for your tournaments, draws and matches',
   },
   playerPro: {
+    /** staff only, on a player card: switch to the free card and back */
+    asFree: 'See it as free',
+    asPro: 'See it as Pro',
     tag: 'PRO',
     title: 'All about {who}',
     sub: 'Wins and losses on every surface, in deciding sets, in tie-breaks and between you.',
@@ -1039,6 +1044,7 @@ export const en: Copy = {
     yours: 'What do you say?',
     yoursNote: 'Pick up to 3.',
     yoursCount: '{n} of 3',
+    change: 'Change ›',
     voted: 'Counted ✓ Your vote is in «What others say».',
     unvoted: 'Taken back.',
     full: 'You already picked 3. Take one back to pick another.',

@@ -753,7 +753,7 @@ export type Database = {
         Returns: Json;
       };
       get_player_pro: {
-        Args: { p_player: string };
+        Args: { p_player: string; p_as_free?: boolean };
         Returns: Json;
       };
       get_players_home: {

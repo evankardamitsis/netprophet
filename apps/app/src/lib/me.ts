@@ -109,6 +109,8 @@ export function toMeView(
     stats: [
       { value: correct, label: m.stats.correct },
       { value: String(me.game.month_points), label: m.stats.points },
+      // all-time: what the level grows from; the header and the Κατάταξη count this month only (founder, 2 Nov 2026)
+      { value: String(me.game.total_points), label: m.stats.total },
     ],
     votes: {
       title:
