@@ -17,7 +17,7 @@ import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
-import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, usePushPrefs, useMedals, type PushPrefKey } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useMyGender, usePushPrefs, useMedals, type PushPrefKey } from '../../src/lib/data';
 import { useStoreDiagnostics } from '../../src/lib/purchase';
 import { diagLines } from '../../src/lib/storeTypes';
 import { fmt } from '../../src/lib/votes';
@@ -322,13 +322,14 @@ const WORN_IN = {
 /** the badge worn on the card, under the name: a lime outline, its name and the tier dots; it slams in late */
 function WornPill({ data }: { data: GetBadgesResult | null }) {
   const t = useCopy();
+  const gender = useMyGender();
   const row = data?.badges.find((b) => b.key === data.worn);
   // a CSS entrance (lib/motion); the key plays it again when another badge is worn
   const style = useEntrance(WORN_IN, 500, 1200);
   if (!row || row.tier === 0) return null;
   return (
-    <Animated.View key={row.key} style={[styles.worn, style]} accessibilityLabel={badgeName(row.key, t)}>
-      <Text style={styles.wornText}>{badgeName(row.key, t)}</Text>
+    <Animated.View key={row.key} style={[styles.worn, style]} accessibilityLabel={badgeName(row.key, t, gender)}>
+      <Text style={styles.wornText}>{badgeName(row.key, t, gender)}</Text>
       <BadgeDots tier={row.tier} size={7} border={1.5} color={colors.lime} gap={3} />
     </Animated.View>
   );
@@ -360,6 +361,7 @@ function BadgesCard({ data }: { data: GetBadgesResult }) {
 
 function BadgeTile({ b, i }: { b: BadgeRow; i: number }) {
   const t = useCopy();
+  const gender = useMyGender();
   const st = tierStyle(b.tier);
   const press = usePress(0.96);
   const enter = useStgIn(STG_MS, 150 + i * 40);
@@ -367,7 +369,7 @@ function BadgeTile({ b, i }: { b: BadgeRow; i: number }) {
     <Animated.View style={enter}>
       <Pressable accessibilityRole="button" onPress={() => router.push(`/badges?key=${b.key}`)} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
         <Animated.View style={[styles.badgeTile, { backgroundColor: st.bg, borderColor: st.border, borderWidth: st.borderWidth }, press.style]}>
-          <Text style={[styles.badgeTileName, { color: st.text }]}>{badgeName(b.key, t)}</Text>
+          <Text style={[styles.badgeTileName, { color: st.text }]}>{badgeName(b.key, t, gender)}</Text>
           <View style={styles.badgeTileFoot}>
             <BadgeDots tier={b.tier} size={11} border={2} color={st.dot} gap={3} />
             <Text style={[styles.badgeTileTier, { color: st.text }]}>
@@ -383,10 +385,11 @@ function BadgeTile({ b, i }: { b: BadgeRow; i: number }) {
 /** the next tier within reach: name, «Ακόμα N» and a bar */
 function NextBadge({ b }: { b: BadgeRow }) {
   const t = useCopy();
+  const gender = useMyGender();
   return (
-    <View style={styles.nextBadge} accessibilityLabel={`${badgeName(b.key, t)}. ${leftLine(b, t)}`}>
+    <View style={styles.nextBadge} accessibilityLabel={`${badgeName(b.key, t, gender)}. ${leftLine(b, t)}`}>
       <View style={styles.rowBetween}>
-        <Text style={styles.nextBadgeName}>{badgeName(b.key, t)}</Text>
+        <Text style={styles.nextBadgeName}>{badgeName(b.key, t, gender)}</Text>
         <Text style={styles.nextBadgeLeft}>{moreLine(b, t)}</Text>
       </View>
       <GrowBar value={pct(b)} height={8} track={colors.navLine} fill={colors.lime} fillBorder={colors.ink} fillBorderWidth={2} delay={400} />
@@ -426,7 +429,7 @@ function NotMeRow() {
   );
 }
 
-/** «Εμφάνιση  Κορνίζες, φόντα, ρούχα και ρακέτα  [Νέο] ›» */
+/** «Εμφάνιση  Frames, φόντα, ρούχα και ρακέτα  [Νέο] ›» */
 function LookRow({ isNew }: { isNew: boolean }) {
   const t = useCopy();
   const press = usePress();

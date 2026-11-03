@@ -14,6 +14,11 @@ describe('quests copy helpers', () => {
     expect(rewardLine(log.reward, copy)).toBe('Frame «Της εβδομάδας»');
     expect(toastLine(kudos.reward, copy)).toBe('Αποστολή ✓ · +1 προς το badge «Ο ευγενικός»');
   });
+  it('a badge reward names the badge for a woman', () => {
+    expect(toastLine(kudos.reward, copy, 'f')).toBe('Αποστολή ✓ · +1 προς το badge «Η ευγενική»');
+    expect(rewardLine(kudos.reward, copy, null)).toBe('+1 προς το badge «Ο ευγενικός»');
+    expect(chipText({ ...kudos, done: false }, copy, 'f')).toBe('Η ευγενική');
+  });
   it('chips: kind of reward, badge name, or done', () => {
     expect(chipText(votes, copy)).toBe('Πολλά τα ψηφαλάκια');
     expect(chipText(matches, copy)).toBe('Φόντο');

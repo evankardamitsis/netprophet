@@ -12,7 +12,7 @@ import { QuestsSheet } from '../src/components/QuestsSheet';
 import { QuizOption } from '../src/components/QuizOption';
 import { TOAST_MS, Toast } from '../src/components/Toast';
 import { useCopy } from '../src/i18n';
-import { useQuests, useQuiz, type QuizErrorKind } from '../src/lib/data';
+import { useMyGender, useQuests, useQuiz, type QuizErrorKind } from '../src/lib/data';
 import { usePopIn, usePress, useStgIn } from '../src/lib/motion';
 import { chipText, fraction, questTitle } from '../src/lib/quests';
 import { fitText } from '../src/lib/fitText';
@@ -234,12 +234,13 @@ function End({
 
 function QuestLine({ row }: { row: QuestRow }) {
   const t = useCopy();
+  const gender = useMyGender();
   return (
     <View style={styles.questLine}>
       <View style={styles.questTop}>
         <Text style={styles.questName}>{`${row.done ? '✓ ' : ''}${questTitle(row.key, t)}`}</Text>
         <View style={[styles.chip, row.done && styles.chipDone]}>
-          <Text style={styles.chipText}>{chipText(row, t)}</Text>
+          <Text style={styles.chipText}>{chipText(row, t, gender)}</Text>
         </View>
       </View>
       <View style={styles.barRow}>

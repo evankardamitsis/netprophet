@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { greekCaps } from '@netprophet/copy';
 import type { GetQuestsResult, QuestRow } from '@netprophet/db';
 import { useCopy } from '../i18n';
+import { useMyGender } from '../lib/data';
 import { useUnlocks } from '../lib/unlocks';
 import { chipText, doneLine, fraction, questTitle } from '../lib/quests';
 import { fmt } from '../lib/votes';
@@ -102,6 +103,7 @@ function Group({ header, reset, rows, open }: { header: string; reset: string; r
 
 function Row({ row, open }: { row: QuestRow; open: boolean }) {
   const t = useCopy();
+  const gender = useMyGender();
   const fill = useSharedValue(0);
   useEffect(() => {
     fill.value = 0;
@@ -113,7 +115,7 @@ function Row({ row, open }: { row: QuestRow; open: boolean }) {
       <View style={styles.rowTop}>
         <Text style={styles.rowTitle}>{questTitle(row.key, t)}</Text>
         <View style={styles.chip}>
-          <Text style={styles.chipText}>{chipText(row, t)}</Text>
+          <Text style={styles.chipText}>{chipText(row, t, gender)}</Text>
         </View>
       </View>
       <View style={styles.barRow}>

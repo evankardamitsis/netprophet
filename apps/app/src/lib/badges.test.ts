@@ -3,7 +3,7 @@ import type { BadgeRow } from '@netprophet/db';
 import { colors } from '@netprophet/tokens';
 import { copy } from '../i18n';
 import { mockBadges } from '../mock/badges';
-import { badgeBarFeedback, earned, leftLine, left, locked, nextBadge, pct, pickSelected, ruleLine, tierOfLine, tierStyle, tileTierLine } from './badges';
+import { badgeBarFeedback, badgeName, earned, leftLine, left, locked, nextBadge, pct, pickSelected, ruleLine, tierOfLine, tierStyle, tileTierLine } from './badges';
 import { feedbackAfterVote } from './quests';
 import { mockQuests } from '../mock/quests';
 
@@ -64,6 +64,24 @@ describe('badge lines', () => {
     expect(leftLine(get('gentleman'), copy)).toBe('Ακόμα 8 για την Ασημένια Βαθμίδα');
     expect(leftLine(get('steady'), copy)).toBe('Ακόμα 1 για τη Χάλκινη Βαθμίδα');
     expect(leftLine(row(100, 3), copy)).toBe('Χρυσή Βαθμίδα. Τα έχεις όλα.');
+  });
+});
+
+describe('badgeName by gender', () => {
+  it('a woman gets the feminine form where there is one; everyone else the usual one', () => {
+    expect(badgeName('steady', copy, 'f')).toBe('Σταθερή');
+    expect(badgeName('steady', copy, 'm')).toBe('Σταθερός');
+    expect(badgeName('steady', copy, null)).toBe('Σταθερός');
+    expect(badgeName('month_top', copy, 'f')).toBe('Κορυφαία του μήνα');
+    expect(badgeName('in_a_row', copy, 'f')).toBe('Στη σειρά');
+  });
+  it('the bar after a vote says the feminine name for a woman', () => {
+    const snap = (counter: number) => ({ badges: [{ ...get('steady'), counter, tier: 1 as const }] });
+    const next = get('steady').thresholds[1]!;
+    const f = badgeBarFeedback(snap(next - 2), snap(next - 1), copy, 'f');
+    const m = badgeBarFeedback(snap(next - 2), snap(next - 1), copy);
+    expect(f?.title).toBe('Ένα ακόμα για το badge Σταθερή');
+    expect(m?.title).toBe('Ένα ακόμα για το badge Σταθερός');
   });
 });
 

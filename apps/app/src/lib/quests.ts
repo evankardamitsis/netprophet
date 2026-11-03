@@ -1,25 +1,24 @@
 import type { Copy } from '@netprophet/copy';
 import type { QuestReward, QuestRow } from '@netprophet/db';
-import { badgeBarFeedback, type BadgeSnapshot } from './badges';
+import { badgeBarFeedback, badgeName, type BadgeSnapshot, type Gender } from './badges';
 import { fmt } from './votes';
 
 /** the cosmetic or badge a reward points at, by its name */
-function rewardName(r: QuestReward, t: Copy): string {
-  const names = r.kind === 'badge' ? t.badges.names : t.quests.cosmetics;
-  return names[r.key] ?? r.key;
+function rewardName(r: QuestReward, t: Copy, gender?: Gender): string {
+  return r.kind === 'badge' ? badgeName(r.key, t, gender) : (t.quests.cosmetics[r.key] ?? r.key);
 }
 
 /** «Frame Της εβδομάδας», «Φόντο Γρασίδι», «+5 στο badge Πολλά τα ψηφαλάκια» (celebration and toast) */
-export function rewardLine(r: QuestReward, t: Copy): string {
-  const name = rewardName(r, t);
+export function rewardLine(r: QuestReward, t: Copy, gender?: Gender): string {
+  const name = rewardName(r, t, gender);
   if (r.kind === 'badge') return fmt(t.quests.rewardBadge, { n: r.amount, name });
   return fmt(r.category === 'frame' ? t.quests.rewardFrame : t.quests.rewardBackground, { name });
 }
 
 /** the chip on a quest row: what kind of reward, the badge's name, or «Το κέρδισες» once done */
-export function chipText(q: QuestRow, t: Copy): string {
+export function chipText(q: QuestRow, t: Copy, gender?: Gender): string {
   if (q.done) return t.quests.got;
-  if (q.reward.kind === 'badge') return rewardName(q.reward, t);
+  if (q.reward.kind === 'badge') return rewardName(q.reward, t, gender);
   return q.reward.category === 'frame' ? t.quests.frame : t.quests.background;
 }
 
@@ -33,8 +32,8 @@ export function doneLine(n: number, t: Copy): string {
   return n === 1 ? t.quests.doneOne : fmt(t.quests.doneMany, { n });
 }
 
-export function toastLine(r: QuestReward, t: Copy): string {
-  return fmt(t.quests.toast, { reward: rewardLine(r, t) });
+export function toastLine(r: QuestReward, t: Copy, gender?: Gender): string {
+  return fmt(t.quests.toast, { reward: rewardLine(r, t, gender) });
 }
 
 /** the bar's fill, 0 to 1 */
@@ -55,18 +54,19 @@ export function feedbackAfterVote(
   after: { daily: QuestRow[]; weekly: QuestRow[] },
   t: Copy,
   badges?: { before: BadgeSnapshot | null; after: BadgeSnapshot | null },
+  gender?: Gender,
 ): QuestFeedback {
   const was = new Map([...(before?.daily ?? []), ...(before?.weekly ?? [])].map((q) => [q.key, q]));
   const moved = [...after.daily, ...after.weekly].filter((q) => q.progress > (was.get(q.key)?.progress ?? 0));
   const finished = moved.find((q) => q.done && !was.get(q.key)?.done);
-  if (finished) return { kind: 'toast', text: toastLine(finished.reward, t) };
+  if (finished) return { kind: 'toast', text: toastLine(finished.reward, t, gender) };
   const q = moved.find((x) => !x.done);
-  if (!q) return badges ? badgeBarFeedback(badges.before, badges.after, t) : null;
+  if (!q) return badges ? badgeBarFeedback(badges.before, badges.after, t, gender) : null;
   return { kind: 'bar', title: questTitle(q.key, t), from: fraction(was.get(q.key) ?? { progress: 0, target: q.target }), to: fraction(q), progress: q.progress, target: q.target };
 }
 
 /** the lines for several rewards: the same badge sums into one line (5 + 3 is «+8 …»), a repeated cosmetic shows once */
-export function rewardLines(rewards: QuestReward[], t: Copy): string[] {
+export function rewardLines(rewards: QuestReward[], t: Copy, gender?: Gender): string[] {
   const merged: QuestReward[] = [];
   for (const r of rewards) {
     const same = merged.findIndex((m) => m.kind === r.kind && m.key === r.key);
@@ -74,15 +74,15 @@ export function rewardLines(rewards: QuestReward[], t: Copy): string[] {
     if (m && m.kind === 'badge' && r.kind === 'badge') merged[same] = { ...m, amount: m.amount + r.amount };
     else if (same < 0) merged.push(r);
   }
-  return merged.map((r) => rewardLine(r, t));
+  return merged.map((r) => rewardLine(r, t, gender));
 }
 
 /** the quest celebrations queued together, as one: label, title, reward lines joined */
-export function questCelebrationView(rewards: { quest: string; reward: QuestReward }[], t: Copy): { label: string; title: string; reward: string } {
+export function questCelebrationView(rewards: { quest: string; reward: QuestReward }[], t: Copy, gender?: Gender): { label: string; title: string; reward: string } {
   const one = rewards.length === 1;
   return {
     label: one ? t.quests.celebrationOne : t.quests.celebrationMany,
     title: one ? questTitle(rewards[0]!.quest, t) : fmt(t.quests.titleMany, { n: rewards.length }),
-    reward: rewardLines(rewards.map((r) => r.reward), t).join(' · '),
+    reward: rewardLines(rewards.map((r) => r.reward), t, gender).join(' · '),
   };
 }
