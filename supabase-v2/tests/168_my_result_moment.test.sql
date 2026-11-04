@@ -55,7 +55,7 @@ select ok((pg_temp.inbox(:'pro'::uuid, :'a'::uuid)).seen_at is not null, 'a seen
 
 -- in review: only once approved
 insert into core.matches (sport_id, format, status, starts_at, source, approved)
-values ('tennis', 'singles', 'confirmed', now() - interval '2 hours', 'user', false) returning id as r \gset
+values ('tennis', 'singles', 'confirmed', now() - interval '2 hours', 'import', false) returning id as r \gset
 insert into core.match_participants (match_id, player_id, side, position) values (:'r'::uuid, :'p1'::uuid, 1, 1), (:'r'::uuid, :'p2'::uuid, 2, 1);
 select pg_temp.res(:'r'::uuid, 1);
 select is((pg_temp.inbox(:'pro'::uuid, :'r'::uuid)).id, null, 'a match in review waits');
