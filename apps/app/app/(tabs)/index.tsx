@@ -3,6 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { AppState, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
+import { MyResultMoment } from '../../src/components/MyResultMoment';
 import { ConfirmRow } from '../../src/components/ConfirmCard';
 import { ProLine } from '../../src/components/ProEntries';
 import { ResultsDeck } from '../../src/components/ResultsDeck';
@@ -34,7 +35,8 @@ import { useFollowedIds } from '../../src/lib/myPeople';
 import { yoursSet } from '../../src/lib/tournamentToday';
 import { useNotes, useVotePath } from '../../src/lib/useVotePath';
 import { skipIds, takenToast } from '../../src/lib/resultsSummary';
-import type { Celebration as CelebrationItem } from '@netprophet/db';
+import type { Celebration as CelebrationItem, MyResultCelebration } from '@netprophet/db';
+import { isMyResult } from '../../src/lib/myResult';
 import { isUnlock, nextGroup } from '../../src/lib/celebrate';
 import { hasMoment } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
@@ -226,6 +228,20 @@ export default function HomeScreen() {
     if (claim('celebration')) setCelebrating(group);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupKey, celebrating, acted, focused, touring, claim]);
+  // a Pro player's own result (founder, 4 Nov): the one moment that does not wait for a vote or for the result cards, it
+  // is what they opened the app for; whatever else is queued waits for the next visit
+  const ownResults = celebrations.filter(isMyResult);
+  const ownKey = ownResults.map((c) => c.id).join();
+  const [myResults, setMyResults] = useState<MyResultCelebration[] | undefined>(undefined);
+  useEffect(() => {
+    if (myResults || celebrating || !ownKey || !focused || touring) return;
+    if (claim('celebration', { asked: true })) setMyResults(ownResults);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownKey, myResults, celebrating, focused, touring, claim]);
+  const onMyResultsDone = (list: MyResultCelebration[]) => {
+    setMyResults(undefined);
+    dismissCelebration(list.map((c) => c.id));
+  };
   // a step that opens quietly has no moment: mark it seen without showing anything
   const quiet = celebrations.filter((c) => isUnlock(c) && !hasMoment(c.payload.key)).map((c) => c.id).join();
   useEffect(() => {
@@ -511,6 +527,16 @@ export default function HomeScreen() {
           if (msg) toast(msg);
         }}
       />
+      {myResults ? (
+        <MyResultMoment
+          items={myResults}
+          onDone={() => onMyResultsDone(myResults)}
+          onStats={() => {
+            onMyResultsDone(myResults);
+            router.push('/me?page=stats');
+          }}
+        />
+      ) : null}
       {celebrating ? <Celebration key={celebrating.map((c) => c.id).join()} items={celebrating} onDone={() => onCelebrated(celebrating)} /> : null}
     </View>
   );

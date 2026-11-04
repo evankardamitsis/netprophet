@@ -157,7 +157,7 @@ const rnd = (i: number, k: number) => {
 };
 
 /** prototype celParts: 14 near pieces, 16 far ones, circles, triangles and squares */
-function Burst({ x, y }: { x: number; y: number }) {
+export function Burst({ x, y }: { x: number; y: number }) {
   const parts = useMemo(
     () =>
       Array.from({ length: 30 }, (_, i) => {

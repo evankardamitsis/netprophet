@@ -26,7 +26,7 @@ import { EFFECT_BEHIND, EFFECT_SOUND, WinEffect } from './WinEffects';
  * haptic. With `pokeable` it answers a touch: a tap squashes it, five quick taps make it dizzy, a long press makes it
  * jump. Lists keep the still `Avatar`; Baller is for the places where it is the star.
  */
-export type BallerMove = 'jump' | 'spin' | 'squash' | 'sigh' | 'wave' | 'dizzy' | 'drop' | 'hop' | 'levelUp';
+export type BallerMove = 'jump' | 'spin' | 'squash' | 'sigh' | 'sighQuiet' | 'wave' | 'dizzy' | 'drop' | 'hop' | 'levelUp';
 
 /**
  * «Ανέβηκες level!» has its own move (founder, 18 Oct: "the level up should have a different baller animation"): a
@@ -191,9 +191,10 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
           squish([[0.74, 90], [1.08, 150], [0.97, 120], [1, 120]]);
           break;
         case 'sigh':
+        case 'sighQuiet':
           face('sad', 1500);
           buzz('soft');
-          playSound('aw');
+          if (move === 'sigh') playSound('aw');
           lift.value = withSequence(withTiming(-size * 0.06, { duration: 380, easing: out }), withTiming(0, { duration: 620, easing: Easing.inOut(Easing.sin) }));
           squish([[0.9, 380], [1, 620]]);
           break;
