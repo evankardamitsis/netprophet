@@ -614,6 +614,8 @@ export const en: Copy = {
     newTournamentsPushLine: 'As soon as a new tournament comes in with its schedule. Never from 23:00 to 08:00.',
     playersPush: 'Players you follow',
     playersPushLine: 'When they play and how it went, who follows you, one vote from a mission. At most 3 a day.',
+    quizPush: 'Quiz of the day',
+    quizPushLine: 'Tuesday and Friday at 17:00, if you have not finished it.',
     followedPush: 'Tournaments you follow',
     followedPushLine: "The draw, tomorrow's schedule, the semifinals and the finals. Never from 23:00 to 08:00.",
     medalEmail: 'Medal emails',

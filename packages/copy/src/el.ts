@@ -719,6 +719,8 @@ export const el = {
     newTournamentsPushLine: 'Μόλις μπαίνει ένα νέο τουρνουά με το πρόγραμμά του. Ποτέ από τις 23:00 ως τις 08:00.',
     playersPush: 'Παίκτες που ακολουθείς',
     playersPushLine: 'Πότε παίζουν και πώς πήγαν, ποιος σε ακολουθεί, μία ψήφος πριν από αποστολή. Το πολύ 3 τη μέρα.',
+    quizPush: 'Quiz της ημέρας',
+    quizPushLine: 'Τρίτη και Παρασκευή στις 17:00, αν δεν το έχεις τελειώσει.',
     followedPush: 'Τουρνουά που ακολουθείς',
     followedPushLine: 'Η κλήρωση, το αυριανό πρόγραμμα, οι ημιτελικοί και οι τελικοί. Ποτέ από τις 23:00 ως τις 08:00.',
     /** the winners' email when the month closes (2 Nov 2026), on unless switched off */
