@@ -9,9 +9,7 @@ select tests.mk_player('Νίκος', 'Βλάχος') as p1 \gset
 select tests.mk_player('Πέτρος', 'Παππάς') as p2 \gset
 update core.players set claimed_by_user_id = :'pro'::uuid where id = :'p1'::uuid;
 update core.players set claimed_by_user_id = :'free'::uuid where id = :'p2'::uuid;
-create or replace function core.is_pro(p uuid) returns boolean language sql as $$
-  select exists (select 1 from auth.users u where u.id = p and u.email = 'mr-pro@test.local')
-$$;
+insert into core.entitlements (user_id, source, status) values (:'pro'::uuid, 'gift', 'active');
 
 create or replace function pg_temp.m() returns uuid language plpgsql as $$
 declare v uuid;
