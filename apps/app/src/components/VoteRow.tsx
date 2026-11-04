@@ -11,6 +11,7 @@ import { HOLD_MS, holdFor, pointOf, type HoldPerson } from '../lib/playerHold';
 import { fmt, type Side } from '../lib/votes';
 import { cardSurface, colors, fonts, motion, text } from '../theme';
 import { Logo } from './Logo';
+import { StagePill } from './StagePill';
 
 /**
  * One match as a row (mockup D, founder 22 Oct): the time on the left, a small line with the tournament and category
@@ -118,6 +119,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
             {match.later && hasTime(match.startsAt) ? <Text style={styles.small}>{t.match.tomorrow}</Text> : null}
           </View>
           <View style={styles.body}>
+            {match.stage ? <StagePill stage={match.stage} /> : null}
             {small ? (
               <View style={styles.whereRow}>
                 {place.logo && place.clubName ? <Logo path={place.logo} name={place.clubName} size={16} /> : null}

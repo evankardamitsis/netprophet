@@ -73,7 +73,7 @@ describe('the scout shows more than the free card', () => {
   });
 
   it('this tournament so far and how they play', () => {
-    expect(v.path.map((m) => m.meta.split(' · ')[0])).toEqual(['Δεύτερος γύρος', 'Προημιτελικός']);
+    expect(v.path.map((m) => m.meta.split(' · ')[0])).toEqual(['Φάση των 16', 'Προημιτελικός']);
     expect(v.traits[0]).toEqual({ id: 'mock-t1', label: 'Κόβει πολύ την μπάλα', count: 9 });
   });
 

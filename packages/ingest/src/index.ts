@@ -9,3 +9,4 @@ export * from './draw';
 export * from './athensTennis';
 export * from './tournamentSoftware';
 export * from './levelFromDraws';
+export * from './rounds';
