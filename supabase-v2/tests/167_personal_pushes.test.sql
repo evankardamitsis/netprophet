@@ -101,11 +101,11 @@ select is(core.personal_push(:'b'::uuid, 'cap-x', 't', 'b', '/', :'noon'::timest
 
 -- your one result was an upset you called: 1 of 4 saw it coming
 select pg_temp.match_(:'t'::uuid, :'p1'::uuid, :'p2'::uuid, null, :'noon'::timestamptz - interval '2 days', 'confirmed') as up \gset
-insert into core.votes (user_id, subject_type, subject_id, option, day_key, outcome, is_upset_call) values
-  (:'a'::uuid, 'match', :'up'::uuid, 1, current_date, 'correct', true),
-  (:'b'::uuid, 'match', :'up'::uuid, 2, current_date, 'wrong', false),
-  (:'off'::uuid, 'match', :'up'::uuid, 2, current_date, 'wrong', false),
-  (:'none'::uuid, 'match', :'up'::uuid, 2, current_date, 'wrong', false);
+insert into core.votes (user_id, subject_type, subject_id, option, day_key, resolved_at, outcome, is_upset_call) values
+  (:'a'::uuid, 'match', :'up'::uuid, 1, current_date, now(), 'correct', true),
+  (:'b'::uuid, 'match', :'up'::uuid, 2, current_date, now(), 'wrong', false),
+  (:'off'::uuid, 'match', :'up'::uuid, 2, current_date, now(), 'wrong', false),
+  (:'none'::uuid, 'match', :'up'::uuid, 2, current_date, now(), 'wrong', false);
 insert into core.outbox (kind, payload, idempotency_key, run_after)
 values ('push', jsonb_build_object('user_id', :'a'::uuid, 'dedupe_key', 'result:' || :'a' || ':' || :'up'), 'push:result:' || :'a' || ':' || :'up', now() - interval '1 minute');
 select is((select j ->> 'body' from jsonb_array_elements(core.take_push_batch(500)) j
