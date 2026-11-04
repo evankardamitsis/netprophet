@@ -372,9 +372,25 @@ export interface LevelCelebrationPayload {
   level: number;
 }
 
+/** a Pro player's own result, full screen; the numbers stand as they are after this match */
+export interface MyResultCelebrationPayload {
+  type: 'my_result';
+  match_id: string;
+  win: boolean;
+  score: string | null;
+  /** «τον Π. Βλάχο» */
+  opponent: string | null;
+  year_wins: number;
+  year_losses: number;
+  wins_in_row: number;
+  /** singles only */
+  h2h_wins: number | null;
+  h2h_losses: number | null;
+}
+
 /** a full-screen moment (prototype celOn): a σερί milestone, a finished quest, a badge tier, an unlock or the month's league result */
 export interface Celebration<
-  P = StreakCelebrationPayload | RecordCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload | LeagueCelebrationPayload | LevelCelebrationPayload,
+  P = StreakCelebrationPayload | RecordCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload | LeagueCelebrationPayload | LevelCelebrationPayload | MyResultCelebrationPayload,
 > {
   id: string;
   created_at: string;
@@ -388,6 +404,7 @@ export type BadgeCelebration = Celebration<BadgeCelebrationPayload>;
 export type UnlockCelebration = Celebration<UnlockCelebrationPayload>;
 export type LeagueCelebration = Celebration<LeagueCelebrationPayload>;
 export type LevelCelebration = Celebration<LevelCelebrationPayload>;
+export type MyResultCelebration = Celebration<MyResultCelebrationPayload>;
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
 /** a tournament with results lately, for the filter on Αποτελέσματα; yours first */

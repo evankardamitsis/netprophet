@@ -1323,6 +1323,23 @@ export const el = {
     },
   },
   /** full-screen moments (prototype celOn): σερί milestones for now */
+  myResult: {
+    aria: 'Το αποτέλεσμά σου',
+    labelWin: 'Νίκη',
+    labelLoss: 'Το ματς σου',
+    labelMany: 'Τα ματς σου',
+    titleWin: 'Το πήρες!',
+    titleLoss: 'Δεν βγήκε αυτή τη φορά',
+    winsOne: '1 νίκη',
+    winsMany: '{n} νίκες',
+    lossesOne: '1 ήττα',
+    lossesMany: '{n} ήττες',
+    line: '{score} με {opponent}',
+    year: 'Φέτος {w}-{l}',
+    inRow: '{n} νίκες στη σειρά',
+    h2h: 'Μεταξύ σας {w}-{l}',
+    stats: 'Δες τα νούμερά σου ›',
+  },
   celebrate: {
     label: 'Σερί',
     titles: { 3: 'Τρία στη σειρά!', 5: 'Πέντε στη σειρά!', 7: 'Επτά στη σειρά!', 10: 'Το δέκα το καλό' } as Record<number, string>,
