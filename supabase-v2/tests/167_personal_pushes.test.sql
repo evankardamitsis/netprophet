@@ -25,7 +25,7 @@ begin
   return v;
 end $$;
 create or replace function pg_temp.result_(p_m uuid) returns void language sql as $$
-  insert into core.match_results (match_id, winner_side, sets, score_summary, sets_won, sets_lost) values (p_m, 1, '[]', '6-4 6-2', 2, 0)
+  insert into core.match_results (match_id, winner_side, sets, score_summary, sets_won, sets_lost) values (p_m, 1, '[{"w": 6, "l": 4}, {"w": 6, "l": 2}]', '2-0', 2, 0)
 $$;
 create or replace function pg_temp.got(p_u uuid, p_like text) returns int language sql as $$
   select count(*)::int from core.notifications where user_id = p_u and type = 'personal' and dedupe_key like p_like

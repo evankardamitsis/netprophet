@@ -235,7 +235,10 @@ begin
         case when (select m.format from core.matches m where m.id = v_id) = 'singles' then 'player_result' else 'player_result_pair' end,
         jsonb_build_object('tournament', (select t.name from core.matches m join core.tournaments t on t.id = m.tournament_id where m.id = v_id),
                            'winner', core.side_names(v_id, v_win), 'loser', core.opponents_acc(v_id, v_win),
-                           'score', (select nullif(mr.score_summary, '') from core.match_results mr where mr.match_id = v_id)));
+                           'score', (select coalesce((select string_agg((x ->> 'w') || '-' || (x ->> 'l'), ' ' order by o)
+                                                       from jsonb_array_elements(mr.sets) with ordinality y(x, o)),
+                                                     nullif(mr.score_summary, ''))
+                                       from core.match_results mr where mr.match_id = v_id)));
       v_url := '/tournament/' || (select m.tournament_id from core.matches m where m.id = v_id) || '?match=' || v_id;
     else
       select * into v_txt from core.ntext('player_results_many', jsonb_build_object('n', array_length(r.ids, 1)));
