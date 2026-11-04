@@ -717,8 +717,10 @@ export const el = {
     /** for everyone (21 Oct): the tournaments you follow */
     newTournamentsPush: 'Νέα τουρνουά',
     newTournamentsPushLine: 'Μόλις μπαίνει ένα νέο τουρνουά με το πρόγραμμά του. Ποτέ από τις 23:00 ως τις 08:00.',
+    playersPush: 'Παίκτες που ακολουθείς',
+    playersPushLine: 'Πότε παίζουν και πώς πήγαν, ποιος σε ακολουθεί, μία ψήφος πριν από αποστολή. Το πολύ 3 τη μέρα.',
     followedPush: 'Τουρνουά που ακολουθείς',
-    followedPushLine: 'Η κλήρωση, το αυριανό πρόγραμμα και ο τελικός. Ποτέ από τις 23:00 ως τις 08:00.',
+    followedPushLine: 'Η κλήρωση, το αυριανό πρόγραμμα, οι ημιτελικοί και οι τελικοί. Ποτέ από τις 23:00 ως τις 08:00.',
     /** the winners' email when the month closes (2 Nov 2026), on unless switched off */
     medalEmail: 'Email για τα μετάλλια',
     medalEmailLine: 'Όταν μπαίνεις στους 3 πρώτους της Κατηγορίας σου.',
