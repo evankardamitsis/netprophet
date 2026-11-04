@@ -580,6 +580,10 @@ export type Database = {
         Args: { p_kind: string; p_id: string; p_path: string };
         Returns: Json;
       };
+      admin_set_match_round: {
+        Args: { p_match: string; p_round: string };
+        Returns: boolean;
+      };
       admin_set_result: {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
         Returns: Json;
