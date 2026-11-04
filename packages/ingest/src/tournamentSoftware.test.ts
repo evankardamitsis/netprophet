@@ -26,6 +26,17 @@ describe('tournamentsoftware.com', () => {
     expect(tournamentSoftwarePerson('Anna DE LA CRUZ')).toMatchObject({ first: 'Anna', surname: 'DE LA CRUZ' });
   });
 
+  it('reads the round of each match, and leaves «Round 1» unknown', () => {
+    const count = (ms: { round?: string }[], r?: string) => ms.filter((m) => m.round === r).length;
+    const queens = parseTournamentSoftwareDay(page('queens-20261103.html.gz'), '20261103');
+    expect(count(queens, 'round16')).toBeGreaterThan(0);
+    expect(count(queens, 'quarter')).toBeGreaterThan(0);
+    expect(count(queens, undefined)).toBeGreaterThan(0);
+    const finals = parseTournamentSoftwareDay(page('tatoi-20261011.html.gz'), '20261011');
+    expect(finals.length).toBeGreaterThan(0);
+    expect(finals.every((m) => m.round === 'final')).toBe(true);
+  });
+
   it('reads tomorrow\'s schedule: time, event, court, no result', () => {
     const ms = parseTournamentSoftwareDay(page('queens-20261103.html.gz'), '20261103');
     expect(ms.length).toBeGreaterThan(20);

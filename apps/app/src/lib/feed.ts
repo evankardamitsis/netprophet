@@ -41,6 +41,8 @@ export interface CardMatch {
   kind: 'match';
   id: string;
   meta: string;
+  /** a semifinal or a final: its pill on the row */
+  stage?: MatchStage;
   learn: string;
   doubles: boolean;
   a: CardSide;
@@ -198,6 +200,11 @@ export const ROUND_KEYS = ['round64', 'round32', 'round16', 'quarter', 'semi', '
 type RoundKey = (typeof ROUND_KEYS)[number];
 const isRoundKey = (r: string): r is RoundKey => (ROUND_KEYS as readonly string[]).includes(r);
 
+/** a semifinal or a final stands out on the card (StagePill); every other round stays quiet */
+export type MatchStage = 'semi' | 'final';
+export const stageOf = (round: string | null | undefined): MatchStage | undefined =>
+  round === 'semi' || round === 'final' ? round : undefined;
+
 export function roundLabel(round: string | null, t: Copy): string | null {
   if (!round) return null;
   return isRoundKey(round) ? t.match.rounds[round] : round;
@@ -295,6 +302,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     moved: card.moved_from && w.label ? movedOf(w.label, rest, dayShort(card.moved_from, t), t) : undefined,
     id: card.match_id,
     meta,
+    stage: stageOf(card.round),
     learn: w.learn,
     doubles,
     a: side(players(1), areas, t),
@@ -337,6 +345,7 @@ export function fromTournamentMatch(m: TournamentMatch, tournamentId: string, t:
     kind: 'match',
     id: m.match_id,
     meta: roundLabel(m.round, t) ?? '',
+    stage: stageOf(m.round),
     learn: '',
     doubles: m.format !== 'singles',
     a: side(players(1), {}, t),
@@ -476,6 +485,7 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     moved: m.movedBack ? movedOf(parts[0]!, parts.slice(1).join(' · '), dayShort(new Date(now.getTime() - 3 * 86_400_000).toISOString(), t), t) : undefined,
     doubles: Boolean(m.a2 && m.b2),
     meta: parts.join(' · '),
+    stage: stageOf(m.round),
     learn: m.day === 'today' ? t.match.learnTonight : t.match.learnTomorrow,
     later: m.day !== 'today',
     a: mockSide(m.a, t, m.a2),

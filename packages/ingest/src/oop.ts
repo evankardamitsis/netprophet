@@ -1,5 +1,6 @@
 import { parseCategory, parseCategoryRaw, type Discipline } from './category';
 import { parseSheetSide, type SheetPerson } from './names';
+import { roundFromLabel, type RoundKey } from './rounds';
 import { parseScore, type ScoreStatus, type SheetSet } from './score';
 
 /**
@@ -65,6 +66,8 @@ export interface SheetMatch {
   club?: string;
   /** the court within the club («Court 1 PRC») */
   court?: string;
+  /** the round, when the source says it for sure (rounds.ts) */
+  round?: RoundKey;
 }
 
 interface TabInput {
@@ -150,6 +153,8 @@ export function parseSheet(tabs: TabInput[], seasonStartYear: number): SheetMatc
       const k1 = a.people.map((p) => p.key).sort().join('+');
       const k2 = b.people.map((p) => p.key).sort().join('+');
       const scoreRaw = g('s').replace(/\s+/g, ' ');
+      // «ΤΕΛΙΚΟΣ», «ΗΜΙΤΕΛΙΚΟΣ» written where the score goes, over a match still to play
+      const round = roundFromLabel(scoreRaw);
       out.push({
         tab: tab.name,
         date: day.date,
@@ -167,6 +172,7 @@ export function parseSheet(tabs: TabInput[], seasonStartYear: number): SheetMatc
         winner: score.winner,
         status: score.status,
         ...(score.retired ? { retired: true } : {}),
+        ...(round ? { round } : {}),
         fingerprint: [day.date, discipline, parseCategoryRaw(g('c')).level, ...[k1, k2].sort()].join('|'),
         flags: [...f],
         dk: JSON.stringify([discipline, cat.level, [k1, k2].sort(), scoreRaw.toLowerCase()]),

@@ -50,6 +50,8 @@ export interface ResultItem {
   category: string | null;
   /** «Προημιτελικά»: the round, quiet beside the category; null when unknown */
   round: string | null;
+  /** a semifinal or a final: its pill instead of the quiet round */
+  stage?: 'semi' | 'final';
 }
 
 /**
@@ -214,7 +216,7 @@ export function groupResults(rows: ResultRow[], t: Copy, now: Date, myPlayerId: 
       groups.push(g);
     }
     const parts = eventParts(row, t);
-    g.items.push({ ...toResultItem(row, t, myPlayerId), category: parts.category, round: parts.detail });
+    g.items.push({ ...toResultItem(row, t, myPlayerId), category: parts.category, round: parts.detail, stage: row.round === 'semi' || row.round === 'final' ? row.round : undefined });
   }
   // a category every card of a tournament shares is said once, on its head (as Σήμερα does)
   for (const g of groups) {

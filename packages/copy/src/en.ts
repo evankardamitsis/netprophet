@@ -102,7 +102,7 @@ export const en: Copy = {
     rounds: {
       round64: 'Round of 64',
       round32: 'Round of 32',
-      round16: 'Second round',
+      round16: 'Round of 16',
       quarter: 'Quarterfinal',
       semi: 'Semifinal',
       final: 'Final',

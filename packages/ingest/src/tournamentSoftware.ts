@@ -1,6 +1,7 @@
 import { normalizeCategory, type Discipline } from './category';
 import { sheetKey, type SheetPerson } from './names';
 import type { SheetMatch } from './oop';
+import { roundFromLabel } from './rounds';
 import type { SheetSet } from './score';
 
 /**
@@ -106,6 +107,9 @@ export function parseTournamentSoftwareDay(html: string, day: string): SheetMatc
     if (i > 0) {
       const head = /class="match__header-title-item">[\s\S]*?nav-link__value">([^<]*)<\/span>/.exec(block);
       const categoryRaw = head ? text(head[1]!) : '';
+      // the header's second item is the round («Quarter final», «Final»)
+      const roundItem = /class="match__header-title-item">[\s\S]*?class="match__header-title-item">[\s\S]*?nav-link__value">([^<]*)<\/span>/.exec(block);
+      const round = roundFromLabel(roundItem ? text(roundItem[1]!) : '');
       const ev = EVENT.exec(categoryRaw);
       const rs = rows(block);
       if (ev && rs.length === 2 && rs[0]!.players.length === rs[1]!.players.length && rs[0]!.players.length <= 2) {
@@ -147,6 +151,7 @@ export function parseTournamentSoftwareDay(html: string, day: string): SheetMatc
           flags,
           ...(venueName ? { club: venueName } : {}),
           ...(courtName ? { court: courtName } : {}),
+          ...(round ? { round } : {}),
         };
         if (!seen.has(m.fingerprint)) {
           seen.add(m.fingerprint);

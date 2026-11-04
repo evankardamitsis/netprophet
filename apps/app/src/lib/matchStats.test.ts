@@ -150,7 +150,7 @@ describe('matchStatsView', () => {
       ['hard', 'Σκληρό', '2-2'],
     ]);
     const rounds = v.blocks.find((b) => b.kind === 'rounds')!;
-    expect(rounds.kind === 'rounds' && rounds.rows.map((r) => r.label)).toEqual(['Δεύτερος γύρος', 'Προημιτελικός', 'Ημιτελικός', 'Τελικός']);
+    expect(rounds.kind === 'rounds' && rounds.rows.map((r) => r.label)).toEqual(['Φάση των 16', 'Προημιτελικός', 'Ημιτελικός', 'Τελικός']);
     expect(rounds.kind === 'rounds' && rounds.rows[3]!.depth).toBe(1);
     const months = v.blocks.find((b) => b.kind === 'months')!;
     expect(months.kind === 'months' && Math.max(...months.bars.map((b) => b.height))).toBe(1);
@@ -162,7 +162,7 @@ describe('matchStatsView', () => {
     expect(tours.kind === 'tournaments' && tours.rows.map((r) => [r.champion, r.line])).toEqual([
       [true, 'Το πήρες!'],
       [false, 'Ημιτελικός · ήττα'],
-      [false, 'Δεύτερος γύρος · ήττα'],
+      [false, 'Φάση των 16 · ήττα'],
     ]);
     expect(tours.kind === 'tournaments' && tours.more).toBeNull();
   });

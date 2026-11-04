@@ -120,7 +120,7 @@ export const el = {
     rounds: {
       round64: 'Φάση των 64',
       round32: 'Φάση των 32',
-      round16: 'Δεύτερος γύρος',
+      round16: 'Φάση των 16',
       quarter: 'Προημιτελικός',
       semi: 'Ημιτελικός',
       final: 'Τελικός',
@@ -394,7 +394,7 @@ export const el = {
     rounds: {
       round64: 'Φάση των 64',
       round32: 'Φάση των 32',
-      round16: 'Δεύτερος γύρος',
+      round16: 'Φάση των 16',
       quarter: 'Προημιτελικά',
       semi: 'Ημιτελικά',
       final: 'Τελικός',

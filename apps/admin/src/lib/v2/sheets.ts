@@ -4,6 +4,7 @@ import {
   levelFromDraws,
   parseAthensTennis,
   parseDraws,
+  roundsFromDraws,
   parseSheet,
   parseTournamentSoftwareDay,
   tournamentSoftwareBase,
@@ -152,7 +153,7 @@ export async function rowsForTournament(
   let known = draws ?? null;
   if (!known && t.draw_url) known = await drawsForTournament({ draw_url: t.draw_url, season_start_year: t.season_start_year }).catch(() => null);
   const matches = parseSheet(tabs, season(t));
-  return runRows(known ? levelFromDraws(matches, known) : matches);
+  return runRows(known ? roundsFromDraws(levelFromDraws(matches, known), known) : matches);
 }
 
 /** fetch and parse one tournament's draw sheet (one bracket per category tab) */

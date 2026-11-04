@@ -10,6 +10,7 @@ import { colors, fonts, motion, type } from '../theme';
 import { useCopy } from '../i18n';
 import { FitText } from './FitText';
 import { ReactionChips } from './ReactionChips';
+import { StagePill } from './StagePill';
 
 /**
  * One finished match on Αποτελέσματα: white, or ink for an upset. Cleared out (founder, 14 Oct: "result cards look a
@@ -60,10 +61,11 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
     >
       <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
         {/* the category and round, as on Σήμερα's cards: who plays in bold, the round quiet beside it */}
-        {item.category || item.round ? (
+        {item.category || item.round || item.stage ? (
           <View style={styles.catRow}>
+            {item.stage ? <StagePill stage={item.stage} onInk={hot} /> : null}
             {item.category ? <Text style={[styles.category, { color: fg }]}>{item.category}</Text> : null}
-            {item.round ? <Text style={[styles.round, { color: soft }]}>{item.round}</Text> : null}
+            {item.round && !item.stage ? <Text style={[styles.round, { color: soft }]}>{item.round}</Text> : null}
           </View>
         ) : null}
         {item.tag || item.calledIt || item.review ? (

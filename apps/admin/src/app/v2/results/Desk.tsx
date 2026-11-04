@@ -4,7 +4,7 @@ import { isValidMatchTiebreak, isValidTennisSet } from '@netprophet/core';
 import type { FeedPlayer, SetScore, Side } from '@netprophet/db';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
-import { keepPostponed, resolveNow, saveResult, voidMatch, type ActionResult } from './actions';
+import { keepPostponed, resolveNow, saveResult, voidMatch, setMatchRound, type ActionResult } from './actions';
 
 export interface DeskItem {
   match_id: string;
@@ -263,6 +263,23 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
           {item.off_sheet ? <Badge tone="ink">{item.off_sheet_since ? `Off the sheet since ${when(item.off_sheet_since)}` : 'Off the sheet'}</Badge> : null}
           {item.postponed_by === 'auto' ? <Badge tone="ink">Rained off by the 15:00 rule</Badge> : null}
           <Badge>{plural(item.votes, 'vote')}</Badge>
+          {/* athenstennis and TAF do not say the round: a person does, and the next read keeps it */}
+          {item.tournament ? (
+            <select
+              className="v2-select"
+              aria-label="Round"
+              value={item.round ?? ''}
+              disabled={pending}
+              onChange={(e) => run('Saving the round', () => setMatchRound(item.match_id, e.target.value || null))}
+            >
+              <option value="">Round: not set</option>
+              {Object.entries(ROUNDS).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          ) : null}
         </span>
       </div>
       <div style={{ fontSize: 18, fontWeight: 800 }}>{names}</div>

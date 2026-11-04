@@ -52,6 +52,18 @@ export async function saveResult(input: {
   }
 }
 
+export async function setMatchRound(matchId: string, round: string | null): Promise<ActionResult> {
+  try {
+    const { rpc } = await staffClient();
+    const { error } = await rpc('admin_set_match_round', { p_match: matchId, p_round: round });
+    if (error) return { ok: false, message: error.message };
+    revalidatePath('/v2/results');
+    return { ok: true, message: round ? 'Round saved.' : 'Round cleared.' };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'failed' };
+  }
+}
+
 export async function voidMatch(matchId: string): Promise<ActionResult> {
   try {
     const { rpc, staff } = await staffClient();
