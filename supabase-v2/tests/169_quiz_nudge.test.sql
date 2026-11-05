@@ -18,6 +18,8 @@ insert into core.push_tokens (token, user_id, platform) values
   ('ExponentPushToken[qn-full]', :'full_'::uuid, 'ios'), ('ExponentPushToken[qn-pnew]', :'pnew'::uuid, 'ios'),
   ('ExponentPushToken[qn-plow]', :'plow'::uuid, 'ios'), ('ExponentPushToken[qn-prest]', :'prest'::uuid, 'ios'),
   ('ExponentPushToken[qn-pall]', :'pall'::uuid, 'ios');
+-- all of them opened the app the day before the Tuesday below, whatever today's date is
+update core.push_tokens set last_seen_at = '2026-11-09 12:00+02' where token like 'ExponentPushToken[qn-%';
 insert into core.entitlements (user_id, source, status) values
   (:'pnew'::uuid, 'gift', 'active'), (:'plow'::uuid, 'gift', 'active'), (:'prest'::uuid, 'gift', 'active'), (:'pall'::uuid, 'gift', 'active');
 update core.profiles set notification_prefs = coalesce(notification_prefs, '{}'::jsonb) || '{"quiz": false}' where user_id = :'off'::uuid;
