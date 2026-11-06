@@ -25,7 +25,9 @@ select tests.login(:'adm'::uuid);
 
 -- the score only
 select is((api.admin_edit_result(:'m'::uuid, :w, '[{"w": 7, "l": 5}, {"w": 6, "l": 1}]') ->> 'points_moved')::int, 0, 'another score with the same winner moves no points');
+reset role;
 select is((select total_points from core.user_game_state where user_id = :'a'::uuid), :'earned'::int, 'the points stay');
+select tests.login(:'adm'::uuid);
 select is((api.admin_edit_result(:'m'::uuid, :w, '[{"w": 7, "l": 5}, {"w": 6, "l": 1}]') ->> 'changed')::boolean, false, 'the same again changes nothing');
 
 -- the other side won
