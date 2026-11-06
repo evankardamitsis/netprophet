@@ -52,6 +52,33 @@ export async function saveResult(input: {
   }
 }
 
+/** a published result changed and put out again (admins): the votes and points follow a new winner */
+export async function editResult(input: {
+  matchId: string;
+  winnerSide: Side;
+  sets: SetScore[];
+  retired: boolean;
+  walkover: boolean;
+}): Promise<ActionResult> {
+  try {
+    const { rpc } = await staffClient();
+    const { data, error } = await rpc('admin_edit_result', {
+      p_match_id: input.matchId,
+      p_winner_side: input.winnerSide,
+      p_sets: input.sets,
+      p_retired: input.retired,
+      p_walkover: input.walkover,
+    });
+    if (error) return { ok: false, message: error.message };
+    const r = data as { changed: boolean; votes_changed: number; points_moved: number };
+    revalidatePath('/v2/results');
+    if (!r.changed) return { ok: true, message: 'Nothing changed.' };
+    return { ok: true, message: r.votes_changed ? `Republished. ${r.votes_changed} votes changed, ${r.points_moved} points moved.` : 'Republished. No points moved.' };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'failed' };
+  }
+}
+
 export async function setMatchRound(matchId: string, round: string | null): Promise<ActionResult> {
   try {
     const { rpc } = await staffClient();
