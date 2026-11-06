@@ -560,16 +560,16 @@ export type Database = {
         Args: { p_id: string; p: Json };
         Returns: Json;
       };
-      admin_revoke_pro: {
-        Args: { p_user_id: string };
-        Returns: Json;
-      };
       admin_review_claim: {
         Args: { p_user: string; p_approve: boolean };
         Returns: Json;
       };
       admin_review_match: {
         Args: { p_match: string; p_approve: boolean };
+        Returns: Json;
+      };
+      admin_revoke_pro: {
+        Args: { p_user_id: string };
         Returns: Json;
       };
       admin_save_club: {
