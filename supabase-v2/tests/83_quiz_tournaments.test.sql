@@ -1,9 +1,10 @@
--- Quiz from the tournaments: three of six cards come from real matches (position 4 a tournament card);
--- «Τουρνουά» asks who lifts a category out of three unbeaten players; «Θυμάσαι;» asks who won, with the right answer.
+-- Quiz from the tournaments: «Τουρνουά» asks who lifts a category out of three unbeaten players, in a category with
+-- someone you know in it, in words you can say out loud. «Θυμάσαι;» has retired.
 begin;
 select plan(7);
 
 select tests.create_user('qt-u@test.local') as u \gset
+select tests.create_user('qt-far@test.local') as far \gset
 create temp table tp as
 select g, tests.mk_player('Τουρ' || g, 'Νουάς' || g, 'm') as id from generate_series(1, 8) g;
 grant select on tp to public;
@@ -22,30 +23,23 @@ select tests.finish_match(:'m2'::uuid, 1);
 select tests.finish_match(:'m3'::uuid, 1);
 select tests.finish_match(:'m4'::uuid, 1);
 
+select is(core.quiz_tournament(:'far'::uuid, 'tennis', 'cup', core.quiz_day_key(now()), 'seed', '{}', '{}'), null, 'nobody you know in it: no card');
+insert into core.follows (user_id, player_id) values (:'u'::uuid, (select id from tp where g = 1));
 select core.quiz_tournament(:'u'::uuid, 'tennis', 'cup', core.quiz_day_key(now()), 'seed', '{}', '{}') as cup \gset
 select is(:'cup'::jsonb -> 'content' ->> 'tag', 'Τουρνουά', 'a cup card');
-select is(:'cup'::jsonb -> 'content' ->> 'q', 'Quiz Open, Μ 40+: ποιος το σηκώνει;', 'names the tournament and the category');
+select is(:'cup'::jsonb -> 'content' ->> 'q', 'Ποιος θα σηκώσει το Μ 40+ στο Quiz Open;', 'names the category and the tournament');
 select ok((select bool_and(x::uuid in (select id from tp where g in (1, 3, 5, 7))) from jsonb_array_elements_text(:'cup'::jsonb -> 'ids') x),
           'three players still unbeaten');
 
-select core.quiz_tournament(:'u'::uuid, 'tennis', 'recall', core.quiz_day_key(now()), 'seed', '{}', '{}') as rec \gset
-select is(:'rec'::jsonb -> 'content' ->> 'tag', 'Θυμάσαι;', 'a recall card');
--- whichever match it picked (the seed data has others too), the right option is that match's winner
-select is(((:'rec'::jsonb -> 'ids') ->> ((:'rec'::jsonb -> 'content' ->> 'right')::int))::uuid,
-          (select mp.player_id from core.match_results r
-             join core.match_participants mp on mp.match_id = r.match_id and mp.side = r.winner_side
-            where r.match_id = (:'rec'::jsonb -> 'content' ->> 'match_id')::uuid limit 1),
-          'the right answer is the winner');
+select is(core.quiz_tournament(:'u'::uuid, 'tennis', 'recall', core.quiz_day_key(now()), 'seed', '{}', '{}'), null, '«Θυμάσαι;» has retired');
 
--- a user who follows nobody: positions 2, 4 and 6 come from the tournament
+update core.tournaments set name = 'Quiz Open 2026–27' where id = :'t'::uuid;
+update core.tournament_events set name = 'Regular Season 2026–27' where id = :'e'::uuid;
+select is(core.quiz_tournament(:'u'::uuid, 'tennis', 'cup', core.quiz_day_key(now()), 'seed', '{}', '{}') -> 'content' ->> 'q',
+          'Ποιος θα το σηκώσει στο Quiz Open;', 'no years, and a category that reads like a code stays out');
+
 select tests.login(:'u'::uuid);
-create temp table q as select api.get_quiz() as doc;
-grant select on q to public;
--- any tournament that is on (the seed has one too), as «Τουρνουά» or «Θυμάσαι;»
-select ok((select c -> 'content' ->> 'tag' in ('Τουρνουά', 'Θυμάσαι;') from q, jsonb_array_elements(doc -> 'cards') c where (c ->> 'position')::int = 4),
-          'position 4: a tournament card');
-select is((select string_agg(c ->> 'family', '' order by (c ->> 'position')::int) from q, jsonb_array_elements(doc -> 'cards') c
-            where (c ->> 'position')::int in (2, 4, 6)), 'ddd', 'three of six come from real matches');
+select ok(not exists (select 1 from jsonb_array_elements(api.get_quiz() -> 'cards') c where c -> 'content' ->> 'tag' = 'Θυμάσαι;'), 'never in a set');
 select tests.logout();
 
 select * from finish();

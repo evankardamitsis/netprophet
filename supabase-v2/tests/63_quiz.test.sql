@@ -49,12 +49,11 @@ create temp table q1 as select api.get_quiz() as doc;
 grant select on q1 to public;
 select is(jsonb_array_length((select doc -> 'cards' from q1)), 6, 'six cards');
 select matches((select string_agg(c ->> 'family', '' order by (c ->> 'position')::int) from q1, jsonb_array_elements(doc -> 'cards') c),
-               '^s[cd]q[od][sdo][cdo]$', 'Σενάριο, Διάλεξε έναν, Ποιος είναι;, Άποψη, Σενάριο, Διάλεξε έναν (2, 4, 5 and 6 can be cards from real matches)');
-select ok((select bool_and(p.id in (select id from pp where g <= 8 or g >= 13))
-             from q1, jsonb_array_elements(doc -> 'cards') c, jsonb_array_elements(c -> 'content' -> 'players') x,
-                  core.players p
-            where (c ->> 'position')::int = 1 and p.id = (x ->> 'id')::uuid),
-          'the first card is about players you follow');
+               '^[scdqo]{6}$', 'six cards, in no fixed order');
+select ok((select coalesce(bool_and(exists (select 1 from core.follows f where f.user_id = :'u'::uuid and f.player_id = (x ->> 'id')::uuid)), true)
+             from q1, jsonb_array_elements(doc -> 'cards') c, jsonb_array_elements(c -> 'content' -> 'players') x
+            where c ->> 'family' in ('s', 'c')),
+          'questions about people are about players you follow');
 select ok(not exists (select 1 from q1, jsonb_array_elements(doc -> 'cards') c, jsonb_array_elements(c -> 'content' -> 'players') x
                        where (x ->> 'id')::uuid in (:'kid'::uuid, :'hid'::uuid, :'me'::uuid)),
           'never a minor, a hidden player or yourself');
@@ -62,8 +61,9 @@ select is((select count(*) - count(distinct x ->> 'id') from q1, jsonb_array_ele
                   jsonb_array_elements(c -> 'content' -> 'players') x)::int, 0, 'nobody twice in a set');
 -- the right answer stays on the server until you answer: read it from the card
 select tests.logout();
-select ok((select ((select x.content ->> 'right' from core.quiz_set_cards x where x.id = (c ->> 'id')::uuid))::int between 0 and 2 and jsonb_array_length(c -> 'content' -> 'clues') >= 2
-             from q1, jsonb_array_elements(doc -> 'cards') c where c ->> 'family' = 'q'),
+-- a set takes one card of a kind in no fixed order, so ask for this one by name
+select ok((select (j ->> 'right')::int between 0 and 2 and jsonb_array_length(j -> 'clues') >= 2
+             from core.quiz_who(:'u'::uuid, 'tennis', 'm', 'seed', '{}') j),
           '«Ποιος είναι;» has clues and one right answer');
 select tests.login(:'u'::uuid);
 select is((select jsonb_agg(c -> 'id') from jsonb_array_elements(api.get_quiz() -> 'cards') c),
