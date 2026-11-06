@@ -24,8 +24,8 @@ export interface RowOptions {
   /** how a person is sent: the runs use unresolvedPerson, the desk sends its own decision */
   person: (p: SheetPerson) => object;
   /**
-   * a walkover: 1 or 2 is the winner staff picked, 'queue' sends it without a winner (the database queues it for
-   * staff), null or undefined sends no result.
+   * a walkover: 1 or 2 is the winner staff picked, 'queue' sends the winner the source names, else none (the database
+   * queues it for staff), null or undefined sends no result.
    */
   walkover?: 1 | 2 | 'queue' | null;
 }
@@ -43,7 +43,7 @@ function resultOf(m: SheetMatch, walkover: RowOptions['walkover']): DbResult {
   }
   if (m.status === 'walkover') {
     if (walkover === 1 || walkover === 2) return { winner_side: walkover, sets: [], walkover: true };
-    if (walkover === 'queue') return { walkover: true };
+    if (walkover === 'queue') return m.winner ? { winner_side: m.winner, sets: [], walkover: true } : { walkover: true };
   }
   return null;
 }
@@ -72,7 +72,7 @@ export function sheetMatchToRow(m: SheetMatch, opts: RowOptions) {
   };
 }
 
-/** the rows for a run: everything not skipped by default, people unresolved, a walkover queued for staff */
+/** the rows for a run: everything not skipped by default, people unresolved, a walkover with no named winner queued for staff */
 export function runRows(matches: SheetMatch[]) {
   return matches.flatMap((m, i) => (skippedByDefault(m) ? [] : [sheetMatchToRow(m, { row: i + 1, person: unresolvedPerson, walkover: 'queue' })]));
 }

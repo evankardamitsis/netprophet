@@ -89,6 +89,23 @@ describe('candidates with context', () => {
   });
 });
 
+describe('a walkover on a run (6 Nov)', () => {
+  const tab = {
+    name: 'ΣΑΒ 26/09',
+    rows: [
+      ['ΩΡΑ', 'ΚΑΤΗΓΟΡΙΑ', 'PLAYER 1', 'PLAYER 2', 'ΑΠΟΤΕΛΕΣΜΑ'],
+      ['12.00', 'Μ 40+', 'ΑΛΦΑΣ ΝΙΚΟΣ', 'ΒΗΤΑΣ ΓΙΩΡΓΟΣ', 'wo'],
+    ],
+  };
+  const sheet = parseSheet([tab], 2026);
+  it('the source does not say who: no winner, staff pick', () => {
+    expect(runRows(sheet)[0]!.result).toEqual({ walkover: true });
+  });
+  it('the source says who: the result goes in', () => {
+    expect(runRows([{ ...sheet[0]!, winner: 2 }])[0]!.result).toEqual({ winner_side: 2, sets: [], walkover: true });
+  });
+});
+
 describe('a sheet row with a result (25 Oct)', () => {
   // one ΑΟΚ order-of-play tab as the cron reads it, names anonymised; the scores are the live ones that never came over
   const tab = {
