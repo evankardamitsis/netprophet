@@ -4,7 +4,7 @@ import { isValidMatchTiebreak, isValidTennisSet } from '@netprophet/core';
 import type { FeedPlayer, SetScore, Side } from '@netprophet/db';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
-import { keepPostponed, resolveNow, saveResult, voidMatch, setMatchRound, type ActionResult } from './actions';
+import { editResult, keepPostponed, resolveNow, saveResult, voidMatch, setMatchRound, type ActionResult } from './actions';
 
 export interface DeskItem {
   match_id: string;
@@ -187,6 +187,9 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
   const [retired, setRetired] = useState(false);
   const [walkover, setWalkover] = useState(false);
   const [confirmGone, setConfirmGone] = useState(false);
+  // a published result open again: the form below, filled in, and «Republish» instead of «Save result»
+  const [editing, setEditing] = useState(false);
+  const [confirmEdit, setConfirmEdit] = useState(false);
 
   const names = `${sideName(item, 1)} vs ${sideName(item, 2)}`;
   const place = [item.tournament ?? item.venue ?? 'Friendly', item.round ? ROUNDS[item.round] ?? item.round : null, FORMATS[item.format]].filter(Boolean).join(' · ');
@@ -238,8 +241,8 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
     start(async () => {
       const r = await fn();
       if (r.ok) {
-        onNotice({ tone: 'done', title: `${names}: ${what === 'Saving' ? 'saved' : what === 'Removing' ? 'removed' : what === 'Keeping' ? 'kept as rained off' : 'done'}`, detail: r.message });
-        notify(what === 'Saving' ? 'Result saved' : what === 'Removing' ? 'Match removed' : what === 'Keeping' ? 'Kept as rained off' : 'Votes counted');
+        onNotice({ tone: 'done', title: `${names}: ${what === 'Saving' ? 'saved' : what === 'Republishing' ? 'republished' : what === 'Removing' ? 'removed' : what === 'Keeping' ? 'kept as rained off' : 'done'}`, detail: r.message });
+        notify(what === 'Saving' ? 'Result saved' : what === 'Republishing' ? 'Result republished' : what === 'Removing' ? 'Match removed' : what === 'Keeping' ? 'Kept as rained off' : 'Votes counted');
         after?.();
       } else {
         onNotice({ tone: 'problem', title: `${names}: it didn’t work`, detail: r.message });
@@ -250,6 +253,27 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
   const save = () => {
     if (winner === null) return;
     run('Saving', () => saveResult({ matchId: item.match_id, winnerSide: winner, sets: check.sets, retired, walkover }));
+  };
+
+  const openEdit = () => {
+    const r = item.result!;
+    setWinner(r.winner_side);
+    setGames([0, 1, 2].map((i) => (r.sets[i] ? [String(r.sets[i]!.w), String(r.sets[i]!.l)] : ['', ''])));
+    setTiebreak(r.sets.some((x) => x.stb));
+    setRetired(r.retired);
+    setWalkover(r.walkover);
+    setConfirmEdit(false);
+    setEditing(true);
+  };
+
+  const flips = editing && winner !== null && winner !== item.result?.winner_side;
+
+  const republish = () => {
+    if (winner === null) return;
+    run('Republishing', () => editResult({ matchId: item.match_id, winnerSide: winner, sets: check.sets, retired, walkover }), () => {
+      setEditing(false);
+      setConfirmEdit(false);
+    });
   };
 
   const header = (
@@ -286,7 +310,7 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
     </>
   );
 
-  if (item.result || item.status === 'void') {
+  if ((item.result || item.status === 'void') && !editing) {
     return (
       <div className={`v2-card tight v2-enter${pending ? ' busy' : ''}`}>
         {header}
@@ -307,6 +331,13 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
           <span className="v2-muted">This match was removed.</span>
         )}
         {item.result && admin ? (
+          <span style={{ alignSelf: 'flex-start' }}>
+            <Secondary small disabled={pending} onClick={openEdit}>
+              Edit result
+            </Secondary>
+          </span>
+        ) : null}
+        {item.result && admin ? (
           <Remove
             pending={pending}
             label="Remove from the app"
@@ -318,7 +349,7 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
     );
   }
 
-  if (item.bucket_name === 'upcoming') {
+  if (item.bucket_name === 'upcoming' && !editing) {
     return (
       <div className={`v2-card tight v2-enter${pending ? ' busy' : ''}`} aria-busy={pending || undefined}>
         {header}
@@ -384,6 +415,30 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
 
       {winner !== null && check.problem ? <span className="v2-muted">{check.problem}</span> : null}
 
+      {editing ? (
+        <div className="v2-row">
+          {confirmEdit ? (
+            <span className="v2-confirm" style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+              <b style={{ fontSize: 14 }}>
+                {sideName(item, winner!)} won instead? {plural(item.votes, 'vote')} flip: whoever is now right gets the base points, whoever is now wrong loses what they earned. Σερί stay as they are. Nobody is notified.
+              </b>
+              <Secondary small busy={pending} onClick={republish}>
+                {pending ? 'Republishing…' : 'Yes, republish'}
+              </Secondary>
+              <Ghost disabled={pending} onClick={() => setConfirmEdit(false)}>
+                Not yet
+              </Ghost>
+            </span>
+          ) : (
+            <Secondary busy={pending} disabled={!canSave} onClick={() => (flips && item.votes > 0 ? setConfirmEdit(true) : republish())}>
+              {pending ? 'Republishing…' : 'Republish'}
+            </Secondary>
+          )}
+          <Ghost disabled={pending} onClick={() => setEditing(false)}>
+            Cancel
+          </Ghost>
+        </div>
+      ) : (
       <div className="v2-row">
         <Secondary busy={pending} disabled={!canSave} onClick={save}>
           {pending ? 'Saving…' : 'Save result'}
@@ -409,6 +464,7 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
           </Ghost>
         ) : null}
       </div>
+      )}
     </div>
   );
 }

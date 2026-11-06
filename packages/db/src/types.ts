@@ -424,6 +424,10 @@ export type Database = {
         Args: { p_confidence?: string; p_limit?: number; p_offset?: number };
         Returns: Json;
       };
+      admin_edit_result: {
+        Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
+        Returns: Json;
+      };
       admin_fix_stale_twins: {
         Args: { p_dry?: boolean; p_tournament?: string };
         Returns: Json;
