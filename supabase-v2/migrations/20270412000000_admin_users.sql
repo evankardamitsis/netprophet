@@ -90,7 +90,7 @@ begin
                          else true end
                  order by p.last_opened desc nulls last, p.created_at desc
                  limit least(greatest(coalesce(p_limit, 500), 1), 1000)) x
-          left join core.user_game_state g on g.user_id = x.user_id), '[]'::jsonb));
+          left join core.user_game_state g on g.user_id = x.user_id), '[]'::jsonb)));
 end;
 $$;
 revoke all on function api.admin_users(text, text, int) from public, anon;
