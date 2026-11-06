@@ -2,8 +2,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Banner, Toast, useToast, type Tone } from "../feedback";
-import { Badge, Card, Empty, Ghost, PageHeader, SearchInput, Secondary, Section, SkeletonRows, Table, Tabs } from "../kit";
-import { mergeInto, recomputeLevels, searchRoster, unclaimPlayer, updatePlayer, type ActionResult } from "./actions";
+import { Badge, Card, Empty, Ghost, PageHeader, SearchInput, Secondary, Section, SkeletonRows, Stats, Table, Tabs } from "../kit";
+import { mergeInto, recomputeLevels, rosterTotals, searchRoster, unclaimPlayer, updatePlayer, type ActionResult, type RosterTotals } from "./actions";
 
 export interface RosterPlayer {
   player_id: string;
@@ -58,6 +58,7 @@ export function Roster() {
   const { toast, notify } = useToast();
   const [tick, setTick] = useState(0);
   const [recomputing, recompute] = useTransition();
+  const [totals, setTotals] = useState<RosterTotals | null>(null);
 
   // opened from a held name on Tournaments («Open in Players»): start on that search
   useEffect(() => {
@@ -77,6 +78,11 @@ export function Roster() {
     }, q ? 250 : 0);
     return () => clearTimeout(id);
   }, [q, filter, tick]);
+
+  // the list stops at its limit, so the totals have their own read; no totals just means no row of numbers
+  useEffect(() => {
+    rosterTotals().then(setTotals).catch(() => setTotals(null));
+  }, [tick]);
 
   const done: Done = (what, r, toastText) => {
     if (r.ok) {
@@ -101,6 +107,17 @@ export function Roster() {
         }
       />
       {notice ? <Banner {...notice} /> : null}
+      {totals ? (
+        <Stats
+          items={[
+            { label: "Players", value: totals.total, ink: true },
+            { label: "Have an account", value: totals.claimed },
+            { label: "Added recently", value: totals.pending },
+            { label: "Hidden", value: totals.hidden },
+            { label: "Under 18", value: totals.minors },
+          ]}
+        />
+      ) : null}
       {editing ? <Editor key={editing.player_id} p={editing} done={done} onClose={() => setEditing(null)} onWorking={setNotice} /> : null}
       <Section
         title="Roster"

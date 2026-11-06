@@ -4,7 +4,7 @@ import { createV2ServerClient } from '@/lib/v2/server';
 import { SignOut } from './SignOut';
 
 /** the v2 admin's desks */
-type Desk = 'tournaments' | 'results' | 'import' | 'sources' | 'moderation' | 'players' | 'quiz' | 'game' | 'names' | 'notifications' | 'team';
+type Desk = 'tournaments' | 'results' | 'import' | 'sources' | 'moderation' | 'players' | 'quiz' | 'game' | 'names' | 'notifications' | 'users' | 'team';
 
 type Counts = Partial<Record<Desk, number>>;
 type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { message: string } | null }>;
@@ -91,6 +91,7 @@ export function Nav({ here, staff }: { here: Desk; staff: { name: string; role: 
         {item('quiz', 'Quiz')}
         {item('game', 'Game')}
         {item('notifications', 'Ειδοποιήσεις')}
+        {staff.role === 'admin' ? item('users', 'Users') : null}
         {staff.role === 'admin' ? item('team', 'Team') : null}
       </nav>
       <div className="v2-nav-foot">

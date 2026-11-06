@@ -33,6 +33,20 @@ export async function searchRoster(query: string, filter: string): Promise<Roste
   return (data ?? []) as RosterPlayer[];
 }
 
+export interface RosterTotals {
+  total: number;
+  claimed: number;
+  pending: number;
+  hidden: number;
+  minors: number;
+}
+
+export async function rosterTotals(): Promise<RosterTotals> {
+  const { data, error } = await (await staffRpc())('admin_players_summary', {});
+  if (error) throw new Error(error.message);
+  return data as RosterTotals;
+}
+
 export async function updatePlayer(playerId: string, patch: Record<string, unknown>): Promise<ActionResult> {
   return act('admin_update_player', { p_player_id: playerId, p: patch }, 'Saved.');
 }

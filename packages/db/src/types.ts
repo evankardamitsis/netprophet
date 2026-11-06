@@ -516,6 +516,10 @@ export type Database = {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
       };
+      admin_players_summary: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_purchases: {
         Args: { p_limit?: number };
         Returns: Json;
@@ -564,6 +568,10 @@ export type Database = {
         Args: { p_match: string; p_approve: boolean };
         Returns: Json;
       };
+      admin_revoke_pro: {
+        Args: { p_user_id: string };
+        Returns: Json;
+      };
       admin_save_club: {
         Args: { p_id: string; p_surface: string };
         Returns: undefined;
@@ -600,6 +608,10 @@ export type Database = {
         Args: { p_id: string; p_entry_deadline: string; p_entry_link: string };
         Returns: undefined;
       };
+      admin_set_user_hidden: {
+        Args: { p_user_id: string; p_hidden: boolean };
+        Returns: Json;
+      };
       admin_staff_by_email: {
         Args: { p_email: string };
         Returns: Json;
@@ -626,6 +638,10 @@ export type Database = {
       };
       admin_update_player: {
         Args: { p_player_id: string; p: Json };
+        Returns: Json;
+      };
+      admin_users: {
+        Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
       };
       admin_void_match: {
