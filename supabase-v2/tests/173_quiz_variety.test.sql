@@ -1,7 +1,7 @@
 -- The daily quiz's variety: rules with a right answer, cards from real results that are right, people you know only, a
 -- different order each day, and nothing again within 30 days while something else is free.
 begin;
-select plan(20);
+select plan(21);
 
 select tests.create_user('qv-u@test.local') as u \gset
 select tests.create_user('qv-new@test.local') as nu \gset
@@ -64,6 +64,8 @@ select ok(exists (select 1 from core.quiz_set_cards c join core.quiz_sets s on s
 -- a Pro set is twelve, one of a kind: «Ποιος κέρδισε;» at most once
 select core.quiz_build_set(:'pu'::uuid, :'d'::date, true);
 select is((select count(*)::int from core.quiz_set_cards c join core.quiz_sets s on s.id = c.set_id where s.user_id = :'pu'::uuid and s.quiz_day = :'d'), 12, 'twelve for Pro');
+select is((select count(*)::int from core.quiz_set_cards c join core.quiz_sets s on s.id = c.set_id
+            where s.user_id = :'pu'::uuid and s.quiz_day = :'d' and c.content ->> 'tag' = 'Κανόνες'), 1, 'one rule a day for Pro too');
 
 -- ten days: the order changes, and nothing comes back while something else is free
 select core.quiz_build_set(:'nu'::uuid, :'d'::date + i, false) from generate_series(1, 4) i;
