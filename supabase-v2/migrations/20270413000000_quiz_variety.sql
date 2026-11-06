@@ -612,7 +612,7 @@ begin
     return v_set;
   end if;
 
-  if extract(isodow from p_day) = 1 then v_kinds := v_kinds || 'weekly'; end if;
+  if extract(isodow from p_day) = 1 then v_kinds := array_append(v_kinds, 'weekly'); end if;
 
   -- from the real matches: one of a kind, in a different order each day
   foreach v_kind in array array(select k from unnest(v_kinds) k order by md5(v_base || k)) loop

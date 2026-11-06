@@ -2,7 +2,7 @@
 -- guess (a three-setter here: who won, or did it go to three; the score shows after the pick), «Εβδομαδιαίο» on
 -- Mondays; the same card for everyone who knows them.
 begin;
-select plan(9);
+select plan(10);
 
 select tests.create_user('qd-u@test.local') as u \gset
 select tests.create_user('qd-v@test.local') as v \gset
@@ -23,34 +23,25 @@ select tests.as_service();
 select api.admin_set_result(:'m2'::uuid, 1, '[{"w":6,"l":4},{"w":3,"l":6},{"w":7,"l":5}]'::jsonb);
 select tests.logout();
 
-select extract(isodow from core.quiz_day_key(now())) = 1 as monday \gset
+select core.quiz_dynamic(:'u'::uuid, 'tennis', 'pre', core.quiz_day_key(now()), 'seed', '{}', '{}') as pre \gset
+select is(:'pre'::jsonb -> 'content' ->> 'tag', 'Πριν το ματς', 'before a match');
+select ok(:'pre'::jsonb -> 'content' ->> 'q' like '{p1.o} και {p2.o} ξαναβρίσκονται αύριο.%', 'a rematch, tomorrow');
+select is(:'pre'::jsonb -> 'content' ->> 'match_id', :'m1', 'about the open match');
+
+select core.quiz_dynamic(:'u'::uuid, 'tennis', 'post_who', core.quiz_day_key(now()), 'seed', '{}', '{}') as who \gset
+select core.quiz_dynamic(:'u'::uuid, 'tennis', 'post_third', core.quiz_day_key(now()), 'seed', '{}', '{}') as third \gset
+select is(:'who'::jsonb -> 'content' ->> 'tag', 'Ποιος κέρδισε;', 'who won, when asked for');
+select is(:'third'::jsonb -> 'content' ->> 'tag', 'Τρίτο σετ;', 'the third set, when asked for');
+select ok(:'third'::jsonb -> 'content' ->> 'reveal' like '%κέρδισε 6-4, 3-6, 7-5.' and (:'third'::jsonb -> 'content' ->> 'right')::int = 0
+          and :'third'::jsonb -> 'content' ->> 'q' not like '%6-4%', 'the three-setter: hidden in the question, the score after the pick');
+
 select tests.login(:'u'::uuid);
-create temp table q as select api.get_quiz() as doc;
-grant select on q to public;
-select is((select c -> 'content' ->> 'tag' from q, jsonb_array_elements(doc -> 'cards') c where (c ->> 'position')::int = 2),
-          'Πριν το ματς', 'position 2: before a match');
-select ok((select c -> 'content' ->> 'q' like '{p1.o} και {p2.o} ξαναβρίσκονται αύριο.%' from q, jsonb_array_elements(doc -> 'cards') c
-            where (c ->> 'position')::int = 2), 'a rematch, tomorrow');
-select is((select c -> 'content' ->> 'match_id' from q, jsonb_array_elements(doc -> 'cards') c where (c ->> 'position')::int = 2),
-          :'m1', 'about the open match');
-select ok((select c -> 'content' ->> 'tag' from q, jsonb_array_elements(doc -> 'cards') c where (c ->> 'position')::int = 6)
-            in ('Ποιος κέρδισε;', 'Τρίτο σετ;') or :'monday'::boolean,
-          'position 6: a result to guess (or the weekly on a Monday)');
--- the right answer stays on the server until you answer: read it from the card
-select tests.logout();
-select ok((select bool_or((select x.content ->> 'reveal' from core.quiz_set_cards x where x.id = (c ->> 'id')::uuid) like '%κέρδισε 6-4, 3-6, 7-5.' and c -> 'content' ->> 'q' not like '%6-4%'
-                          and ((select x.content ->> 'right' from core.quiz_set_cards x where x.id = (c ->> 'id')::uuid))::int in (0, 1))
-             from q, jsonb_array_elements(doc -> 'cards') c where c ->> 'family' = 'd')
-          or :'monday'::boolean, 'the three-setter: hidden in the question, the score after the pick');
-select tests.login(:'u'::uuid);
-select is((select count(*)::int from q, jsonb_array_elements(doc -> 'cards') c), 6, 'still six cards');
+select is(jsonb_array_length(api.get_quiz() -> 'cards'), 6, 'still six cards');
 select tests.logout();
 
 -- v knows the same players: the same card, so the answers add up
-select tests.login(:'v'::uuid);
-select is((select c -> 'content' ->> 'match_id' from jsonb_array_elements(api.get_quiz() -> 'cards') c where (c ->> 'position')::int = 2),
+select is(core.quiz_dynamic(:'v'::uuid, 'tennis', 'pre', core.quiz_day_key(now()), 'seed', '{}', '{}') -> 'content' ->> 'match_id',
           :'m1', 'the same match for someone who knows the same players');
-select tests.logout();
 
 -- Monday: the player of the week, out of the people you know (3, 5 and 1 each won this week)
 select tests.mk_match((select id from pp where g = 5), (select id from pp where g = 6), now() - interval '2 days') as m3 \gset
