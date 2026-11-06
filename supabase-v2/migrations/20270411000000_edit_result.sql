@@ -33,6 +33,7 @@ declare
   v_edit  uuid;
   v_pts   int;
   v_ok    boolean;
+  v_out   text;
   v_new   int;
   v_diff  int;
   v_votes int := 0;
@@ -77,6 +78,7 @@ begin
     loop
       perform pg_advisory_xact_lock(hashtextextended('user:' || r.user_id::text, 0));
       v_ok := r.option = p_winner_side;
+      v_out := case when v_ok then 'correct' else 'wrong' end;
       v_new := case when v_ok then v_pts else 0 end;
       select v_new - coalesce(sum(l.delta), 0)::int into v_diff
         from core.points_ledger l
@@ -85,15 +87,15 @@ begin
               or (l.ref_type = 'admin' and l.ref_id in (select e.id from core.result_edits e where e.match_id = p_match_id)));
       perform core.award_points(r.user_id, v_diff, 'admin_adjust', 'admin', v_edit, 'edit:' || v_edit || ':' || r.user_id, r.resolved_at);
       v_moved := v_moved + abs(v_diff);
-      update core.votes set outcome = case when v_ok then 'correct' else 'wrong' end, is_upset_call = false, points = v_new where id = r.id;
-      if r.outcome <> case when v_ok then 'correct' else 'wrong' end then
+      update core.votes set outcome = v_out, is_upset_call = false, points = v_new where id = r.id;
+      if r.outcome <> v_out then
         update core.user_game_state
            set votes_correct = greatest(votes_correct + case when v_ok then 1 else -1 end, 0), updated_at = now()
          where user_id = r.user_id;
         v_votes := v_votes + 1;
       end if;
       update core.feed_inbox
-         set payload = payload || jsonb_build_object('outcome', case when v_ok then 'correct' else 'wrong' end, 'points', v_new, 'upset', false)
+         set payload = payload || jsonb_build_object('outcome', v_out, 'points', v_new, 'upset', false)
        where kind = 'result' and user_id = r.user_id and ref = 'match:' || p_match_id;
     end loop;
   end if;
