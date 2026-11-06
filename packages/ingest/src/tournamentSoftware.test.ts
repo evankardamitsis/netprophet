@@ -57,6 +57,19 @@ describe('tournamentsoftware.com', () => {
     expect(ms.every((x) => x.status === 'scheduled' && /^\d{2}:\d{2}$/.test(x.time))).toBe(true);
   });
 
+  it('takes a walkover\'s winner from the side the site marks, on either side', () => {
+    const days = ['20261004', '20261005', '20261011'];
+    const wo = days.flatMap((d) => parseTournamentSoftwareDay(page(`tatoi-${d}.html.gz`), d)).filter((x) => x.status === 'walkover');
+    expect(wo.some((x) => x.winner === 1)).toBe(true);
+    expect(wo.some((x) => x.winner === 2)).toBe(true);
+    // neither side marked: nothing is guessed, staff decide
+    const unmarked = days
+      .flatMap((d) => parseTournamentSoftwareDay(page(`tatoi-${d}.html.gz`).replace(/\bhas-won\b/g, '').replace(/(\btag\b[^"]*">)W</g, '$1<'), d))
+      .filter((x) => x.status === 'walkover');
+    expect(unmarked).toHaveLength(wo.length);
+    expect(unmarked.every((x) => x.winner === null && x.flags.includes('walkover_winner_unknown'))).toBe(true);
+  });
+
   it('reads results: sets, the winner, a match tie-break, doubles, retirements and walkovers', () => {
     const all = ['20261004', '20261005', '20261011'].flatMap((d) => parseTournamentSoftwareDay(page(`tatoi-${d}.html.gz`), d));
     const qf = all.find((x) => x.side1.startsWith('KATOPIS PETROS') && x.categoryRaw.startsWith('MS65') && x.date === '2026-10-05' && x.status === 'completed' && x.sets.length === 2 && x.sets[0]!.g[0] === 3)!;
@@ -69,7 +82,10 @@ describe('tournamentsoftware.com', () => {
     expect(all.some((x) => x.discipline === 'XD')).toBe(true);
     const wo = all.filter((x) => x.status === 'walkover');
     expect(wo.length).toBeGreaterThan(0);
-    expect(wo.every((x) => x.winner === null && x.sets.length === 0)).toBe(true);
+    expect(wo.every((x) => x.sets.length === 0)).toBe(true);
+    // the side in bold went through; only a walkover with neither side marked is left for staff
+    expect(wo.every((x) => (x.winner === null) === x.flags.includes('walkover_winner_unknown'))).toBe(true);
+    expect(wo.some((x) => x.winner !== null)).toBe(true);
     const ret = all.filter((x) => x.retired);
     expect(ret.every((x) => x.status === 'completed' && x.winner !== null && x.flags.includes('retired'))).toBe(true);
     // every finished match has a winner and its score

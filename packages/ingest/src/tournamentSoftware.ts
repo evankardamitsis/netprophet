@@ -128,7 +128,7 @@ export function parseTournamentSoftwareDay(html: string, day: string): SheetMatc
         const won2 = st.filter((s) => s.g[1] > s.g[0]).length;
         const k1 = side1.map((p) => p.key).join(' / ');
         const k2 = side2.map((p) => p.key).join(' / ');
-        const flags = walkover ? ['walkover_winner_unknown'] : retired ? ['retired'] : [];
+        const flags = walkover ? (winner === null ? ['walkover_winner_unknown'] : []) : retired ? ['retired'] : [];
         const m: SheetMatch = {
           tab: venueName,
           date,
@@ -143,8 +143,8 @@ export function parseTournamentSoftwareDay(html: string, day: string): SheetMatc
           scoreRaw: walkover ? 'w/o' : st.map((s) => (s.tb ? `[${s.g[0]}-${s.g[1]}]` : `${s.g[0]}-${s.g[1]}`)).join(' '),
           sets: walkover ? [] : st,
           setsWon: done ? `${won1}-${won2}` : '',
-          // a walkover's winner is not a result to vote on (as in the sheets): the match is voided
-          winner: done ? winner : null,
+          // a walkover: the site shows who went through in bold (has-won, founder 6 Nov 2026), the other side is tagged
+          winner: done || walkover ? winner : null,
           status: walkover ? 'walkover' : done ? 'completed' : 'scheduled',
           ...(retired && done ? { retired: true } : {}),
           fingerprint: ['ts', date, disc, level, ...[k1, k2].sort()].join('|'),
