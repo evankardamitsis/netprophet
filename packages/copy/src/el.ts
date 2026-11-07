@@ -406,7 +406,7 @@ export const el = {
     /** «Το 69% έλεγε Πράτσας»: the side most people picked */
     line: 'Το {pct}% έλεγε {name}',
     retired: 'ret',
-    walkover: 'w/o',
+    walkover: 'Walkover',
     empty: 'Δεν έχει αποτελέσματα ακόμα. Μόλις τελειώσει ένα ματς, θα το δεις εδώ.',
     error: 'Δεν φόρτωσαν. Τράβα προς τα κάτω για ξανά.',
   },

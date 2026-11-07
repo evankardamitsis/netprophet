@@ -25,8 +25,10 @@ export function RecentMatches({ v }: { v: MeView }) {
       <View style={styles.card}>
         {v.last.map((m, i) => (
           <View key={i} style={[styles.matchRow, i > 0 && styles.matchLine]}>
-            <View style={[styles.letter, m.win ? styles.letterWin : styles.letterLoss]}>
-              <Text style={[styles.letterText, { color: m.win ? colors.ink : colors.lime }]}>{m.win ? t.me.matches.win : t.me.matches.loss}</Text>
+            <View style={[styles.letter, m.walkover ? styles.letterEven : m.win ? styles.letterWin : styles.letterLoss]}>
+              <Text style={[styles.letterText, { color: m.walkover || m.win ? colors.ink : colors.lime }]}>
+                {m.walkover ? '=' : m.win ? t.me.matches.win : t.me.matches.loss}
+              </Text>
             </View>
             <View style={styles.matchText}>
               <Text style={styles.matchAgainst}>{m.against}</Text>
@@ -74,6 +76,7 @@ const styles = StyleSheet.create({
   letter: { width: 34, height: 34, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   letterWin: { backgroundColor: colors.lime },
   letterLoss: { backgroundColor: colors.ink },
+  letterEven: { backgroundColor: colors.sand },
   letterText: { fontFamily: fonts.displayHeavy, fontSize: 18, lineHeight: 20, paddingBottom: 4, marginBottom: -4 },
   matchText: { flex: 1, minWidth: 0 },
   matchAgainst: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },

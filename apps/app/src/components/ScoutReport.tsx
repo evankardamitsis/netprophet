@@ -228,11 +228,13 @@ function FormatHero({ f }: { f: ScoutFormat }) {
   );
 }
 
-/** a match: ✓ on lime for a win, who, the score from that side, a quiet line */
+/** a match: ✓ on lime for a win, «=» for a walkover (neither), who, the score from that side, a quiet line */
 function LineRow({ m, first }: { m: ScoutLine; first: boolean }) {
   return (
     <View style={[styles.row, !first && styles.rowLine]}>
-      <View style={[styles.mark, m.won ? styles.markWin : styles.markLoss]}>{m.won ? <Text style={styles.tick}>✓</Text> : null}</View>
+      <View style={[styles.mark, m.won && !m.walkover ? styles.markWin : styles.markLoss]}>
+        {m.walkover ? <Text style={styles.even}>=</Text> : m.won ? <Text style={styles.tick}>✓</Text> : null}
+      </View>
       <View style={styles.rowBody}>
         <View style={styles.rowTop}>
           {/* a meeting between you has no names to show: the score leads */}
@@ -323,6 +325,7 @@ const styles = StyleSheet.create({
   mark: { width: MARK, height: MARK, borderRadius: MARK / 2, alignItems: 'center', justifyContent: 'center', marginTop: -1 },
   markWin: { backgroundColor: colors.lime },
   markLoss: { borderWidth: 2, borderColor: colors.fog },
+  even: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.inkSoft },
   tick: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 18, color: colors.ink },
   rowBody: { flex: 1, minWidth: 0, gap: 2 },
   rowTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },

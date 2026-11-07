@@ -57,6 +57,7 @@ describe('the scout shows more than the free card', () => {
     expect(v.history[0]).toEqual({
       key: 'mock-h0',
       won: true,
+      walkover: false,
       score: '6-3, 6-4',
       against: 'Κώστας Λιάπης',
       againstSegs: [{ text: 'Κώστας Λιάπης', id: 'mock-o1' }],
@@ -83,5 +84,14 @@ describe('the scout shows more than the free card', () => {
     expect(sideScore(m, false, t)).toBe('4-6, 6-7(5)');
     expect(sideScore({ ...m, sets: [] }, false, t)).toBe('0-2');
     expect(sideScore({ ...m, walkover: true }, false, t)).toBe(t.results.walkover);
+  });
+
+  it('a walkover is listed, marked, and is never «the last time»', () => {
+    const p = mockScout('m', NOW).opponents[0]!;
+    const [played] = p.h2h.meetings;
+    const wo = { ...played!, match_id: 'mock-wo', won: true, sets: [], score: null, walkover: true };
+    const v = toScoutView({ ...p, h2h: { ...p.h2h, meetings: [wo, played!] } }, {}, t, NOW);
+    expect(v.h2h.line).toBe('Την τελευταία φορά έχασες 4-6, 6-3, 7-10.');
+    expect(v.h2h.meetings[0]).toMatchObject({ walkover: true, score: 'Walkover' });
   });
 });

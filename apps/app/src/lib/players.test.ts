@@ -110,6 +110,7 @@ describe('toProfile', () => {
     expect(p.last[0]).toEqual({
       key: 'a',
       won: true,
+      walkover: false,
       score: '6-4, 3-6, 10-8',
       against: 'Άννα Μάνου',
       againstSegs: [{ text: 'Άννα Μάνου', id: 'Άννα-Μάνου' }],
@@ -121,6 +122,7 @@ describe('toProfile', () => {
     expect(p.last[1]).toEqual({
       key: 'b',
       won: false,
+      walkover: false,
       score: '4-6, 6-7(5)',
       against: 'Α Β & Γ Δ',
       // every name keeps its roster id, so a tap on it opens that player's card
@@ -159,6 +161,8 @@ describe('toProfile', () => {
     expect(p.last[0]!.score).toBe('1-2');
     expect(p.last[0]!.meta).toBe('1/9');
     expect(p.last[1]!.score).toBe(t.results.walkover);
+    expect(p.last[1]!.walkover).toBe(true);
+    expect(p.last[0]!.walkover).toBe(false);
     expect(p.last[1]!.meta).toBe('1/6/25');
   });
 });

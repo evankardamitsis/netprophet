@@ -123,7 +123,7 @@ describe('toResultItem', () => {
       t,
     );
     expect(it3.line).toBe('Το 58% έλεγε Δεσύπρης & Μέμμος');
-    expect(it3.score).toBe('w/o');
+    expect(it3.score).toBe('Walkover');
     expect(it3.winnerSets).toBe('');
   });
 });

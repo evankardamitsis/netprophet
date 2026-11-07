@@ -207,6 +207,8 @@ export interface PathMatch {
   /** «6-4, 6-3», winner first */
   score: string | null;
   won: boolean;
+  /** not played: neither a win nor a loss */
+  walkover?: boolean;
 }
 
 export interface NextMatch {

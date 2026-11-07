@@ -423,11 +423,12 @@ export function summaryOf(me: Identity, matches: TournamentMatch[], run: Run | n
       againstSegs: againstSegs(sideOf(m, sideNo(m) === 1 ? 2 : 1), t),
       score: (m.sets?.length ?? 0) > 0 || m.walkover === true ? formatWinnerSets(m.sets ?? [], { retired: m.retired === true, walkover: m.walkover === true }, t.results) : null,
       won: m.winner_side === sideNo(m),
+      walkover: m.walkover === true,
     }));
   if (previous.length === 0 && run) {
     previous = run.steps
       .filter((s) => s.state === 'won' || s.state === 'lost')
-      .map((s) => ({ matchId: s.key, day: '', meta: s.round, against: s.against ? fmt(f.against, { name: s.against }) : f.notYet, score: s.score, won: s.state === 'won' }));
+      .map((s) => ({ matchId: s.key, day: '', meta: s.round, against: s.against ? fmt(f.against, { name: s.against }) : f.notYet, score: s.score, won: s.state === 'won', walkover: s.score === t.results.walkover }));
   }
   const nowMs = now.getTime();
   const open = matches.filter((m) => m.winner_side === null);

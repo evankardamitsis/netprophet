@@ -81,7 +81,7 @@ export function mockPlayer(id: string, now: Date): PlayerProfile | null {
       level: i === 2 ? null : 'Μ 40+',
       discipline: i === 1 ? 'MD' : null,
       retired: false,
-      walkover: false,
+      walkover: i === 2,
       partner: i === 1 ? [ref(others[3 % others.length]!.id)] : [],
       opponents: i === 1 ? [ref(others[1]!.id), ref(others[2]!.id)] : [ref(others[i % others.length]!.id)],
     })),

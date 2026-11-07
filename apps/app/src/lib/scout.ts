@@ -23,6 +23,8 @@ import { joinSegs, segmentsOf, type NameSeg } from './tournamentToday';
 export interface ScoutLine {
   key: string;
   won: boolean;
+  /** not played: neither a win nor a loss */
+  walkover: boolean;
   score: string;
   against: string;
   /** the same as pieces, each name with its roster id (a tap opens that player's card) */
@@ -141,7 +143,8 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
   const s = t.scout;
   const met = p.h2h.w + p.h2h.l > 0;
   const meetings = p.h2h.meetings ?? [];
-  const lastMeeting = meetings[0] ?? null;
+  // a walkover was not played, so it is never «the last time»
+  const lastMeeting = meetings.find((m) => !m.walkover) ?? null;
   const last = p.h2h.last;
   const voiced = scoutVoice(t);
   const formats = (['singles', 'doubles'] as const)
@@ -177,6 +180,7 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
       meetings: meetings.map((m) => ({
         key: m.match_id,
         won: m.won,
+        walkover: m.walkover,
         score: sideScore(m, m.won, t),
         against: '',
         againstSegs: [],
@@ -193,6 +197,7 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
     path: (p.path ?? []).map((m) => ({
       key: m.match_id,
       won: m.won,
+      walkover: m.walkover,
       score: sideScore(m, m.won, t),
       against: people(m.opponents),
       againstSegs: peopleSegs(m.opponents),
@@ -204,6 +209,7 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
     history: history.map((m) => ({
       key: m.match_id,
       won: m.won,
+      walkover: m.walkover,
       score: sideScore(m, m.won, t),
       against: people(m.opponents),
       againstSegs: peopleSegs(m.opponents),

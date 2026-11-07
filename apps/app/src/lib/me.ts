@@ -34,7 +34,7 @@ export interface MeView {
   votes: { title: string; sub: string };
   /** `with`: «Με τον Χ. Καραγιανίδη» in doubles (null in singles); `against`: the other side, full names */
   /** `format` and `startsAt` feed the form squares on «Τα στατιστικά σου» (doubles counts mixed) */
-  last: { win: boolean; score: string; when: string; against: string; with: string | null; format: 'singles' | 'doubles'; startsAt: string }[];
+  last: { win: boolean; walkover: boolean; score: string; when: string; against: string; with: string | null; format: 'singles' | 'doubles'; startsAt: string }[];
   next: string | null;
   /** your next match, for «Ο αντίπαλος πριν το ματς» */
   nextMatchId: string | null;
@@ -128,6 +128,7 @@ export function toMeView(
     },
     last: (player?.last_matches ?? []).map((x, i) => ({
       win: x.won,
+      walkover: x.walkover === true,
       format: x.format === 'singles' ? 'singles' : 'doubles',
       startsAt: x.starts_at,
       // from my side («4-6, 3-6» for a loss), as the profile shows it
