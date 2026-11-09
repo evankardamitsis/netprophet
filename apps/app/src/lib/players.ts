@@ -36,7 +36,9 @@ export interface PlayerRow {
 export interface LastMatchLine {
   key: string;
   won: boolean;
-  /** «6-4, 3-6, 10-8» from this player's side; «1-2» when only the sets are known; «w/o» */
+  /** not played: neither a win nor a loss, so the row marks neither */
+  walkover: boolean;
+  /** «6-4, 3-6, 10-8» from this player's side; «1-2» when only the sets are known; «Walkover» */
   score: string;
   /** «Άννα Μάνου», or the pair across the net on doubles: «Α Β & Γ Δ» */
   against: string;
@@ -165,6 +167,7 @@ export function lastLine(m: PlayerProfile['last_matches'][number], t: Copy, now:
   return {
     key: m.match_id,
     won: m.won,
+    walkover: m.walkover === true,
     score: formatSideSets(m.sets ?? [], m.won, m.score, { retired: m.retired, walkover: m.walkover }, t.results),
     against: m.opponents.map(fullName).join(' & '),
     partner: m.partner.length > 0 ? fmt(t.players.withPartner, { names: m.partner.map(nameAcc).join(' & ') }) : null,

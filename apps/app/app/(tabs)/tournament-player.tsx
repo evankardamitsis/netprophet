@@ -192,11 +192,11 @@ function Played({ p, k, tournamentId }: { p: PathMatch; k: number; tournamentId:
   const enter = useStgIn(motion.revealDurShort, motion.revealDur + k * motion.stagger);
   return (
     <Animated.View style={[styles.playedRow, enter]}>
-      <View style={[styles.tick, !p.won && styles.tickOff]}>
-        <Text style={styles.tickText}>{p.won ? '✓' : ''}</Text>
+      <View style={[styles.tick, (!p.won || p.walkover) && styles.tickOff]}>
+        <Text style={styles.tickText}>{p.walkover ? '=' : p.won ? '✓' : ''}</Text>
       </View>
       <View style={styles.playedBody}>
-        <Text style={[styles.against, !p.won && styles.lost]} numberOfLines={1}>
+        <Text style={[styles.against, !p.won && !p.walkover && styles.lost]} numberOfLines={1}>
           {p.againstSegs ? <HoldSegs tournamentId={tournamentId} segs={p.againstSegs} ctx={{ match: p.matchId }} /> : p.against}
         </Text>
         <Text style={styles.meta} numberOfLines={1}>

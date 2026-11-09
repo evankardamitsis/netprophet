@@ -6,17 +6,17 @@ import { colors, fonts } from '../theme';
 
 /**
  * One row of «Τελευταία ματς» (founder, 22 Oct 2026: the old one-line row wrapped against a long day and category):
- * a lime ✓ for a win (an empty ring for a loss), who was across the net (the pair on doubles), the partner, the
+ * a lime ✓ for a win (an empty ring for a loss, «=» for a walkover, which is neither), who was across the net (the pair on doubles), the partner, the
  * score from this player's side on the right, and one quiet line with the day, the tournament, the category and
  * the round.
  */
 export function LastMatchRow({ m, first }: { m: LastMatchLine; first: boolean }) {
   const t = useCopy();
-  const said = [m.won ? t.players.won : t.players.lost, m.score, m.against, m.partner, m.meta].filter(Boolean).join(', ');
+  const said = [m.walkover ? null : m.won ? t.players.won : t.players.lost, m.score, m.against, m.partner, m.meta].filter(Boolean).join(', ');
   return (
     <View accessible accessibilityLabel={said} style={[styles.row, !first && styles.line]}>
-      <View style={[styles.mark, m.won ? styles.markWin : styles.markLoss]}>
-        {m.won ? <Text style={styles.tick}>✓</Text> : null}
+      <View style={[styles.mark, m.won && !m.walkover ? styles.markWin : styles.markLoss]}>
+        {m.walkover ? <Text style={styles.even}>=</Text> : m.won ? <Text style={styles.tick}>✓</Text> : null}
       </View>
       <View style={styles.body}>
         <View style={styles.top}>
@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
   markWin: { backgroundColor: colors.lime },
   markLoss: { borderWidth: 2, borderColor: colors.fog },
   tick: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 18, color: colors.ink },
+  even: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.inkSoft },
   body: { flex: 1, minWidth: 0, gap: 2 },
   top: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
   against: { flex: 1, minWidth: 0, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },

@@ -348,7 +348,7 @@ export const en: Copy = {
     calledIt: 'Called it · +{points}',
     line: '{pct}% said {name}',
     retired: 'ret',
-    walkover: 'w/o',
+    walkover: 'Walkover',
     empty: 'No results yet. When a match ends, you will see it here.',
     error: 'Did not load. Pull down to try again.',
   },

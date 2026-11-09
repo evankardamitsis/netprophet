@@ -202,7 +202,7 @@ describe('the summary of one entry', () => {
     const s = summaryOf(me, matchesOfEntry(d, me, entries, entry), runOf(d, entry, t), now, t);
     expect(s.previous).toEqual([
       {
-        matchId: 'md-r2', day: 'Σαβ 17/10', meta: null, against: 'με Ήτα & Θήτα', score: '6-3, 6-4', won: true,
+        matchId: 'md-r2', day: 'Σαβ 17/10', meta: null, against: 'με Ήτα & Θήτα', score: '6-3, 6-4', walkover: false, won: true,
         againstSegs: [{ text: 'με ' }, { text: 'Ήτα', id: 'hta' }, { text: ' & ' }, { text: 'Θήτα', id: 'the' }],
       },
     ]);
