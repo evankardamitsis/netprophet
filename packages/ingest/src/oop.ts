@@ -140,6 +140,8 @@ export function parseSheet(tabs: TabInput[], seasonStartYear: number): SheetMatc
       const doubles = discipline === 'MD' || discipline === 'WD' || discipline === 'XD' || p1.includes('/') || p2.includes('/');
       const a = parseSheetSide(p1, doubles);
       const b = parseSheetSide(p2, doubles);
+      // «ΠΡΟΚΡΙΜΑΤΙΚΑ 1» against someone: the match is not known until the qualifier's name is written
+      if (a.flags.includes('open_spot') || b.flags.includes('open_spot')) continue;
       [...a.flags, ...b.flags].forEach((x) => f.add(x));
       if (a.pair !== b.pair) f.add('side_type_mismatch');
       if (a.pair || b.pair) {

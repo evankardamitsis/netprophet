@@ -91,11 +91,27 @@ export function greekLookalikes(s: string): string {
 }
 
 /**
+ * A spot in a draw or schedule that no one holds yet (11 Nov 2026: «ΠΡΟΚΡΙΜΑΤΙΚΑ 1» in the Taf women's draw became a
+ * roster player): «ΠΡΟΚΡΙΜΑΤΙΚΑ 1», «ΠΡΟΚΡΙΜΑΤΙΚΑ 1 ΔΕΥ 21.30», «Q1», «QUALIFIER 2», «LL», «LUCKY LOSER», «ΝΙΚΗΤΗΣ ΑΓΩΝΑ 3»,
+ * «TBD». A real name with «LL» after it is still that person.
+ */
+export function isOpenSpot(raw: string): boolean {
+  const k = sheetKey(greekLookalikes(raw)).replace(/[.:#()-]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!k) return false;
+  return (
+    /^(προκριματικ[αο]σ?|προκρ|qualifier|qualif|qual|q)\s*\d*(\s|$)/.test(k) ||
+    /^(ll|lucky loser|tbd|tba|νικητησ αγωνα|winner match|w match)(\s*\d+)?(\s|$)/.test(k) ||
+    /^q\d+$/.test(k)
+  );
+}
+
+/**
  * One side of a match: one person, or two with «/»; flags first_name_missing and latin_name. In a doubles category
  * (`doubles`) a side of exactly two words with no «/» is two surnames, «ΓΕΜΙΔΟΠΟΥΛΟΥ ΦΕΛΕΜΕΓΚΑΣ» (founder, 17 Oct: ΑΟΚ
  * writes pairs that way); flagged pair_by_space.
  */
 export function parseSheetSide(raw: string, doubles = false): { people: SheetPerson[]; flags: string[]; pair: boolean } {
+  if (isOpenSpot(raw)) return { people: [], flags: ['open_spot'], pair: false };
   const words = raw.trim().split(/\s+/).filter(Boolean);
   const bySpace = doubles && !raw.includes('/') && words.length === 2;
   const pair = raw.includes('/') || bySpace;
