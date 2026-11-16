@@ -1,4 +1,4 @@
-import type { Copy } from '@netprophet/copy';
+import { euroCents, type Copy, type Locale } from '@netprophet/copy';
 import { PRO_PRICE_CENTS_PER_MONTH } from '@netprophet/core';
 import type { ProState } from '@netprophet/db';
 import { buyLineFor, type BuyOutcome, type RestoreResult } from './storeTypes';
@@ -6,14 +6,14 @@ import { fmt } from './votes';
 
 /** Pro (prototype V2, the pass sheet): the price line and what the screen says about your Pro. */
 
-/** «8,99€», from core */
-export function proPrice(cents: number = PRO_PRICE_CENTS_PER_MONTH): string {
-  return `${Math.floor(cents / 100)},${String(cents % 100).padStart(2, '0')}€`;
+/** «8,99€» in Greek, «€8.99» in English, from core */
+export function proPrice(cents: number = PRO_PRICE_CENTS_PER_MONTH, locale: Locale = 'el'): string {
+  return euroCents(cents, locale);
 }
 
 /** «8,99€ τον μήνα» */
 export function priceLine(t: Copy): string {
-  return fmt(t.pro.price, { price: proPrice() });
+  return fmt(t.pro.price, { price: proPrice(PRO_PRICE_CENTS_PER_MONTH, t.locale) });
 }
 
 /** «Ενεργό» or «Ενεργό μέχρι 12/11» when you have Pro; null when you do not */
@@ -39,10 +39,10 @@ export function proStatusLine(state: ProState, t: Copy): string | null {
   return parts.length > 0 ? parts.join(' · ') : t.pro.active;
 }
 
-/** «49,99€» from euros */
-export function euro(n: number): string {
+/** «49,99€» («€49.99» in English) from euros */
+export function euro(n: number, locale: Locale = 'el'): string {
   const cents = Math.round(n * 100);
-  return proPrice(cents);
+  return proPrice(cents, locale);
 }
 
 export interface PlanCard {
@@ -133,12 +133,12 @@ export function planCards(
       const founding = x.product_id === 'pro_founding';
       // the founding plan always says what follows its first year (founder, 22 Oct: 49,99 then 69,99)
       const after = x.renews ?? (founding ? FOUNDING_RENEWS_EUR : x.price);
-      const renews = Math.round(after * 100) !== Math.round(x.price * 100) ? euro(after) : null;
+      const renews = Math.round(after * 100) !== Math.round(x.price * 100) ? euro(after, t.locale) : null;
       return {
         productId: x.product_id,
         title: p[x.product_id as 'pro_monthly' | 'pro_yearly' | 'pro_founding'] ?? x.product_id,
-        price: euro(x.price),
-        note: founding ? fmt(p.foundingNote, { renews: renews ?? euro(x.price) }) : x.period === 'year' ? p.yearlyNote : p.monthlyNote,
+        price: euro(x.price, t.locale),
+        note: founding ? fmt(p.foundingNote, { renews: renews ?? euro(x.price, t.locale) }) : x.period === 'year' ? p.yearlyNote : p.monthlyNote,
         renews,
         best: x.period === 'year',
       };

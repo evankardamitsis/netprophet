@@ -3,7 +3,7 @@
     "name": "NetProphet",
     "slug": "netprophet",
     "scheme": "netprophet",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F3F5EE",
@@ -15,6 +15,9 @@
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleLocalizations": ["el", "en"]
       }
     },
     "android": {

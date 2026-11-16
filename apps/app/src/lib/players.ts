@@ -1,5 +1,5 @@
 import { formatSideSets, localParts } from '@netprophet/core';
-import { accusativeName, nameGender, type Copy, levelNumber } from '@netprophet/copy';
+import { nameAcc as nameAccIn, nameGender, type Copy, type Locale, levelNumber } from '@netprophet/copy';
 import type { PlayerCard, PlayerMatchLine, PlayerProfile, PlayerRef } from '@netprophet/db';
 import { initials, roundLabel, when } from './feed';
 import { playerAvatar, type AvatarLook } from './avatar';
@@ -85,7 +85,7 @@ const fullName = (p: Pick<PlayerRef, 'first_name' | 'surname'>) => `${p.first_na
 export function toPlayerRow(card: PlayerCard, areas: Record<string, string>, t: Copy): PlayerRow {
   const g = nameGender(card.first_name, card.gender);
   const parts = [
-    PLAYER_LEVEL_SHOWN && card.level_tier != null ? `${t.level.label} ${levelNumber(card.level_tier)}` : null,
+    PLAYER_LEVEL_SHOWN && card.level_tier != null ? `${t.level.label} ${levelNumber(card.level_tier, t.locale)}` : null,
     card.area_id ? areas[card.area_id] ?? null : null,
     card.is_followed ? t.players.friend[g] : null,
   ].filter(Boolean);
@@ -103,11 +103,13 @@ function plural(n: number, forms: { one: string; many: string }): string {
   return n === 1 ? forms.one : forms.many;
 }
 
-/** The player's name in a «με …» line: the stored accusative when there is one, else the grammar helper. */
-function nameAcc(p: PlayerRef): string {
-  return typeof p.name_forms?.accusative === 'string' && p.name_forms.accusative
-    ? p.name_forms.accusative
-    : accusativeName(p.first_name, p.surname, p.gender);
+/**
+ * The player's name in a «με …» line: in Greek the stored accusative when there is one, else the grammar helper; in
+ * English the name as written.
+ */
+function nameAcc(p: PlayerRef, locale: Locale): string {
+  if (locale === 'el' && typeof p.name_forms?.accusative === 'string' && p.name_forms.accusative) return p.name_forms.accusative;
+  return nameAccIn(p.first_name, p.surname, p.gender, locale);
 }
 
 /**
@@ -119,7 +121,7 @@ export function nextParts(m: PlayerMatchLine, t: Copy, now: Date): { when: strin
   const full =
     m.partner.length > 0 || m.opponents.length > 1
       ? fmt(t.players.nextAgainst, { when: '', names: m.opponents.map(fullName).join(' & ') })
-      : fmt(t.players.nextWith, { when: '', name: m.opponents[0] ? nameAcc(m.opponents[0]) : '' });
+      : fmt(t.players.nextWith, { when: '', name: m.opponents[0] ? nameAcc(m.opponents[0], t.locale) : '' });
   return { when: label, who: full.replace(/^[\s·]+/, ''), category: categoryLabel(m.level, m.discipline, t) };
 }
 
@@ -139,7 +141,7 @@ export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Co
     id: p.id,
     first: p.first_name,
     surname: p.surname,
-    level: PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
+    level: PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier, t.locale)}` : null,
     sub: [area, PLAYER_LEVEL_SHOWN && p.level_tier != null ? dir : null].filter(Boolean).join(' · '),
     record: fmt(t.players.record, { w, wins: plural(w, t.players.wins), l, losses: plural(l, t.players.losses) }),
     form: p.form,
@@ -170,9 +172,9 @@ export function lastLine(m: PlayerProfile['last_matches'][number], t: Copy, now:
     walkover: m.walkover === true,
     score: formatSideSets(m.sets ?? [], m.won, m.score, { retired: m.retired, walkover: m.walkover }, t.results),
     against: m.opponents.map(fullName).join(' & '),
-    partner: m.partner.length > 0 ? fmt(t.players.withPartner, { names: m.partner.map(nameAcc).join(' & ') }) : null,
+    partner: m.partner.length > 0 ? fmt(t.players.withPartner, { names: m.partner.map((p) => nameAcc(p, t.locale)).join(' & ') }) : null,
     againstSegs: joinSegs(m.opponents, (p) => ({ text: fullName(p), id: p.id })),
-    partnerSegs: m.partner.length > 0 ? segmentsOf(t.players.withPartner, { names: joinSegs(m.partner, (p) => ({ text: nameAcc(p), id: p.id })) }) : null,
+    partnerSegs: m.partner.length > 0 ? segmentsOf(t.players.withPartner, { names: joinSegs(m.partner, (p) => ({ text: nameAcc(p, t.locale), id: p.id })) }) : null,
     meta: [day, m.tournament ?? null, category, roundLabel(m.round ?? null, t)].filter(Boolean).join(' · '),
     when: [day, category].filter(Boolean).join(' · '),
   };

@@ -1,4 +1,4 @@
-import { withArticleAccusative, type Copy } from '@netprophet/copy';
+import { nameObj, type Copy } from '@netprophet/copy';
 import type { PlayerProTeaser } from '@netprophet/db';
 import { fmt } from './votes';
 
@@ -32,7 +32,7 @@ export function teaserRows(x: PlayerProTeaser, hasPlayer: boolean, t: Copy): Tea
 
 /** «Όλα για τον Γιώργο» */
 export function teaserTitle(first: string, gender: 'm' | 'f' | null, t: Copy): string {
-  return fmt(t.playerPro.title, { who: withArticleAccusative(first, '', gender).trim() });
+  return fmt(t.playerPro.title, { who: nameObj(first, '', gender, t.locale) });
 }
 
 /** the guest's sample: a busy player, met three times */

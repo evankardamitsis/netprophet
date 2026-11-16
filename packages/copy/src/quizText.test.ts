@@ -37,9 +37,10 @@ describe('renderQuizText', () => {
         expect(renderQuizText('Συμφωνώ', players)).toBe('Συμφωνώ');
     });
 
-    it('has no articles in English', () => {
-        expect(renderQuizText('{p1.o} vs {p2.ston}', players, 'en')).toBe('Nikos Roditis vs Ioanna Tsakou');
-        expect(renderQuizText('{p1.o_first}', players, 'en')).toBe('Nikos');
+    it('has no articles and no cases in English, names as written', () => {
+        expect(renderQuizText('{p1.o} vs {p2.ston}', players, 'en')).toBe('Νίκος Ροδίτης vs Ιωάννα Τσάκου');
+        expect(renderQuizText('{p1.ton}', players, 'en')).toBe('Νίκος Ροδίτης');
+        expect(renderQuizText('{p1.o_first}', players, 'en')).toBe('Νίκος');
     });
 });
 

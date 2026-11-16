@@ -163,7 +163,7 @@ export default function AddMatch() {
                 </View>
                 {moreDays ? (
                   <View style={styles.grid}>
-                    {otherDays(form.mode, now).map((d) => (
+                    {otherDays(form.mode, now, t).map((d) => (
                       <View key={d.key} style={styles.third}>
                         <Chip on={form.date === d.key} onPress={() => choose({ date: d.key })} minHeight={44} bg={colors.paper}>
                           {d.label}
@@ -472,9 +472,9 @@ function Done({ form, matchId, kudo, inReview, onAgain }: { form: LogForm; match
     setToast({ text, n: Date.now() });
     setTimeout(() => setToast(null), TOAST_MS);
   };
-  const me = raw?.profile ?? { first_name: 'Βαγγέλης', surname: 'Καρδαμίτσης', gender: 'm' as const };
+  const me = raw?.profile ?? { first_name: 'Γιώργος', surname: 'Παπαδόπουλος', gender: 'm' as const };
   const base = linkBase();
-  const title = fmt(s.title, { who: whoShort(me) });
+  const title = fmt(s.title, { who: whoShort(me, t.locale) });
   const peek = () => {
     setSharing(false);
     if (links[0]) router.push(`/m/${links[0].token}`);

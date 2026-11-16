@@ -171,6 +171,46 @@ export function weekdayAccusative(day: number | string): string | null {
     return WEEKDAY_ACC[dow] ?? null;
 }
 
+/**
+ * Names in a sentence, per locale (founder, 16 Nov 2026): Greek declines them («τον Νίκο Ροδίτη»); English shows the
+ * name as written, nominative, with no article («Νίκος Ροδίτης»). Every name inside app copy goes through these three.
+ */
+function plainName(firstName: string, surname: string): string {
+    return [firstName.trim(), surname.trim()].filter(Boolean).join(' ');
+}
+
+/** «τον Νίκο Ροδίτη» in Greek, «Νίκος Ροδίτης» in English. An empty surname leaves only the first name. */
+export function nameObj(firstName: string, surname: string, known: NameGender | null | undefined, locale: 'el' | 'en'): string {
+    if (locale !== 'el') return plainName(firstName, surname);
+    return withArticleAccusative(firstName, surname, known).trim();
+}
+
+/** «Νίκο Ροδίτη» in Greek (accusative, no article), «Νίκος Ροδίτης» in English */
+export function nameAcc(firstName: string, surname: string, known: NameGender | null | undefined, locale: 'el' | 'en'): string {
+    if (locale !== 'el') return plainName(firstName, surname);
+    return accusativeName(firstName, surname, known);
+}
+
+/** one word: «Ροδίτη» in Greek, «Ροδίτης» in English */
+export function wordAcc(word: string, gender: NameGender, locale: 'el' | 'en'): string {
+    return locale === 'el' ? accusativeWord(word, gender) : word;
+}
+
+/* ================= numbers and money ================= */
+
+/** 4.23 -> «4,23» in Greek, «4.23» in English */
+export function decimal(n: number, locale: 'el' | 'en' = 'el', digits = 2): string {
+    const text = n.toFixed(digits);
+    return locale === 'el' ? text.replace('.', ',') : text;
+}
+
+/** 4999 cents -> «49,99€» in Greek, «€49.99» in English */
+export function euroCents(cents: number, locale: 'el' | 'en' = 'el'): string {
+    const whole = Math.floor(cents / 100);
+    const rest = String(cents % 100).padStart(2, '0');
+    return locale === 'el' ? `${whole},${rest}€` : `€${whole}.${rest}`;
+}
+
 /** «4», «4,5»: levels go in halves (founder, 12 Oct 2026); Greek writes the decimal with a comma */
 export function levelNumber(level: number, locale: 'el' | 'en' = 'el'): string {
     const text = String(Math.floor(level * 2) / 2);

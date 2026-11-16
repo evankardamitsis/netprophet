@@ -1,4 +1,4 @@
-import { levelNumber, type Copy } from '@netprophet/copy';
+import { decimal, levelNumber, type Copy, type Locale } from '@netprophet/copy';
 import type { GetLookResult, GetMyLevelResult, LookCategory, LookItem } from '@netprophet/db';
 import { fmt } from './votes';
 
@@ -17,15 +17,17 @@ export interface Tile {
 
 export type Tone = 'free' | 'earned' | 'bought' | 'price' | 'locked';
 
-/** 1.99 -> «1,99» */
-export function eur(n: number): string {
-  return n.toFixed(2).replace('.', ',');
+/** 1.99 -> «1,99» in Greek, «1.99» in English (the copy adds the €) */
+export function eur(n: number, locale: Locale = 'el'): string {
+  return decimal(n, locale);
 }
 
-export const itemName = (i: LookItem): string => i.name_el;
+/** the item's name in the app's language; English falls back to the Greek one when it has none */
+export const itemName = (i: LookItem, locale: Locale = 'el'): string =>
+  locale === 'en' && i.name_en?.trim() ? i.name_en : i.name_el;
 
 export function tileName(tile: Tile, t: Copy): string {
-  if (tile.item) return itemName(tile.item);
+  if (tile.item) return itemName(tile.item, t.locale);
   const none: Record<LookCategory, string> = {
     frame: t.look.noFrame,
     background: t.look.noBackground,
@@ -62,7 +64,7 @@ export function tagOf(tile: Tile, t: Copy): { text: string; tone: Tone } | null 
     if (i.kind === 'earned' || i.source === 'earned') return { text: t.look.tagEarned, tone: 'earned' };
     return { text: t.look.tagBought, tone: 'bought' };
   }
-  if ((i.kind === 'buy' || i.kind === 'pack') && i.price_eur !== null) return { text: fmt(t.look.price, { price: eur(i.price_eur) }), tone: 'price' };
+  if ((i.kind === 'buy' || i.kind === 'pack') && i.price_eur !== null) return { text: fmt(t.look.price, { price: eur(i.price_eur, t.locale) }), tone: 'price' };
   return { text: i.earn_rule ?? '', tone: 'locked' };
 }
 
@@ -79,7 +81,7 @@ export function markerOf(tile: Tile, t: Copy): Marker | null {
   if (i.kind === 'free') return { kind: 'free', text: t.look.tagFree };
   if (i.owned) return { kind: 'owned', text: t.look.markerOwned };
   if (i.kind === 'earned') return { kind: 'earn', text: t.look.markerEarn };
-  if (i.price_eur !== null) return { kind: 'price', text: fmt(t.look.price, { price: eur(i.price_eur) }) };
+  if (i.price_eur !== null) return { kind: 'price', text: fmt(t.look.price, { price: eur(i.price_eur, t.locale) }) };
   return null;
 }
 
@@ -91,7 +93,7 @@ export function ctaOf(tile: Tile, look: GetLookResult, t: Copy): Cta {
   const isWorn = wornKey(look, tile.category) === tile.key;
   if (!i || i.owned) return isWorn ? { kind: 'worn' } : { kind: 'wear' };
   if ((i.kind === 'buy' || i.kind === 'pack') && i.price_eur !== null) {
-    return { kind: 'buy', label: fmt(t.look.buy, { price: fmt(t.look.priceSpaced, { price: eur(i.price_eur) }) }) };
+    return { kind: 'buy', label: fmt(t.look.buy, { price: fmt(t.look.priceSpaced, { price: eur(i.price_eur, t.locale) }) }) };
   }
   return { kind: 'none' };
 }
@@ -109,12 +111,12 @@ export interface BuySheet {
 export function buySheetOf(item: LookItem, t: Copy): BuySheet | null {
   if (item.price_eur === null) return null;
   const s = t.look.sheet;
-  const price = fmt(t.look.priceSpaced, { price: eur(item.price_eur) });
+  const price = fmt(t.look.priceSpaced, { price: eur(item.price_eur, t.locale) });
   if (item.category === 'kit') return { key: item.key, title: s.kit, price, line: s.lineKit, note: s.noteKit };
-  if (item.category === 'frame') return { key: item.key, title: fmt(s.frame, { name: itemName(item) }), price, line: s.lineFrame, note: s.noteFrame };
-  if (item.category === 'gear') return { key: item.key, title: fmt(s.gear, { name: itemName(item) }), price, line: s.lineGear, note: s.noteGear };
-  if (item.category === 'win_effect') return { key: item.key, title: fmt(s.effect, { name: itemName(item) }), price, line: s.lineEffect, note: s.noteEffect };
-  return { key: item.key, title: fmt(s.background, { name: itemName(item) }), price, line: s.lineBackground, note: s.noteBackground };
+  if (item.category === 'frame') return { key: item.key, title: fmt(s.frame, { name: itemName(item, t.locale) }), price, line: s.lineFrame, note: s.noteFrame };
+  if (item.category === 'gear') return { key: item.key, title: fmt(s.gear, { name: itemName(item, t.locale) }), price, line: s.lineGear, note: s.noteGear };
+  if (item.category === 'win_effect') return { key: item.key, title: fmt(s.effect, { name: itemName(item, t.locale) }), price, line: s.lineEffect, note: s.noteEffect };
+  return { key: item.key, title: fmt(s.background, { name: itemName(item, t.locale) }), price, line: s.lineBackground, note: s.noteBackground };
 }
 
 /** wear `key` (null: take it off) right away, before the server answers */
@@ -171,8 +173,8 @@ export interface LevelBack {
   toNext: string | null;
 }
 
-/** two decimals with a comma: 4.23 -> «4,23» */
-const dec = (n: number): string => n.toFixed(2).replace('.', ',');
+/** two decimals: 4.23 -> «4,23» in Greek, «4.23» in English */
+const dec = (n: number, locale: Locale): string => decimal(n, locale);
 
 /** the stats side from get_my_level; null while it has not loaded */
 export function levelBackOf(r: GetMyLevelResult | null, t: Copy): LevelBack | null {
@@ -188,8 +190,8 @@ export function levelBackOf(r: GetMyLevelResult | null, t: Copy): LevelBack | nu
   if (!r.claimed || r.status === 'pending' || r.tier === null || r.tier === undefined) {
     return { state: 'pending', level: '', arrow, word, counts, pro: r.pro, value: null, toNext: null };
   }
-  const value = r.pro && r.value != null ? dec(r.value) : null;
+  const value = r.pro && r.value != null ? dec(r.value, t.locale) : null;
   const toNext =
-    r.pro && r.to_next != null && r.next_tier != null ? fmt(s.toNext, { next: levelNumber(r.next_tier), gap: dec(r.to_next) }) : null;
-  return { state: 'active', level: levelNumber(r.tier), arrow, word, counts, pro: r.pro, value, toNext };
+    r.pro && r.to_next != null && r.next_tier != null ? fmt(s.toNext, { next: levelNumber(r.next_tier, t.locale), gap: dec(r.to_next, t.locale) }) : null;
+  return { state: 'active', level: levelNumber(r.tier, t.locale), arrow, word, counts, pro: r.pro, value, toNext };
 }

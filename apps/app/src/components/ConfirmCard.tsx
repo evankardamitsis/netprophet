@@ -21,7 +21,7 @@ export function ConfirmRow({ item, onAnswer }: { item: PendingConfirmation; onAn
     (item.sides.find((s) => s.side === side)?.players ?? []).map((p) => p.first_name).join(' & ');
   const winner = firsts(item.winner_side);
   const loser = firsts(item.winner_side === 1 ? 2 : 1);
-  const logger = item.logged_by?.first_name ? who({ first_name: item.logged_by.first_name, surname: item.logged_by.surname }, true) : '';
+  const logger = item.logged_by?.first_name ? who({ first_name: item.logged_by.first_name, surname: item.logged_by.surname }, true, t.locale) : '';
   const us = firsts(item.my_side);
   const them = firsts(item.my_side === 1 ? 2 : 1);
   const fixes: { label: string; fix: { winner: 'me' | 'them'; sets: '2-0' | '2-1' } }[] = [

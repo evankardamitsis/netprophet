@@ -9,7 +9,7 @@
 //   {p1.ston}    στον Νίκο Ροδίτη    «στον» / «στην» + accusative full name
 // pN refers to players[N - 1]. A player without a gender falls back to nameGender(first_name).
 
-import { accusativeName, displayName, nameGender, type NameGender } from './greek';
+import { accusativeName, nameGender, type NameGender } from './greek';
 
 export interface QuizTextPlayer {
     first_name: string;
@@ -26,8 +26,8 @@ function fullName(p: QuizTextPlayer): string {
 function renderToken(p: QuizTextPlayer, kind: string | undefined, locale: 'el' | 'en'): string {
     const g = nameGender(p.first_name, p.gender);
     if (locale === 'en') {
-        // English has no articles or cases: just the name, in Latin script
-        return displayName(kind === 'first' || kind === 'o_first' ? p.first_name : fullName(p), 'en');
+        // English has no articles or cases: just the name, as written (founder, 16 Nov 2026: Greek script stays)
+        return kind === 'first' || kind === 'o_first' ? p.first_name : fullName(p);
     }
     const article = g === 'f' ? 'η' : 'ο';
     switch (kind) {

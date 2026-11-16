@@ -91,11 +91,20 @@ describe('strip markers', () => {
       }
     }
   });
+  it('names in English, the Greek name when an item has no English one', () => {
+    const en = getCopy('en');
+    expect(tileName(tile('frame', 'frame_gold'), en)).toBe('Gold');
+    expect(tileName(tile('frame', 'frame_gold'), t)).toBe('Χρυσό');
+    const bare = { ...tile('frame', 'frame_gold'), item: { ...tile('frame', 'frame_gold').item!, name_en: '' } };
+    expect(tileName(bare, en)).toBe('Χρυσό');
+    expect(eur(1.99)).toBe('1,99');
+    expect(eur(1.99, 'en')).toBe('1.99');
+  });
   it('in English too', () => {
     const en = getCopy('en');
     expect(markerOf(tile('frame', 'frame_ten'), en)?.text).toBe('Earn it');
     expect(markerOf(tile('kit', 'kit_green'), en)?.text).toBe('Free');
-    expect(markerOf(tile('frame', 'frame_gold'), en)?.text).toBe('€1,99');
+    expect(markerOf(tile('frame', 'frame_gold'), en)?.text).toBe('€1.99');
   });
 });
 
@@ -154,6 +163,13 @@ describe('the back of the card', () => {
     const b = levelBackOf({ ...free, pro: true, tier: 4, value: 4.23, to_next: 0.27, next_tier: 4.5 }, t)!;
     expect(b.value).toBe('4,23');
     expect(b.toNext).toBe('Ως το level 4,5: +0,27');
+  });
+  it('English writes a decimal point', () => {
+    const en = getCopy('en');
+    const b = levelBackOf({ ...free, pro: true, tier: 4.5, value: 4.73, to_next: 0.27, next_tier: 5 }, en)!;
+    expect(b.level).toBe('4.5');
+    expect(b.value).toBe('4.73');
+    expect(b.toNext).toContain('+0.27');
   });
   it('pending: the crowd decides; one vote is singular', () => {
     const b = levelBackOf({ claimed: true, pro: false, status: 'pending', tier: null, direction: 'same', matches: 1, votes: 1, value: null, week_ago: null, to_next: null, next_tier: null }, t)!;

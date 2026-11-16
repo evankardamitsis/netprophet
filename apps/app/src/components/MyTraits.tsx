@@ -38,7 +38,7 @@ export function MyTraits({ data, first, proOpen }: { data: MyTraitsData; first: 
       ) : (
         <>
           {data.traits.map((row, i) => (
-            <Row key={row.id} label={traitLabel(row, gender)} share={shareWidth(row.share)} count={data.pro ? row.count : null} index={i} />
+            <Row key={row.id} label={traitLabel(row, gender, t.locale)} share={shareWidth(row.share)} count={data.pro ? row.count : null} index={i} />
           ))}
           {!data.pro && proOpen ? (
             <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=traits')} style={styles.linkHit}>

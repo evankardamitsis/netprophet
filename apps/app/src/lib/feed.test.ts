@@ -247,6 +247,12 @@ describe('fromResultCard', () => {
     expect(c.winnerSurname).toBe('Πράτσας & Μέμμος');
     expect(c.line).toBe('κέρδισαν τους Γιώργο Δεσύπρη & ΑΝΝΑ ΜΑΝΟΥ');
   });
+
+  it('English: the names as written, no article, no case', () => {
+    const en = getCopy('en');
+    expect(fromResultCard(result({}), en).line).toBe('beat Γιώργος Δεσύπρης');
+    expect(fromResultCard(result({ sides: sides(true) }), en).line).toBe('beat Γιώργος Δεσύπρης & ΑΝΝΑ ΜΑΝΟΥ');
+  });
 });
 
 describe('put-off matches', () => {

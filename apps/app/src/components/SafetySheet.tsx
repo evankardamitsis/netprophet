@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { nameGender, withArticleAccusative } from '@netprophet/copy';
+import { nameGender, nameObj } from '@netprophet/copy';
 import type { ReportReason } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import { useSafety, type SafetyTarget } from '../lib/data';
@@ -60,7 +60,7 @@ export function SafetySheet({ target, onClose }: { target: SafetyTarget | null; 
     const female = nameGender(who?.first_name ?? '', who?.gender) === 'f';
     close(ok ? (female ? s.blockedF : s.blocked) : s.failed);
   };
-  const to = who?.first_name ? withArticleAccusative(who.first_name, '', who.gender).trim() : '';
+  const to = who?.first_name ? nameObj(who.first_name, '', who.gender, t.locale) : '';
 
   return (
     <Modal visible={target !== null} transparent animationType="none" onRequestClose={() => close()}>

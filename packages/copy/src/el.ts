@@ -1,5 +1,7 @@
 /** Greek is primary. Spoken, playful, no betting vocabulary, no em dashes. */
 export const el = {
+  /** which dictionary this is: the helpers in greek.ts decline names only in Greek */
+  locale: 'el' as 'el' | 'en',
   common: {
     continue: 'Συνέχεια',
     back: 'Πίσω',
@@ -559,50 +561,6 @@ export const el = {
     intro: {
       /** the step pill, «1 από 4» */
       of: '{n} από {total}',
-      ready: 'Πάμε',
-      vote: {
-        title: 'Ψήφισε τους νικητές.',
-        sub: 'Δες αγώνες από την παρέα σου και ψήφισε ποιος θα κερδίσει. Θέλουμε γεμάτη κερκίδα, ε;',
-        when: 'Σήμερα 18:00 · Open Γλυφάδας',
-        a: { first: 'Νίκος', surname: 'Ροδίτης' },
-        b: { first: 'Δημήτρης', surname: 'Γκότσης' },
-        foot: 'Πάτα όποιον πιστεύεις. Βλέπεις αμέσως τι ψήφισαν οι άλλοι.',
-      },
-      know: {
-        title: 'Μάθε ποιον έχεις απέναντι.',
-        sub: 'Δες περισσότερα για τον αντίπαλό σου πριν περάσει στην άλλη μεριά του φιλέ.',
-        who: 'Νίκος Ροδίτης · level 5 · πώς παίζει',
-        traits: [
-          { name: 'Δυνατό σερβίς', n: 23 },
-          { name: 'Δεν χάνει tie-break', n: 17 },
-          { name: 'Αργεί να ζεσταθεί', n: 12 },
-        ],
-        foot: 'Τα γράφουν όσοι έχουν παίξει απέναντί του.',
-      },
-      points: {
-        title: 'Μάζεψε πόντους, κράτα το σερί σου.',
-        sub: 'Κάθε σωστή ψήφος δίνει πόντους. Όσο μεγαλώνει το σερί σου, τόσο ανεβαίνεις στην Κατάταξη.',
-        correct: 'Σωστή ψήφος',
-        upset: 'Είπες την ανατροπή',
-        streak: 'Σερί: σωστές ψήφοι στη σειρά',
-        rows: [
-          { name: '1 · Μαρία Καρρά', n: 610 },
-          { name: '2 · Εσύ', n: 580 },
-        ],
-        foot: 'Κάθε μήνα νέα Κατάταξη με την παρέα σου.',
-      },
-      matches: {
-        title: 'Πέρνα εύκολα τους αγώνες σου.',
-        sub: 'Όσους περισσότερους αγώνες βάζεις, τόσο γεμίζει το προφίλ σου και μαζεύεις ψήφους.',
-        when: 'Χθες · Φιλικό · Μονό',
-        line: 'Κέρδισες τον Γιώργο Δεσύπρη',
-        score: '2-1',
-        help: 'Πότε, με ποιον, ποιος κέρδισε. Μισό λεπτό.',
-        level: 'Ανεβαίνεις level όσο το λες σωστά.',
-        levelHelp: 'Κάθε σωστή ψήφος, κάθε σερί και οι ερωτήσεις της ημέρας σε ανεβάζουν.',
-      },
-      /** the splash after the slides: «Ας» in paper, «ξεκινήσουμε» in lime */
-      go: { a: 'Ας', b: 'ξεκινήσουμε' },
     },
     failed: 'Δεν αποθηκεύτηκε. Ξαναδοκίμασε.',
   },
@@ -711,6 +669,11 @@ export const el = {
     /** Baller's sounds (founder, 17 Oct) */
     sounds: 'Ήχοι',
     soundsLine: 'Μικροί ήχοι από τον Baller σου. Σωπαίνουν όταν το κινητό είναι στο αθόρυβο.',
+    /** Ρυθμίσεις (founder, 16 Nov 2026): the app follows the phone's language unless you pick one here */
+    language: 'Γλώσσα',
+    languageLine: 'Παίρνει τη γλώσσα του κινητού σου, εκτός αν διαλέξεις εσύ.',
+    /** each language in its own words, so you find yours whatever the app speaks now */
+    languages: { auto: 'Αυτόματα', el: 'Ελληνικά', en: 'English' },
     /** the push when someone reacts to your match (founder, 20 Oct); saved on the account, on unless switched off */
     reactionsPush: 'Αντιδράσεις στα ματς σου',
     reactionsPushLine: 'Σου λέμε όταν κάποιος αντιδρά σε ματς σου. Το πολύ μία ειδοποίηση ανά ματς κάθε 3 ώρες.',

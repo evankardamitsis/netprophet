@@ -1,5 +1,5 @@
 import { formatWinnerSets, localParts } from '@netprophet/core';
-import { accusativeName, levelNumber, nameGender } from '@netprophet/copy';
+import { levelNumber, nameAcc, nameGender } from '@netprophet/copy';
 import type { Copy } from '@netprophet/copy';
 import type { MatchStatsPart, PlayerRef, ScoutPlayer, SetScore, StatsPerson, WinLoss } from '@netprophet/db';
 import { categoryLabel } from './category';
@@ -10,6 +10,7 @@ import { dayLabel } from './results';
 import { fmt } from './votes';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
 import { joinSegs, segmentsOf, type NameSeg } from './tournamentToday';
+import { traitLabel } from './traits';
 
 /**
  * «Ο αντίπαλος πριν το ματς» (Pro): the other side of your own next match, turned into lines.
@@ -105,10 +106,10 @@ const people = (list: StatsPerson[]) => list.map(fullName).join(' & ');
 const peopleSegs = (list: StatsPerson[]) => joinSegs(list, (p) => ({ text: fullName(p), id: p.player_id }));
 const partnerSegs = (list: StatsPerson[], t: Copy) =>
   list.length > 0
-    ? segmentsOf(t.scout.withPartner, { names: joinSegs(list, (p) => ({ text: accusativeName(p.first_name, p.surname, p.gender), id: p.player_id })) })
+    ? segmentsOf(t.scout.withPartner, { names: joinSegs(list, (p) => ({ text: nameAcc(p.first_name, p.surname, p.gender, t.locale), id: p.player_id })) })
     : null;
 const partnerLine = (list: StatsPerson[], t: Copy) =>
-  list.length > 0 ? fmt(t.scout.withPartner, { names: list.map((p) => accusativeName(p.first_name, p.surname, p.gender)).join(' & ') }) : null;
+  list.length > 0 ? fmt(t.scout.withPartner, { names: list.map((p) => nameAcc(p.first_name, p.surname, p.gender, t.locale)).join(' & ') }) : null;
 
 /** «Τα στατιστικά σου» blocks, said about them: the same numbers, the words in the third person */
 export function scoutVoice(t: Copy): Copy {
@@ -158,7 +159,7 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
     first: p.first_name,
     surname: p.surname,
     sub: [
-      PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
+      PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier, t.locale)}` : null,
       p.area_id ? areas[p.area_id] ?? null : null,
       p.hand ? s.hands[p.hand] : null,
     ]
@@ -205,7 +206,7 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
       partnerSegs: null,
       meta: [roundLabel(m.round, t), day(m.starts_at, now, t)].filter(Boolean).join(' · '),
     })),
-    traits: (p.traits ?? []).map((x) => ({ id: x.id, label: x.label_el[nameGender(p.first_name, p.gender)], count: x.count })),
+    traits: (p.traits ?? []).map((x) => ({ id: x.id, label: traitLabel(x, nameGender(p.first_name, p.gender), t.locale), count: x.count })),
     history: history.map((m) => ({
       key: m.match_id,
       won: m.won,
