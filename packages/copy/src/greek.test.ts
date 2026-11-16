@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, tidyName, nameShapeOk, nameKey, sameNamedPerson } from './greek';
+    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, nameObj, nameAcc, wordAcc, decimal, euroCents, tidyName, nameShapeOk, nameKey, sameNamedPerson } from './greek';
 import nameVectors from '../../core/test-vectors/name-keys.json';
 
 describe('greekCaps', () => {
@@ -113,6 +113,47 @@ describe('accusativeName', () => {
   });
 });
 
+describe('names in a sentence, per locale (founder, 16 Nov 2026)', () => {
+  // [first, surname, gender, el nameObj, el nameAcc, en (both)]
+  const vectors: [string, string, 'm' | 'f' | null, string, string, string][] = [
+    ['Νίκος', 'Ροδίτης', 'm', 'τον Νίκο Ροδίτη', 'Νίκο Ροδίτη', 'Νίκος Ροδίτης'],
+    ['Μαρία', 'Καρρά', null, 'την Μαρία Καρρά', 'Μαρία Καρρά', 'Μαρία Καρρά'],
+    ['ΓΙΑΝΝΗΣ', 'ΠΑΠΠΑΣ', null, 'τον ΓΙΑΝΝΗ ΠΑΠΠΑ', 'ΓΙΑΝΝΗ ΠΑΠΠΑ', 'ΓΙΑΝΝΗΣ ΠΑΠΠΑΣ'],
+    ['Γιώργος', '', 'm', 'τον Γιώργο', 'Γιώργο', 'Γιώργος'],
+    ['Andrei', 'Ostapov', null, 'τον Andrei Ostapov', 'Andrei Ostapov', 'Andrei Ostapov'],
+  ];
+  it.each(vectors)('%s %s', (first, surname, g, elObj, elAcc, en) => {
+    expect(nameObj(first, surname, g, 'el')).toBe(elObj);
+    expect(nameAcc(first, surname, g, 'el')).toBe(elAcc);
+    expect(nameObj(first, surname, g, 'en')).toBe(en);
+    expect(nameAcc(first, surname, g, 'en')).toBe(en);
+  });
+  it('Greek matches the old helpers exactly', () => {
+    expect(nameObj('Νίκος', 'Ροδίτης', null, 'el')).toBe(withArticleAccusative('Νίκος', 'Ροδίτης'));
+    expect(nameObj('Μαρία', '', null, 'el')).toBe(withArticleAccusative('Μαρία', '').trim());
+    expect(nameAcc('Δημήτρης', 'Γκότσης', null, 'el')).toBe(accusativeName('Δημήτρης', 'Γκότσης'));
+  });
+  it('one word: declined in Greek, as written in English', () => {
+    expect(wordAcc('Ροδίτης', 'm', 'el')).toBe('Ροδίτη');
+    expect(wordAcc('Ροδίτης', 'm', 'en')).toBe('Ροδίτης');
+    expect(wordAcc('Καρρά', 'f', 'el')).toBe('Καρρά');
+  });
+});
+
+describe('decimal and euroCents', () => {
+  it('Greek writes a comma and the € after, English a point and the € before', () => {
+    expect(decimal(4.23)).toBe('4,23');
+    expect(decimal(4.23, 'el')).toBe('4,23');
+    expect(decimal(4.23, 'en')).toBe('4.23');
+    expect(decimal(1.99, 'en')).toBe('1.99');
+    expect(euroCents(4999)).toBe('49,99€');
+    expect(euroCents(4999, 'el')).toBe('49,99€');
+    expect(euroCents(4999, 'en')).toBe('€49.99');
+    expect(euroCents(899, 'en')).toBe('€8.99');
+    expect(euroCents(7000, 'el')).toBe('70,00€');
+  });
+});
+
 describe('levelNumber', () => {
   it('halves with a Greek comma, never rounded up', () => {
     expect(levelNumber(4)).toBe('4');
@@ -120,6 +161,8 @@ describe('levelNumber', () => {
     expect(levelNumber(4.49)).toBe('4');
     expect(levelNumber(3.99)).toBe('3,5');
     expect(levelNumber(4.5, 'en')).toBe('4.5');
+    expect(levelNumber(3.99, 'en')).toBe('3.5');
+    expect(levelNumber(4, 'en')).toBe('4');
   });
 });
 

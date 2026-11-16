@@ -1,5 +1,5 @@
 import { dayKey, formatWinnerSets } from '@netprophet/core';
-import { accusativeWord, nameGender, nameKey, sameNamedPerson, tidyName, type Copy } from '@netprophet/copy';
+import { nameGender, nameKey, sameNamedPerson, tidyName, wordAcc, type Copy, type Locale } from '@netprophet/copy';
 import type { DrawEntrantRow, DrawMatchRow, FeedPlayer, GetTournamentResult, TournamentDraw, TournamentMatch } from '@netprophet/db';
 import { fmt } from './votes';
 import { placeLine } from './place';
@@ -114,7 +114,7 @@ export function entriesOf(d: GetTournamentResult, me: Identity, t: Copy): Entry[
       entrant,
       partner: partner ? { name: `${partner.surname} ${partner.first}`.trim(), ...partner } : null,
       label: partner
-        ? fmt(t.tournaments.focus.entryPill, { category: draw.tab, partner: accusativeWord(partner.surname, nameGender(partner.first)) })
+        ? fmt(t.tournaments.focus.entryPill, { category: draw.tab, partner: wordAcc(partner.surname, nameGender(partner.first), t.locale) })
         : draw.tab,
     });
   }
@@ -398,7 +398,7 @@ export function ifWinsLine(run: Run, t: Copy): { line: string; when: string | nu
   return { line, when: next.when };
 }
 
-const surnamesAcc = (ps: Person[]) => ps.map((p) => accusativeWord(p.surname, nameGender(p.first_name))).join(' & ');
+const surnamesAcc = (ps: Person[], locale: Locale) => ps.map((p) => wordAcc(p.surname, nameGender(p.first_name), locale)).join(' & ');
 const startMs = (m: TournamentMatch) => (m.starts_at ? Date.parse(m.starts_at) : NaN);
 
 /**
@@ -411,7 +411,7 @@ export function summaryOf(me: Identity, matches: TournamentMatch[], run: Run | n
   const sideNo = (m: TournamentMatch): 1 | 2 => (sideOf(m, 1).some((p) => isPerson(me, p)) ? 1 : 2);
   const against = (m: TournamentMatch) => {
     const other = sideOf(m, sideNo(m) === 1 ? 2 : 1);
-    return other.length > 0 ? fmt(f.against, { name: surnamesAcc(other) }) : f.notYet;
+    return other.length > 0 ? fmt(f.against, { name: surnamesAcc(other, t.locale) }) : f.notYet;
   };
   let previous: PathMatch[] = matches
     .filter((m) => m.winner_side !== null)

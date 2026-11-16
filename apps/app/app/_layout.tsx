@@ -17,6 +17,8 @@ import { api, isLive } from "../src/lib/supabase";
 import { colors } from "../src/theme";
 import { initSounds } from "../src/lib/sound";
 import { Loading } from "../src/components/Loading";
+import { LocaleProvider, syncProfileLocale } from "../src/lib/LocaleProvider";
+import { useLocale } from "../src/i18n";
 
 /**
  * the animated logo stays at least this long on a cold start, so its hop is seen and the screen never flickers. It
@@ -56,9 +58,14 @@ export default function RootLayout() {
           <SafeAreaProvider>
             {/* mounted at once: the session restores and the gate reads during the logo; the screens wait for the
                 fonts (only text needs them) */}
-            <AuthProvider>
-              <OnboardingGateProvider>{fontsReady ? <Routes /> : null}</OnboardingGateProvider>
-            </AuthProvider>
+            {/* the language is known before any word shows (one saved key and the phone's language) */}
+            <LocaleProvider>
+              {(localeReady) => (
+                <AuthProvider>
+                  <OnboardingGateProvider>{fontsReady && localeReady ? <Routes /> : null}</OnboardingGateProvider>
+                </AuthProvider>
+              )}
+            </LocaleProvider>
           </SafeAreaProvider>
         </View>
       </View>
@@ -75,13 +82,19 @@ function Routes() {
   const { ready, session, guest } = useAuth();
   const gate = useOnboardingGate();
   const userId = session?.user.id ?? null;
+  const locale = useLocale();
   // a signed-in phone keeps its push token current (asking happens after the first vote)
   useEffect(() => {
     if (userId && api) void refreshPushToken(api);
-    if (userId) identify(userId, "el");
     // the store (RevenueCat) is configured for this account now, not at the first tap on buy
     if (userId) void prepareStore(userId);
   }, [userId]);
+  // the account's language, for analytics and for what the server writes to it (core.profiles.locale)
+  useEffect(() => {
+    if (!userId) return;
+    identify(userId, locale);
+    if (api) syncProfileLocale(api, userId, locale);
+  }, [userId, locale]);
   // a tapped push opens its screen (pushRoute), from the first moment, signed in or not: the tap that launched a killed
   // app, a tap from the background, a banner tapped in the app. The place waits (setPendingPush) and the main layout
   // ((tabs)/_layout, only there when signed in and past onboarding) opens it (founder, 25 Oct: pushes landed wrong).
@@ -100,7 +113,9 @@ function Routes() {
   return (
     <>
       <StatusBar style={signedIn ? "light" : "dark"} />
+      {/* keyed by language: a switch in Ρυθμίσεις remounts every screen, so nothing keeps words from the old one */}
       <Stack
+        key={locale}
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.paper },

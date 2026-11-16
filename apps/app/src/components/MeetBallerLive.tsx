@@ -1,6 +1,7 @@
 import { useAuth } from '../lib/auth';
 import { useBaller, useLook, useMyAvatar } from '../lib/data';
 import { MeetBaller } from './MeetBaller';
+import { useLocale } from '../i18n';
 
 /** «Γνώρισε τον Baller σου» with your own style, kit, gear and name, saving to your account */
 export function MeetBallerLive({ onDone, onLater, laterLabel }: { onDone: () => void; onLater?: () => void; laterLabel?: string }) {
@@ -8,13 +9,14 @@ export function MeetBallerLive({ onDone, onLater, laterLabel }: { onDone: () => 
   const my = useMyAvatar();
   const look = useLook();
   const baller = useBaller();
+  const locale = useLocale();
   // wait for the style and the name, so the screen opens on yours
   if (!my.avatar || baller.met === null) return null;
   const eq = look.look?.equipped;
   return (
     <MeetBaller
       userId={session?.user.id ?? 'guest'}
-      lang="el"
+      lang={locale}
       current={my.avatar}
       name={baller.name}
       kit={eq?.kit ?? 'kit_green'}

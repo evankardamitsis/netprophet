@@ -559,7 +559,7 @@ export default function OnboardingScreen() {
               {link ? (
                 <>
                   <Text style={styles.sub}>{o.known.subtitle}</Text>
-                  {link.view.logged_by ? <Text style={styles.note}>{fmt(t.link.knownNote, { who: who(link.view.logged_by) })}</Text> : null}
+                  {link.view.logged_by ? <Text style={styles.note}>{fmt(t.link.knownNote, { who: who(link.view.logged_by, false, t.locale) })}</Text> : null}
                 </>
               ) : (
                 // one line (founder, 20 Oct): who to pick and what happens if nobody is picked

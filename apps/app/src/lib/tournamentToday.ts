@@ -1,5 +1,5 @@
 import { dayKey } from '@netprophet/core';
-import { accusativeWord, nameGender, type Copy } from '@netprophet/copy';
+import { nameGender, wordAcc, type Copy, type Locale } from '@netprophet/copy';
 import type { FeedPlayer, GetTournamentResult, TournamentMatch } from '@netprophet/db';
 import { fmt, type Side } from './votes';
 import { fromTournamentMatch, overlayFeed, toUiSide, type CardMatch } from './feed';
@@ -36,13 +36,13 @@ type Person = Pick<FeedPlayer, 'id' | 'first_name' | 'surname'>;
 
 const sideOf = (m: TournamentMatch, n: 1 | 2): Person[] => m.sides.find((s) => s.side === n)?.players ?? [];
 const surnames = (ps: Person[]) => ps.map((p) => p.surname).join(' & ');
-const surnamesAcc = (ps: Person[]) => ps.map((p) => accusativeWord(p.surname, nameGender(p.first_name))).join(' & ');
+const surnamesAcc = (ps: Person[], locale: Locale) => ps.map((p) => wordAcc(p.surname, nameGender(p.first_name), locale)).join(' & ');
 /** «Ροδίτης Ν.», as the schedule writes a name */
 export const shortName = (p: Person) => `${p.surname} ${p.first_name.slice(0, 1)}.`.trim();
 
 /** «Ροδίτης με Δεσύπρη» */
 export function pairLine(m: TournamentMatch, t: Copy): string {
-  return fmt(t.tournaments.focus.pair, { a: surnames(sideOf(m, 1)), b: surnamesAcc(sideOf(m, 2)) });
+  return fmt(t.tournaments.focus.pair, { a: surnames(sideOf(m, 1)), b: surnamesAcc(sideOf(m, 2), t.locale) });
 }
 
 /** a piece of a line that shows names: a name with a roster id can be held (its run opens), the rest is plain text */
@@ -69,21 +69,21 @@ export function joinSegs<P>(list: readonly P[], seg: (p: P) => NameSeg): NameSeg
 }
 
 /** a side as pieces: «Ροδίτης & Πράτσας», surnames (the accusative after «με»), each with its roster id */
-export function sideSegs(ps: Person[], accusative = false): NameSeg[] {
+export function sideSegs(ps: Person[], accusative = false, locale: Locale = 'el'): NameSeg[] {
   return ps.flatMap((p, i): NameSeg[] => [
     ...(i > 0 ? [{ text: ' & ' }] : []),
-    { text: accusative ? accusativeWord(p.surname, nameGender(p.first_name)) : p.surname, id: p.id },
+    { text: accusative ? wordAcc(p.surname, nameGender(p.first_name), locale) : p.surname, id: p.id },
   ]);
 }
 
 /** «Ροδίτης με Δεσύπρη» as pieces: the same text as `pairLine`, the names holdable */
 export function pairSegments(m: TournamentMatch, t: Copy): NameSeg[] {
-  return segmentsOf(t.tournaments.focus.pair, { a: sideSegs(sideOf(m, 1)), b: sideSegs(sideOf(m, 2), true) });
+  return segmentsOf(t.tournaments.focus.pair, { a: sideSegs(sideOf(m, 1)), b: sideSegs(sideOf(m, 2), true, t.locale) });
 }
 
 /** «με Δεσύπρη» as pieces, for the people across (undefined when nobody is across yet) */
 export function againstSegs(others: Person[], t: Copy): NameSeg[] | undefined {
-  return others.length > 0 ? segmentsOf(t.tournaments.focus.against, { name: sideSegs(others, true) }) : undefined;
+  return others.length > 0 ? segmentsOf(t.tournaments.focus.against, { name: sideSegs(others, true, t.locale) }) : undefined;
 }
 
 /** NaN without a real time (none, or the import's 00:00 for a row with no time) */
@@ -183,7 +183,7 @@ export function yoursToday(matches: TournamentMatch[], yours: Set<string>, t: Co
         playerId: p.id,
         name: shortName(p),
         time: m.postponed === true ? t.tournaments.detail.postponedTime : hasTime(m.starts_at) ? timeOf(m.starts_at!) : dayLabel(m.starts_at ? dayKey(m.starts_at) : today, today, t),
-        against: fmt(t.tournaments.focus.against, { name: surnamesAcc(other) || t.tournaments.detail.tbd }),
+        against: fmt(t.tournaments.focus.against, { name: surnamesAcc(other, t.locale) || t.tournaments.detail.tbd }),
         at: m.postponed === true || Number.isNaN(startMs(m)) ? Infinity : startMs(m),
       });
       break;
@@ -250,7 +250,7 @@ export function mineToday(matches: TournamentMatch[], me: string | null, t: Copy
   if (!mine) return null;
   const n = sideOf(mine, 1).some((p) => p.id === me) ? 1 : 2;
   const other = sideOf(mine, n === 1 ? 2 : 1);
-  const who = fmt(t.tournaments.focus.against, { name: surnamesAcc(other) || t.tournaments.detail.tbd });
+  const who = fmt(t.tournaments.focus.against, { name: surnamesAcc(other, t.locale) || t.tournaments.detail.tbd });
   const category = mine.level ?? null;
   const when = hasTime(mine.starts_at) ? timeOf(mine.starts_at!) : t.match.today;
   return {

@@ -10,6 +10,8 @@ describe('proPrice', () => {
     expect(proPrice()).toBe('8,99€');
     expect(proPrice(1000)).toBe('10,00€');
     expect(priceLine(t)).toBe('8,99€ τον μήνα');
+    expect(proPrice(899, 'en')).toBe('€8.99');
+    expect(priceLine(getCopy('en'))).toBe('€8.99 a month');
   });
 });
 
@@ -71,7 +73,16 @@ describe('trialLine', () => {
       '49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.',
     );
     expect(buyLine(monthly!, t)).toBe('8,99€ τον μήνα.');
-    expect(buyLine(founding!, getCopy('en'))).toBe('49,99€ for the first year, then 69,99€/year.');
+    const en = getCopy('en');
+    const [foundingEn, monthlyEn] = planCards(
+      [
+        { product_id: 'pro_founding', price: 49.99, period: 'year', renews: 69.99 },
+        { product_id: 'pro_monthly', price: 8.99, period: 'month', renews: 8.99 },
+      ],
+      en,
+    );
+    expect(buyLine(foundingEn!, en)).toBe('€49.99 for the first year, then €69.99/year.');
+    expect(buyLine(monthlyEn!, en)).toBe('€8.99 a month.');
   });
 });
 

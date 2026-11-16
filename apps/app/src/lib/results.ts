@@ -1,5 +1,5 @@
 import { dayKey, formatWinnerSets, localParts } from '@netprophet/core';
-import { greekCaps, withArticleAccusative, type Copy } from '@netprophet/copy';
+import { greekCaps, nameObj, type Copy } from '@netprophet/copy';
 import type { FeedPlayer, Reactions, ResultRow, Side } from '@netprophet/db';
 import { fmt } from './votes';
 import { categoryLabel } from './category';
@@ -178,7 +178,7 @@ export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null 
     reactions: !inReview && row.reactions && row.reactions.options.length > 0 ? row.reactions : null,
     thank: !inReview && row.kudo_to
       ? {
-          label: fmt(t.kudos.prompt, { to: withArticleAccusative(row.kudo_to.first_name, '', row.kudo_to.gender).trim() }),
+          label: fmt(t.kudos.prompt, { to: nameObj(row.kudo_to.first_name, '', row.kudo_to.gender, t.locale) }),
           playerId: row.kudo_to.player_id,
           first: row.kudo_to.first_name,
           gender: row.kudo_to.gender,

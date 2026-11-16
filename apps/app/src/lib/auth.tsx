@@ -11,6 +11,7 @@ import { AuthFailure, EMAIL_RE, appleName, authErrorKind, passwordErrorKind } fr
 import { isReviewEmail } from './reviewAccount';
 import { markMeStale } from './meStore';
 import { api, supabase } from './supabase';
+import { currentLocale } from '../i18n';
 
 export { AuthFailure, EMAIL_RE, type AuthErrorKind } from './authErrors';
 
@@ -118,7 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async sendCode(email) {
         if (!supabase) return;
         if (!EMAIL_RE.test(email)) throw new AuthFailure('invalidEmail', 'invalid email');
-        const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+        // a new account starts in the language the app speaks now (handle_new_user reads meta.locale)
+        const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, data: { locale: currentLocale() } } });
         if (error) fail(error);
       },
       async verifyCode(email, code) {

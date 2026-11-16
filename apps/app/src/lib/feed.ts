@@ -1,5 +1,5 @@
 import { dayKey, localParts, toMs, voteLockInstant } from '@netprophet/core';
-import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy, levelNumber } from '@netprophet/copy';
+import { greekCaps, nameGender, nameObj, wordAcc, type Copy, levelNumber } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type TournamentMatch, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
 import { placeLine } from './place';
@@ -149,11 +149,11 @@ export function fromResultCard(card: FeedResultCard, t: Copy): CardResult {
   let line = '';
   if (losers.length === 1) {
     const l = losers[0]!;
-    line = fmt(t.result.beat, { loser: withArticleAccusative(l.first_name, l.surname) });
+    line = fmt(t.result.beat, { loser: nameObj(l.first_name, l.surname, null, t.locale) });
   } else if (losers.length > 1) {
     const names = losers.map((l) => {
       const g = nameGender(l.first_name);
-      return [l.first_name, l.surname].map((w) => accusativeWord(w, g)).join(' ');
+      return [l.first_name, l.surname].map((w) => wordAcc(w, g, t.locale)).join(' ');
     });
     line = fmt(t.result.beatPair, { losers: names.join(' & ') });
   }
@@ -239,16 +239,16 @@ function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): Ca
     if (!PLAYER_LEVEL_SHOWN) return { people, sub: area, level: null, area };
     const sub =
       p.level_tier != null && area
-        ? fmt(t.match.levelArea, { level: levelNumber(p.level_tier), area })
+        ? fmt(t.match.levelArea, { level: levelNumber(p.level_tier, t.locale), area })
         : p.level_tier != null
-          ? `${t.level.label} ${levelNumber(p.level_tier)}`
+          ? `${t.level.label} ${levelNumber(p.level_tier, t.locale)}`
           : area;
-    return { people, sub, level: p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null, area };
+    return { people, sub, level: p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier, t.locale)}` : null, area };
   }
   // doubles: «level 5 & 4», only when both levels are known
   if (!PLAYER_LEVEL_SHOWN) return { people, sub: null, level: null, area: null };
   const levels = players.map((p) => p.level_tier);
-  const sub = levels.every((l) => l != null) ? `${t.level.label} ${levels.map((l) => levelNumber(l as number)).join(' & ')}` : null;
+  const sub = levels.every((l) => l != null) ? `${t.level.label} ${levels.map((l) => levelNumber(l as number, t.locale)).join(' & ')}` : null;
   return { people, sub, level: sub, area: null };
 }
 

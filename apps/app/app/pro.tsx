@@ -182,11 +182,11 @@ export default function ProScreen() {
         {/* App Store 3.1.2: the price, the period and the renewal sit in the line under the button; 3.1.1: restoring,
             next to the two links */}
         <View style={styles.legal}>
-          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('terms'), (u) => Linking.openURL(u))}>
+          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('terms', t.locale), (u) => Linking.openURL(u))}>
             <Text style={styles.legalLink}>{p.terms}</Text>
           </Pressable>
           <Text style={styles.legalDot}>·</Text>
-          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('privacy'), (u) => Linking.openURL(u))}>
+          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('privacy', t.locale), (u) => Linking.openURL(u))}>
             <Text style={styles.legalLink}>{p.privacy}</Text>
           </Pressable>
           {!paid && !onTrial ? (
