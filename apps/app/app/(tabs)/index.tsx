@@ -43,8 +43,8 @@ import { useUnlocks } from '../../src/lib/unlocks';
 import { quizStaleIn } from '../../src/lib/quiz';
 import { fmt } from '../../src/lib/votes';
 import { useHudActions } from '../../src/lib/hud';
-import { measureView, useTour, useTourTarget } from '../../src/lib/tour';
-import { revealDelta, type TourTarget } from '../../src/lib/tourSteps';
+import { useTour, useTourTarget } from '../../src/lib/tour';
+import { placeInWindow, revealOffset, type Rect, type TourTarget } from '../../src/lib/tourSteps';
 import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { colors, fonts, text } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -319,20 +319,35 @@ export default function HomeScreen() {
   const tourY = useRef(0);
   const tourVote = useTourTarget('vote');
   const tourTournament = useTourTarget('tournament');
+  /** the list's content height, so a reveal never asks for a scroll past its end */
+  const contentH = useRef(0);
   const reveal = useCallback(
-    async (id: TourTarget) => {
+    async (id: TourTarget): Promise<Rect | null> => {
       const ref = id === 'vote' ? tourVote : id === 'tournament' ? tourTournament : null;
-      const list = scroller.current as unknown as { measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void } | null;
-      if (!ref || !list) return;
-      const [target, view] = await Promise.all([
-        measureView(ref),
-        new Promise<{ top: number; bottom: number }>((resolve) => list.measureInWindow((_x, y, _w, h) => resolve({ top: y, bottom: y + h }))),
+      const list = scroller.current as unknown as {
+        measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void;
+        getInnerViewRef?: () => unknown;
+      } | null;
+      if (!ref || !list) return null;
+      const inner = list.getInnerViewRef?.();
+      // the place in the list's content (no scroll makes this stale) and the list in the window (it does not scroll)
+      const [place, view] = await Promise.all([
+        new Promise<Rect | null>((resolve) => {
+          const node = ref.current as unknown as {
+            measureLayout?: (to: unknown, ok: (x: number, y: number, w: number, h: number) => void, fail: () => void) => void;
+          } | null;
+          if (!node?.measureLayout || !inner) return resolve(null);
+          node.measureLayout(inner, (x, y, width, height) => resolve(width > 0 && height > 0 ? { x, y, width, height } : null), () => resolve(null));
+        }),
+        new Promise<Rect>((resolve) => list.measureInWindow((x, y, width, height) => resolve({ x, y, width, height }))),
       ]);
-      if (!target) return;
-      const delta = revealDelta(target, view, 12);
-      if (delta === 0) return;
-      tourY.current = Math.max(0, tourY.current + delta);
-      scroller.current?.scrollTo({ y: tourY.current, animated: false });
+      if (!place) return null;
+      const offset = revealOffset(place, tourY.current, view.height, contentH.current > 0 ? contentH.current : Number.POSITIVE_INFINITY, 12);
+      if (offset !== tourY.current) {
+        tourY.current = offset;
+        scroller.current?.scrollTo({ y: offset, animated: false });
+      }
+      return placeInWindow(place, view, offset);
     },
     [tourVote, tourTournament],
   );
@@ -511,6 +526,9 @@ export default function HomeScreen() {
         onScroll={onScrolled}
         onScrollBeginDrag={onScrolled}
         scrollEventThrottle={250}
+        onContentSizeChange={(_w, h) => {
+          contentH.current = h;
+        }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={onPull} tintColor={colors.ink} />}

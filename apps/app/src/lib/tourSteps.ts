@@ -137,32 +137,51 @@ export interface Rect {
 }
 
 /**
- * How far Σήμερα's list must scroll (positive: down) to bring `target` into `view`: 0 when it is already wholly
- * there, else enough to put its top `pad` under the view's top. The caller keeps the offset at 0 or more.
+ * Where Σήμερα's list stands to show `place`. The place is in the list's own content (measureLayout against the
+ * content, which no scroll makes stale), `offset` is where the list stands now, `viewHeight` its height and
+ * `contentHeight` all of it. A place wholly in view stays put; otherwise its top goes `pad` under the list's top,
+ * never past either end of the list.
+ *
+ * Why not the window: on iOS (Fabric) a view's measureInWindow does not follow a scrollTo of the list it sits in, so
+ * after the scroll the first vote row still read as below the screen (16 Nov 2026).
  */
-export function revealDelta(target: Rect, view: { top: number; bottom: number }, pad: number): number {
-  if (target.y >= view.top && target.y + target.height <= view.bottom) return 0;
-  return target.y - (view.top + pad);
+export function revealOffset(place: Rect, offset: number, viewHeight: number, contentHeight: number, pad: number): number {
+  const max = Math.max(0, contentHeight - viewHeight);
+  const top = place.y - offset;
+  const at = top >= 0 && top + place.height <= viewHeight ? offset : place.y - pad;
+  return Math.min(max, Math.max(0, at));
 }
 
-/** the cut-out around a target: `pad` of room, kept inside `bounds` (a tall card is cut at the tab bar) */
-export function spotlight(target: Rect, pad: number, bounds: { top: number; bottom: number; left: number; right: number }): Rect {
+/** a place of the list's content in the window, with the list at `list` (its window position) scrolled to `offset` */
+export function placeInWindow(place: Rect, list: { x: number; y: number }, offset: number): Rect {
+  return { x: list.x + place.x, y: list.y + place.y - offset, width: place.width, height: place.height };
+}
+
+/**
+ * The cut-out around a target: `pad` of room, kept inside `bounds` (a tall card is cut at the tab bar). A target with
+ * nothing inside the bounds (off the screen, or not laid out) has no cut-out: null, and the card sits in the middle.
+ */
+export function spotlight(target: Rect, pad: number, bounds: { top: number; bottom: number; left: number; right: number }): Rect | null {
   const x = Math.max(bounds.left, target.x - pad);
   const y = Math.max(bounds.top, target.y - pad);
   const right = Math.min(bounds.right, target.x + target.width + pad);
   const bottom = Math.min(bounds.bottom, target.y + target.height + pad);
-  return { x, y, width: Math.max(0, right - x), height: Math.max(0, bottom - y) };
+  if (right - x <= 0 || bottom - y <= 0) return null;
+  return { x, y, width: right - x, height: bottom - y };
 }
 
 /**
  * Where the tooltip card sits: under the cut-out when it fits there (the avatar, the feed), above it otherwise (the
- * tabs at the bottom), never off the screen.
+ * tabs at the bottom). Whatever the cut-out says, the whole card stays on the screen, so «Παράλειψη» can always be
+ * reached.
  */
 export function placeTooltip(hole: Rect, screenHeight: number, cardHeight: number, gap: number, margin: number): number {
+  const lowest = Math.max(margin, screenHeight - margin - cardHeight);
+  const keep = (top: number) => Math.min(lowest, Math.max(margin, top));
   const below = hole.y + hole.height + gap;
-  if (below + cardHeight <= screenHeight - margin) return below;
+  if (below + cardHeight <= screenHeight - margin) return keep(below);
   const above = hole.y - gap - cardHeight;
-  if (above >= margin) return above;
+  if (above >= margin) return keep(above);
   // neither fits whole (a tall card on a small phone): over the cut-out's lower part, inside the screen
-  return Math.max(margin, screenHeight - margin - cardHeight);
+  return lowest;
 }

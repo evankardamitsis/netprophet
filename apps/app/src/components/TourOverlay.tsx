@@ -130,9 +130,12 @@ function TourLayer({ step }: { step: TourStepId }) {
       const local = (r: Rect | null): Rect | null =>
         r && { x: r.x - ox, y: r.y - oy, width: r.width, height: r.height };
       let bounds = { top: 0, bottom: h, left: 0, right: w };
+      // a place on Σήμερα's list: where the scroll left it, as the list says (a window measure after the scroll can
+      // still read the place where it was before it, under the tab bar)
+      let revealed: Rect | null = null;
       if (scrollsHome(step)) {
-        // a place on Σήμερα's list: between the header and the tab bar, scrolled into view first
-        await reveal(targetOf(step));
+        // between the header and the tab bar, scrolled into view first
+        revealed = await reveal(targetOf(step));
         await frame();
         const [head, tab] = await Promise.all([measure("stats"), measure("tab:results")]).then((rs) => rs.map(local));
         bounds = {
@@ -141,8 +144,9 @@ function TourLayer({ step }: { step: TourStepId }) {
           bottom: tab ? tab.y - PAD / 2 : h,
         };
       }
-      const target = local(await measure(targetOf(step)));
+      const target = local(revealed ?? (await measure(targetOf(step))));
       if (!live) return;
+      // nothing of the place on the screen: no cut-out, the card sits in the middle
       setHole(target ? spotlight(target, PAD / 2, bounds) : null);
       setShown(step);
     };
@@ -257,34 +261,41 @@ function TourLayer({ step }: { step: TourStepId }) {
           height: e.nativeEvent.layout.height,
         })
       }
-      style={[StyleSheet.absoluteFill, styles.root, fadeIn]}
+      style={[StyleSheet.absoluteFill, styles.root]}
     >
+      {/* the fade-up is on a layer of its own: the root is measured as the overlay's origin, and a root still rising
+        12px put every cut-out 12px off */}
       <Animated.View
-        pointerEvents={leaving ? "none" : "box-none"}
-        style={[StyleSheet.absoluteFill, exitStyle]}
+        pointerEvents="box-none"
+        style={[StyleSheet.absoluteFill, fadeIn]}
       >
-        {/* the cut-out is clipped in a layer of its own: its border reaches far past the screen, and on the web a
-          clipping parent of the card would scroll that overflow when a button takes focus */}
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, styles.clip]}
-        >
-          <Animated.View style={[styles.hole, holeStyle]}>
-            {hole ? <Ring key={shown ?? step} radius={radius} /> : null}
-          </Animated.View>
-        </View>
         <Animated.View
-          style={[styles.cardWrap, cardStyle]}
-          pointerEvents="box-none"
+          pointerEvents={leaving ? "none" : "box-none"}
+          style={[StyleSheet.absoluteFill, exitStyle]}
         >
-          {shown ? (
-            <Card
-              step={shown}
-              onHeight={setCardH}
-              onNext={onNext}
-              onSkip={onSkip}
-            />
-          ) : null}
+          {/* the cut-out is clipped in a layer of its own: its border reaches far past the screen, and on the web a
+          clipping parent of the card would scroll that overflow when a button takes focus */}
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, styles.clip]}
+          >
+            <Animated.View style={[styles.hole, holeStyle]}>
+              {hole ? <Ring key={shown ?? step} radius={radius} /> : null}
+            </Animated.View>
+          </View>
+          <Animated.View
+            style={[styles.cardWrap, cardStyle]}
+            pointerEvents="box-none"
+          >
+            {shown ? (
+              <Card
+                step={shown}
+                onHeight={setCardH}
+                onNext={onNext}
+                onSkip={onSkip}
+              />
+            ) : null}
+          </Animated.View>
         </Animated.View>
       </Animated.View>
     </Animated.View>

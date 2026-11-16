@@ -3,7 +3,8 @@ import {
   currentStep,
   isLastStep,
   placeTooltip,
-  revealDelta,
+  placeInWindow,
+  revealOffset,
   scrollsHome,
   TOUR_TARGETS,
   type TourTarget,
@@ -126,18 +127,38 @@ describe('next and skip', () => {
 });
 
 describe('where things go', () => {
-  const view = { top: 100, bottom: 700 };
+  // the list: 756 high, 3000 of content, standing at the top; places are in the list's content
+  const H = 756;
+  const C = 3000;
   it('a place already in view does not scroll the list', () => {
-    expect(revealDelta({ x: 16, y: 300, width: 350, height: 64 }, view, 12)).toBe(0);
+    expect(revealOffset({ x: 16, y: 300, width: 350, height: 64 }, 0, H, C, 12)).toBe(0);
+    expect(revealOffset({ x: 16, y: 1100, width: 350, height: 64 }, 989, H, C, 12)).toBe(989);
   });
-  it('a place below the fold scrolls up to the top of the list', () => {
-    expect(revealDelta({ x: 16, y: 900, width: 350, height: 64 }, view, 12)).toBe(788);
+  it('a place below the fold comes up to the top of the list (the Pro Max sample home, 16 Nov)', () => {
+    expect(revealOffset({ x: 16, y: 1001, width: 408, height: 167 }, 0, H, C, 12)).toBe(989);
   });
   it('a place half cut at the bottom scrolls too', () => {
-    expect(revealDelta({ x: 16, y: 680, width: 350, height: 64 }, view, 12)).toBe(568);
+    expect(revealOffset({ x: 16, y: 720, width: 350, height: 64 }, 0, H, C, 12)).toBe(708);
   });
-  it('a place above the top scrolls back up (negative)', () => {
-    expect(revealDelta({ x: 16, y: 40, width: 350, height: 64 }, view, 12)).toBe(-72);
+  it('a place above the top scrolls back up', () => {
+    expect(revealOffset({ x: 16, y: 400, width: 350, height: 64 }, 989, H, C, 12)).toBe(388);
+  });
+  it('the list never scrolls past either end', () => {
+    expect(revealOffset({ x: 16, y: 2900, width: 350, height: 64 }, 0, H, C, 12)).toBe(C - H);
+    expect(revealOffset({ x: 16, y: 4, width: 350, height: 64 }, 500, H, C, 12)).toBe(0);
+    // content shorter than the list: it cannot scroll at all
+    expect(revealOffset({ x: 16, y: 700, width: 350, height: 64 }, 0, H, 600, 12)).toBe(0);
+  });
+  it('a place is drawn where the scroll leaves it, not where the window measure says', () => {
+    // the vote row: 1001 into the content, the list's top at 124, scrolled to 989: on the screen at 136
+    expect(placeInWindow({ x: 16, y: 1001, width: 408, height: 167 }, { x: 0, y: 124 }, 989)).toEqual({ x: 16, y: 136, width: 408, height: 167 });
+  });
+  it('a target off the screen or not laid out has no cut-out', () => {
+    const bounds = { top: 112, bottom: 870, left: 0, right: 440 };
+    // the stale measure of the vote row on the Pro Max (16 Nov): below the tab bar
+    expect(spotlight({ x: 16, y: 1113, width: 408, height: 167 }, 4, bounds)).toBeNull();
+    expect(spotlight({ x: 16, y: -300, width: 408, height: 167 }, 4, bounds)).toBeNull();
+    expect(spotlight({ x: 0, y: 0, width: 0, height: 0 }, 0, { top: 0, bottom: 800, left: 0, right: 390 })).toBeNull();
   });
   it('the cut-out pads the target and stops at the bounds', () => {
     const bounds = { top: 100, bottom: 700, left: 0, right: 390 };
@@ -150,5 +171,18 @@ describe('where things go', () => {
   });
   it('a tooltip that fits neither way stays on the screen', () => {
     expect(placeTooltip({ x: 0, y: 150, width: 390, height: 500 }, 800, 200, 14, 16)).toBe(584);
+  });
+  it('the card is always wholly on the screen, wherever the cut-out is', () => {
+    // the Pro Max sample home (16 Nov): an empty cut-out under the screen put the card at 869 of 956
+    expect(placeTooltip({ x: 12, y: 1109, width: 416, height: 0 }, 956, 226, 14, 16)).toBe(956 - 16 - 226);
+    // a cut-out above the screen
+    expect(placeTooltip({ x: 12, y: -400, width: 416, height: 100 }, 956, 226, 14, 16)).toBe(16);
+    for (const y of [-2000, -100, 0, 300, 700, 940, 1500, 5000]) {
+      for (const h of [0, 44, 300]) {
+        const top = placeTooltip({ x: 0, y, width: 100, height: h }, 956, 226, 14, 16);
+        expect(top).toBeGreaterThanOrEqual(16);
+        expect(top + 226).toBeLessThanOrEqual(956 - 16);
+      }
+    }
   });
 });
