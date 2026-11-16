@@ -1,5 +1,7 @@
 # Founding pricing: 49,99€ the first year, then 69,99€
 
+**16 Nov 2026 update (founder): the founding plan is sold until 31/3/2027 23:59 Athens, not 31/12/2026.** The date lives in `core.founding_until()` (migration `20270420000000_founding_until_march.sql`). Read every 31/12/2026 below as 31/3/2027 and every 1/1/2027 as 1/4/2027: Apple's price change to 69,99€ starts 1/4/2027, and Play's founding offer is switched off on 1/4/2027.
+
 Founder decision, 22 Oct 2026: Pro «Ιδρυτικό μέλος» costs **49,99€ for the first year** and **renews at 69,99€ a
 year** after it. It is sold only until **31/12/2026** (23:59 Athens). Every plan starts with the store's **7-day free
 trial** (with a card, charged on day 8 unless cancelled).

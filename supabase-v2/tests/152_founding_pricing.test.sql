@@ -1,5 +1,5 @@
 -- Founding pricing (founder, 22 Oct 2026): «Ιδρυτικό μέλος» is 49,99€ the first year, then 69,99€ a year, sold until
--- 31/12. The Pro screen gets the price after the first year from api.pro_offer. On Google Play the founding offer's
+-- 31/3/2027 (31/12 until 16 Nov 2026). The Pro screen gets the price after the first year from api.pro_offer. On Google Play the founding offer's
 -- phases arrive as TRIAL, then INTRO at 49,99€, then NORMAL at 69,99€: the INTRO year is paid Pro and gives
 -- «Πρώτη γενιά», the free week alone does not.
 begin;
@@ -32,19 +32,19 @@ select is((select renews_eur from core.store_products where product_id = 'pro_fo
 select tests.login(:'a'::uuid);
 select is((select (x ->> 'renews')::numeric from jsonb_array_elements(api.pro_offer() -> 'plans') x
             where x ->> 'product_id' = 'pro_founding'),
-          case when core.athens_day() <= date '2026-12-31' then 69.99 end,
+          case when core.athens_day() <= core.founding_until() then 69.99 end,
           'the offer says 69,99 after the founding year (while it is sold)');
 select is((select (x ->> 'renews')::numeric from jsonb_array_elements(api.pro_offer() -> 'plans') x
             where x ->> 'product_id' = 'pro_monthly'), 8.99, 'a plain plan renews at its own price');
 select tests.logout();
 
--- the Play offer, phase by phase: 7 days free on 28/12, the first year at 49,99 on 4/1, 69,99 a year later
-select tests.play('fp1', 'INITIAL_PURCHASE', :'a'::uuid, '2026-12-28 12:00+02', 'TRIAL', 0) is not null as x \gset
+-- the Play offer, phase by phase: 7 days free on 28/3, the first year at 49,99 on 4/4, 69,99 a year later
+select tests.play('fp1', 'INITIAL_PURCHASE', :'a'::uuid, '2027-03-28 12:00+03', 'TRIAL', 0) is not null as x \gset
 select ok(core.is_pro(:'a'::uuid), 'the Play free week on «Ιδρυτικό μέλος» is Pro');
 select is(tests.founding(:'a'::uuid), 0, 'the free week alone gives no frame');
-select is((tests.play('fp2', 'RENEWAL', :'a'::uuid, '2027-01-04 12:00+02', 'INTRO', 49.99) ->> 'founding_frame')::boolean,
-          true, 'the 49,99 year (INTRO) after a free week started on 28/12 gives «Πρώτη γενιά»');
-select is((tests.play('fp3', 'RENEWAL', :'a'::uuid, '2028-01-04 12:00+02', 'NORMAL', 69.99) ->> 'applied')::boolean,
+select is((tests.play('fp2', 'RENEWAL', :'a'::uuid, '2027-04-04 12:00+03', 'INTRO', 49.99) ->> 'founding_frame')::boolean,
+          true, 'the 49,99 year (INTRO) after a free week started on 28/3 gives «Πρώτη γενιά»');
+select is((tests.play('fp3', 'RENEWAL', :'a'::uuid, '2028-04-04 12:00+03', 'NORMAL', 69.99) ->> 'applied')::boolean,
           true, 'the 69,99 renewal a year later keeps Pro');
 select is(tests.founding(:'a'::uuid), 1, 'and the frame once');
 

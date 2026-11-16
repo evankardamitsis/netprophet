@@ -52,7 +52,7 @@ export interface PlanCard {
   price: string;
   /** «τον πρώτο χρόνο, μετά 69,99€/χρόνο» */
   note: string;
-  /** «4,17€ τον μήνα» for a yearly plan, «4,17€ τον μήνα · μόνο μέχρι 31/12» for the founding one */
+  /** «4,17€ τον μήνα» for a yearly plan, «4,17€ τον μήνα · μόνο μέχρι 31/3» for the founding one */
   /** «69,99€»: what the plan costs after its first year, when that is not its price (the founding plan) */
   renews: string | null;
   /** the yearly or founding plan carries «Καλύτερη τιμή» */

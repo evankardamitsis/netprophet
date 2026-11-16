@@ -1,7 +1,7 @@
 -- Google Play product ids: RevenueCat sends «<subscription>:<base plan>» (pro_monthly:monthly). Each Pro plan bought
 -- on Play gives Pro, renewals, cancellations, refunds, expirations and transfers work with Play ids, the purchase keeps
 -- the id we sell (and the raw one), an unknown id is still rejected, App Store / web ids are unchanged, and the founding
--- frame («Πρώτη γενιά») works with «pro_founding:yearly» (purchase, plan change, transfer; never after 31/12).
+-- frame («Πρώτη γενιά») works with «pro_founding:yearly» (purchase, plan change, transfer; never after 31/3).
 begin;
 select plan(29);
 
@@ -49,7 +49,7 @@ select is((select product_id from core.purchases where event_id = 'play-3'), 'pr
 -- «Πρώτη γενιά»: a founding member on Play gets it like on the App Store
 select ok(exists (select 1 from core.user_cosmetics uc join core.cosmetic_items ci on ci.id = uc.item_id
                    where uc.user_id = :'c'::uuid and ci.key = 'frame_founding' and uc.source = 'earned'),
-          'pro_founding:yearly bought by 31/12 gives the founding frame');
+          'pro_founding:yearly bought by 31/3 gives the founding frame');
 select ok(core.pro_trial_used(:'a'::uuid), 'a Play buyer has used the free week');
 
 -- ── renewal, auto-renew off, refund, expiration with Play ids ──
@@ -99,7 +99,7 @@ select ok(exists (select 1 from core.user_cosmetics uc join core.cosmetic_items 
 select is((select product_id || ' ' || raw_product_id from core.purchases where event_id = 'play-9'),
           'pro_founding pro_founding:yearly', 'and records the id we sell');
 
--- ── the founding frame: a Play plan change to pro_founding counts, a purchase after 31/12 does not ──
+-- ── the founding frame: a Play plan change to pro_founding counts, a purchase after 31/3 does not ──
 select tests.as_service();
 select api.apply_store_event(jsonb_build_object('event', jsonb_build_object(
   'id', 'play-12', 'type', 'PRODUCT_CHANGE', 'app_user_id', :'h', 'product_id', 'pro_monthly:monthly',
@@ -108,7 +108,7 @@ select api.apply_store_event(jsonb_build_object('event', jsonb_build_object(
   'expiration_at_ms', (extract(epoch from now() + interval '365 days') * 1000)::bigint)));
 select api.apply_store_event(jsonb_build_object('event', jsonb_build_object(
   'id', 'play-13', 'type', 'INITIAL_PURCHASE', 'app_user_id', :'i', 'product_id', 'pro_founding:yearly',
-  'store', 'PLAY_STORE', 'purchased_at_ms', (extract(epoch from timestamptz '2027-01-05 12:00+02') * 1000)::bigint,
+  'store', 'PLAY_STORE', 'purchased_at_ms', (extract(epoch from timestamptz '2027-04-05 12:00+03') * 1000)::bigint,
   'expiration_at_ms', (extract(epoch from now() + interval '365 days') * 1000)::bigint)));
 select tests.logout();
 select ok(exists (select 1 from core.user_cosmetics uc join core.cosmetic_items ci on ci.id = uc.item_id
@@ -116,7 +116,7 @@ select ok(exists (select 1 from core.user_cosmetics uc join core.cosmetic_items 
           'a Play plan change to pro_founding:yearly gives the founding frame');
 select ok(core.is_pro(:'i'::uuid) and not exists (select 1 from core.user_cosmetics uc join core.cosmetic_items ci on ci.id = uc.item_id
                    where uc.user_id = :'i'::uuid and ci.key = 'frame_founding'),
-          'pro_founding:yearly bought after 31/12 gives Pro but not the frame');
+          'pro_founding:yearly bought after 31/3 gives Pro but not the frame');
 
 -- ── an unknown id is still rejected ──
 select tests.as_service();

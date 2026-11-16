@@ -85,7 +85,7 @@ WHAT TO TRY
 6. Εγώ (Me): your Baller (avatar) and its wardrobe; Settings at the bottom of the screen.
 
 IN-APP PURCHASES
-- NetProphet Pro, auto-renewable subscription (monthly, yearly; a founding yearly plan until 31 Dec 2026), with a
+- NetProphet Pro, auto-renewable subscription (monthly, yearly; a founding yearly plan until 31 Mar 2027), with a
   7-day free trial. Open it from Εγώ (Me) › Pro, or from any "Pro" card. The Pro screen shows the price, the
   period, the auto-renewal terms, Terms of Use, Privacy Policy and "Επαναφορά αγορών" (Restore purchases).
 - Cosmetic items for the Baller (backgrounds, frames, kits, gear, win effects), one-time non-consumable purchases
