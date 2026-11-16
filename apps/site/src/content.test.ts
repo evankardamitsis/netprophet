@@ -89,7 +89,7 @@ describe('the site copy', () => {
     expect(text).toContain('8,99€');
     expect(text).toContain('69,99€');
     expect(text).toContain('49,99€');
-    expect(text).toContain('31/12');
+    expect(text).toContain('31/3');
     expect(text).toContain('7 μέρες δωρεάν');
     expect(text).toMatch(/Δεν αγοράζει/);
     const enText = strings(en).join(' ');

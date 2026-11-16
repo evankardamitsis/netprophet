@@ -1,5 +1,5 @@
 -- Cosmetics decisions (founder, 22 Oct 2026). «Πρώτη γενιά» is for everyone who takes Pro «Ιδρυτικό μέλος» by
--- 31/12/2026 23:59 Athens: given once by the store event, never twice on a renewal or a replay, never after the date,
+-- 31/3/2027 23:59 Athens: given once by the store event, never twice on a renewal or a replay, never after the date,
 -- never for another plan or for the free week alone, carried over on a restore. σερί 10 gives one free freeze the
 -- first time only, into a free slot only.
 begin;
@@ -36,12 +36,12 @@ select tests.create_user('cd-s@test.local') as s \gset
 
 -- the item is back, earned, with its rule and no price
 select ok((select active and kind = 'earned' and price_eur is null
-                  and earn_rule_text = 'Για όσους μπήκαν Ιδρυτικά μέλη στο Pro ως τις 31/12'
+                  and earn_rule_text = 'Για όσους μπήκαν Ιδρυτικά μέλη στο Pro ως τις 31/3'
              from core.cosmetic_items where key = 'frame_founding'), 'Πρώτη γενιά is on, earned, with its rule');
 select tests.login(:'b'::uuid);
 select is((select jsonb_build_object('owned', i -> 'owned', 'price', i -> 'price_eur', 'rule', i ->> 'earn_rule')
              from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'key' = 'frame_founding'),
-          jsonb_build_object('owned', false, 'price', null, 'rule', 'Για όσους μπήκαν Ιδρυτικά μέλη στο Pro ως τις 31/12'),
+          jsonb_build_object('owned', false, 'price', null, 'rule', 'Για όσους μπήκαν Ιδρυτικά μέλη στο Pro ως τις 31/3'),
           'the wardrobe shows it with its rule, not owned, never for sale');
 select throws_ok($$select api.equip_item('frame', 'frame_founding')$$, '42501', 'not_owned', 'and it cannot be worn before it is yours');
 select tests.logout();
@@ -60,22 +60,22 @@ select lives_ok($$select api.equip_item('frame', 'frame_founding')$$, 'and it ca
 select ok(core.is_pro(:'a'::uuid), 'Pro itself is untouched by the frame');
 select tests.logout();
 
--- the line is 31/12/2026 23:59 Athens (UTC+2 in winter)
-select tests.store('cd3', 'INITIAL_PURCHASE', :'b'::uuid, 'pro_founding', '2026-12-31 23:59:59+02') is not null as x \gset
-select is(tests.founding(:'b'::uuid), 1, '31/12 23:59:59 Athens still counts');
-select tests.store('cd4', 'INITIAL_PURCHASE', :'c'::uuid, 'pro_founding', '2027-01-01 00:00:01+02') is not null as x \gset
-select is(tests.founding(:'c'::uuid), 0, 'after 31/12 Athens: no frame');
+-- the line is 31/3/2027 23:59 Athens (UTC+3, summer time starts on 28/3/2027)
+select tests.store('cd3', 'INITIAL_PURCHASE', :'b'::uuid, 'pro_founding', '2027-03-31 23:59:59+03') is not null as x \gset
+select is(tests.founding(:'b'::uuid), 1, '31/3 23:59:59 Athens still counts');
+select tests.store('cd4', 'INITIAL_PURCHASE', :'c'::uuid, 'pro_founding', '2027-04-01 00:00:01+03') is not null as x \gset
+select is(tests.founding(:'c'::uuid), 0, 'after 31/3 Athens: no frame');
 select ok(core.is_pro(:'c'::uuid), 'though Pro itself was applied');
-select tests.store('cd4b', 'RENEWAL', :'c'::uuid, 'pro_founding', '2028-01-01 00:00:01+02') is not null as x \gset
+select tests.store('cd4b', 'RENEWAL', :'c'::uuid, 'pro_founding', '2028-04-01 00:00:01+03') is not null as x \gset
 select is(tests.founding(:'c'::uuid), 0, 'nor on its renewal');
 
 -- another plan, the free week alone, a sandbox purchase by a player
 select tests.store('cd5', 'INITIAL_PURCHASE', :'d'::uuid, 'pro_monthly', '2026-11-05 10:00+02') is not null as x \gset
 select is(tests.founding(:'d'::uuid), 0, 'monthly Pro gives no frame');
-select tests.store('cd6', 'INITIAL_PURCHASE', :'e'::uuid, 'pro_founding', '2026-12-28 12:00+02', 'TRIAL') is not null as x \gset
+select tests.store('cd6', 'INITIAL_PURCHASE', :'e'::uuid, 'pro_founding', '2027-03-28 12:00+03', 'TRIAL') is not null as x \gset
 select is(tests.founding(:'e'::uuid), 0, 'the free week on «Ιδρυτικό μέλος» gives nothing yet');
-select tests.store('cd7', 'RENEWAL', :'e'::uuid, 'pro_founding', '2027-01-04 12:00+02') is not null as x \gset
-select is(tests.founding(:'e'::uuid), 1, 'a free week started on 28/12 that turns paid on 4/1 counts from 28/12');
+select tests.store('cd7', 'RENEWAL', :'e'::uuid, 'pro_founding', '2027-04-04 12:00+03') is not null as x \gset
+select is(tests.founding(:'e'::uuid), 1, 'a free week started on 28/3 that turns paid on 4/4 counts from 28/3');
 select tests.store('cd8', 'INITIAL_PURCHASE', :'s'::uuid, 'pro_founding', '2026-11-05 10:00+02', 'NORMAL', 'SANDBOX') is not null as x \gset
 select is(tests.founding(:'s'::uuid), 1, 'a sandbox purchase by a player counts too (App Review)');
 

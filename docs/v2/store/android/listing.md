@@ -108,8 +108,8 @@ Minors are never shown in the app.
 An app by Monad Labs. Questions: hello@monadlabs.gr
 ```
 
-Before pasting: while the founding plan is sold (until 31/12), add one line after the prices:
-«Μέχρι 31/12, το ιδρυτικό πακέτο: 49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.» / «Until 31 December, the founding
+Before pasting: while the founding plan is sold (until 31/3), add one line after the prices:
+«Μέχρι 31/3, το ιδρυτικό πακέτο: 49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.» / «Until 31 March, the founding
 plan: €49.99 for the first year, then €69.99/year.» The site and the Pro screen say the same (founder, 22 Oct;
 `docs/v2/founding-pricing.md`). Remove the line on 1/1/2027.
 
