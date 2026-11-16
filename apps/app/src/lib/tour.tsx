@@ -36,8 +36,11 @@ interface Registry {
   /** null unregisters; `mine` only if that measurer is still the one held */
   register: (id: TourTarget, measure: Measure | null, mine?: Measure) => void;
   measure: (id: TourTarget) => Promise<Rect | null>;
-  /** Σήμερα scrolls the place into view (a no-op for the header and the tabs) */
-  reveal: (id: TourTarget) => Promise<void>;
+  /**
+   * Σήμερα scrolls the place into view and says where it now is in the window (null: it cannot tell, measure it). A
+   * window measure taken after the scroll can be stale on iOS, so the overlay takes this rect for the list's places.
+   */
+  reveal: (id: TourTarget) => Promise<Rect | null>;
 }
 
 export interface Tour {
@@ -55,12 +58,12 @@ export interface Tour {
   /** «Δες ξανά την ξενάγηση»: runs again next time Σήμερα is calm */
   replay: () => void;
   /** Σήμερα: whether it is calm now, how to get it ready (scroll to the top) and how to scroll a place into view */
-  setHome: (ready: boolean, prepare?: () => void, reveal?: (id: TourTarget) => Promise<void>) => void;
+  setHome: (ready: boolean, prepare?: () => void, reveal?: (id: TourTarget) => Promise<Rect | null>) => void;
 }
 
 const noop = () => undefined;
 const NO_STEPS: TourStepId[] = [];
-const RegistryContext = createContext<Registry>({ register: noop, measure: async () => null, reveal: async () => undefined });
+const RegistryContext = createContext<Registry>({ register: noop, measure: async () => null, reveal: async () => null });
 const TourContext = createContext<Tour>({
   active: false,
   step: null,
@@ -94,7 +97,7 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
   const [mirror, setMirror] = useState<{ user: string | null; mark: TourMark | null } | undefined>(undefined);
   const [homeReady, setHomeReady] = useState(false);
   const prepare = useRef<() => void>(noop);
-  const revealer = useRef<(id: TourTarget) => Promise<void>>(async () => undefined);
+  const revealer = useRef<(id: TourTarget) => Promise<Rect | null>>(async () => null);
 
   useEffect(() => {
     let live = true;
@@ -174,7 +177,7 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
     setState(TOUR_IDLE);
     setReplay(true);
   }, []);
-  const setHome = useCallback((ready: boolean, prep?: () => void, reveal?: (id: TourTarget) => Promise<void>) => {
+  const setHome = useCallback((ready: boolean, prep?: () => void, reveal?: (id: TourTarget) => Promise<Rect | null>) => {
     if (prep) prepare.current = prep;
     if (reveal) revealer.current = reveal;
     setHomeReady(ready);
