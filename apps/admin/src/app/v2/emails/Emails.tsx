@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, PageHeader, Primary, Secondary, Section, SkeletonRows, Table, type Column } from '../kit';
-import { loadEmailSettings, saveEmailSettings, sendTest, type EmailKindRow, type EmailSettings } from './actions';
+import { importOfferCodes, loadEmailSettings, saveEmailSettings, sendTest, type EmailKindRow, type EmailSettings } from './actions';
 
 /**
  * The player emails (founder, 17 Nov 2026): one switch for all of them (off, allow-list, on), the allow-list of
@@ -22,6 +22,7 @@ const GROUP_WORDS: Record<EmailKindRow['group'], string> = { account: 'Account',
 function errorWords(m: string): string {
   if (m.includes('forbidden')) return 'Only an admin can change the player emails.';
   if (m.includes('unknown_kind')) return 'This email kind does not exist any more. Refresh the page.';
+  if (m.includes('expiry_in_past')) return 'The expiry date must be after today. Use the date the batch has in App Store Connect.';
   return `Something went wrong (${m}). Try again.`;
 }
 
@@ -32,6 +33,8 @@ export function Emails() {
   const [confirmOn, setConfirmOn] = useState(false);
   const [busy, start] = useTransition();
   const [testing, setTesting] = useState<string | null>(null);
+  const [codes, setCodes] = useState('');
+  const [codesExpire, setCodesExpire] = useState('');
   const { toast, notify } = useToast();
 
   const load = useCallback(() => {
@@ -69,6 +72,31 @@ export function Emails() {
       if (r.ok) {
         setNotice({ tone: 'done', title: `A test of ${kind} is on its way`, detail: 'It goes out within 10 minutes to your own address (it must be on the allow-list).' });
       } else setNotice({ tone: 'problem', title: 'No test sent', detail: errorWords(r.message) });
+    });
+  };
+
+  const importCodes = () => {
+    const list = codes.split(/[\s,;]+/).filter(Boolean);
+    if (!list.length || !codesExpire) {
+      setNotice({ tone: 'problem', title: 'Nothing imported', detail: 'Paste the codes and pick the date they expire in App Store Connect.' });
+      return;
+    }
+    setNotice({ tone: 'working', title: `Importing ${list.length} codes…` });
+    start(async () => {
+      const r = await importOfferCodes(list, codesExpire);
+      if (!r.ok) {
+        setNotice({ tone: 'problem', title: 'No codes imported', detail: errorWords(r.message) });
+        return;
+      }
+      const v = r.value;
+      setCodes('');
+      setNotice({
+        tone: 'done',
+        title: `${v.added} codes imported, ${v.left} free now`,
+        detail: [v.already_there ? `${v.already_there} were already there.` : '', v.invalid ? `${v.invalid} lines were not codes and were left out.` : ''].filter(Boolean).join(' ') || undefined,
+      });
+      const again = await loadEmailSettings();
+      if (again.ok) setS(again.value);
     });
   };
 
@@ -133,6 +161,28 @@ export function Emails() {
           <Section title="The emails">
             <Table rows={s.kinds} columns={columns} rowKey={(k) => k.kind} noun="emails" />
           </Section>
+          {s.offer_codes ? (
+            <Section title="Winback offer codes" aside={<span className="v2-muted">App Store, 3 months at 4,49€</span>}>
+              <Card>
+                <p style={{ margin: '0 0 6px', fontWeight: 800 }}>
+                  {s.offer_codes.left} codes free · {s.offer_codes.given} given
+                  {s.offer_codes.winback_waiting ? <> · <Badge tone="attention">{s.offer_codes.winback_waiting} waiting for a code</Badge></> : null}
+                </p>
+                <p className="v2-muted" style={{ margin: '0 0 14px' }}>
+                  Each Pro winback takes one code when it goes out. With none left it waits, nothing is sent without a code.
+                  {s.offer_codes.next_expiry ? ` The next batch expires on ${new Date(s.offer_codes.next_expiry).toLocaleDateString('en-GB')}.` : ''}
+                </p>
+                <textarea value={codes} onChange={(e) => setCodes(e.target.value)} rows={4} placeholder="One code per line, as App Store Connect gives them" style={{ width: '100%', font: 'inherit', padding: 10, borderRadius: 10, border: '1px solid #CFD7C6', boxSizing: 'border-box' }} />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 10 }}>
+                  <label className="v2-muted">
+                    Expires{' '}
+                    <input type="date" value={codesExpire} onChange={(e) => setCodesExpire(e.target.value)} style={{ font: 'inherit', padding: 6, borderRadius: 8, border: '1px solid #CFD7C6' }} />
+                  </label>
+                  <Secondary busy={busy} onClick={importCodes}>Import the codes</Secondary>
+                </div>
+              </Card>
+            </Section>
+          ) : null}
         </>
       )}
       <Toast text={toast} />

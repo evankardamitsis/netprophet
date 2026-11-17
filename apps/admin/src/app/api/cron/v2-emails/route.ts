@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { V2_URL } from '@/lib/v2/env';
 import { bearerMatches } from '@/lib/cronAuth';
-import { renderDue, type DueEmail } from '@/lib/v2/mail/lifecycle';
+import { renderDue, type DueEmail } from '@/lib/v2/mail';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   for (const e of rows) {
     const mail = renderDue(e);
     if (!mail) {
-      results.push({ id: e.id, ok: false, error: `no template for ${e.kind}` });
+      results.push({ id: e.id, ok: false, error: `cannot render ${e.kind} (no template, or the row lacks what it needs)` });
       continue;
     }
     const headers: Record<string, string> = {};

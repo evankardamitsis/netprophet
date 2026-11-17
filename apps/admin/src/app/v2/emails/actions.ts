@@ -12,12 +12,28 @@ export interface EmailKindRow {
   failed: number;
   due: number;
 }
+/** the App Store offer codes for the Pro winback (core.offer_codes) */
+export interface OfferCodes {
+  /** codes free with more than a week left */
+  left: number;
+  given: number;
+  next_expiry: string | null;
+  /** winbacks due that wait for a code */
+  winback_waiting: number;
+}
 export interface EmailSettings {
   mode: 'off' | 'allowlist' | 'on';
   allowlist: string[];
   start_at: string;
   kinds_off: string[];
   kinds: EmailKindRow[];
+  offer_codes?: OfferCodes;
+}
+export interface ImportResult {
+  added: number;
+  already_there: number;
+  invalid: number;
+  left: number;
 }
 export type Result<T> = { ok: true; value: T } | { ok: false; message: string };
 
@@ -55,6 +71,17 @@ export async function sendTest(kind: string): Promise<Result<string>> {
     const { data, error } = await (await adminRpc())('admin_email_test', { p_kind: kind });
     if (error) throw new Error(error.message);
     return { ok: true, value: data as string };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** a batch of one-time offer codes from App Store Connect, with the expiry the batch has there (YYYY-MM-DD) */
+export async function importOfferCodes(codes: string[], expires: string): Promise<Result<ImportResult>> {
+  try {
+    const { data, error } = await (await adminRpc())('admin_offer_codes_import', { p_codes: codes, p_expires: expires });
+    if (error) throw new Error(error.message);
+    return { ok: true, value: data as ImportResult };
   } catch (e) {
     return fail(e);
   }

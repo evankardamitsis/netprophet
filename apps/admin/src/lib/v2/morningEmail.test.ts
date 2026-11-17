@@ -22,4 +22,11 @@ describe('the morning email', () => {
   it('stays quiet when every club has its surface', () => {
     expect(morningEmail({ ...base, clubs_no_surface: [] }).subject).toBe('NetProphet: all quiet this morning');
   });
+  it('asks for offer codes when a Pro winback waits for one', () => {
+    const emails = { mode: 'on' as const, sent_24h: 0, failed: 0, by_kind: {}, winback_waiting: 2, codes_left: 0 };
+    const e = morningEmail({ ...base, emails });
+    expect(e.subject).toBe('NetProphet: 1 thing needs you today');
+    expect(e.text).toContain('2 Pro winbacks wait for an App Store offer code: the pool is empty.');
+    expect(morningEmail({ ...base, emails: { ...emails, winback_waiting: 0, codes_left: 3 } }).text).toContain('Only 3 winback offer codes are left.');
+  });
 });
