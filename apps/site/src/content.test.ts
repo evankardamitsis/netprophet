@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { el, en } from './content';
+import { el, en, listPages } from './content';
 import { deleteAccount, privacy, support, terms } from './legal';
 
 /** every string on the site, flattened */
 const strings = (v: unknown): string[] =>
   typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(strings) : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
 
-const all = [...strings(el), ...strings(en), ...strings(privacy), ...strings(support), ...strings(deleteAccount), ...strings(terms)];
-const greek = [...strings(el), ...strings(privacy.el), ...strings(support.el), ...strings(deleteAccount.el), ...strings(terms.el)];
+const all = [...strings(el), ...strings(en), ...strings(listPages), ...strings(privacy), ...strings(support), ...strings(deleteAccount), ...strings(terms)];
+const greek = [...strings(el), ...strings(listPages.el), ...strings(privacy.el), ...strings(support.el), ...strings(deleteAccount.el), ...strings(terms.el)];
 
 describe('the site copy', () => {
   it('has no em dashes', () => {
