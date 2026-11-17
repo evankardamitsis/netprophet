@@ -189,7 +189,7 @@ export const en: Copy = {
   },
   welcome: {
     title: 'Everything about amateur',
-    sports: ['tennis.', 'padel.'],
+    sports: ['tennis.'],
     points: ['Pick the winners', 'See results', 'Know your opponents inside out'],
     tagline: 'Who wins today? Say it first.',
     cta: 'Let’s go',
