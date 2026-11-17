@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
   const res = await rpc('admin_morning_digest', {});
   if (res.error) return NextResponse.json({ error: res.error.message, medals }, { status: 500 });
   const d = res.data as Digest;
+  const emails = await rpc('admin_email_digest', {});
+  if (!emails.error) d.emails = emails.data as Digest['emails'];
   if (!d.recipients.length) return NextResponse.json({ skipped: true, reason: 'no staff', medals });
 
   const mail = morningEmail(d);

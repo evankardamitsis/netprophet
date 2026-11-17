@@ -17,6 +17,8 @@ export interface Digest {
   new_players?: { tournament: string; count: number; names: string[] }[];
   /** clubs a sheet named that have matches but no surface yet (their matches use the tournament's meanwhile) */
   clubs_no_surface?: { club: string; matches: number; tournaments: string[] }[];
+  /** the player emails (api.admin_email_digest): the switch, what went out in the last day, what failed this week */
+  emails?: { mode: 'off' | 'allowlist' | 'on'; sent_24h: number; failed: number; by_kind: Record<string, number> };
 }
 
 const ADMIN_URL = 'https://admin.netprophetapp.com/v2';
@@ -63,6 +65,11 @@ export function morningEmail(d: Digest): { subject: string; html: string; text: 
     news.push(`${n.tournament}: ${many(n.count, 'new player', 'new players')} added to the roster (${n.names.join(', ')}${more}). Check the spelling on ${ADMIN_URL}/players`);
   }
   if (!d.last_runs) news.push('The sheets were not read in the last day. The automatic updates may be stuck.');
+  if (d.emails) {
+    const kinds = Object.entries(d.emails.by_kind).map(([k, n]) => `${k} ${n}`).join(', ');
+    if (d.emails.sent_24h) news.push(`${many(d.emails.sent_24h, 'player email', 'player emails')} went out in the last day${kinds ? ` (${kinds})` : ''}${d.emails.mode === 'allowlist' ? ', allow-list only' : ''}`);
+    if (d.emails.failed) todo.push(`${many(d.emails.failed, 'player email', 'player emails')} failed this week after three tries. Check ${ADMIN_URL}/emails`);
+  }
   const subject = todo.length ? `NetProphet: ${many(todo.length, 'thing needs', 'things need')} you today` : 'NetProphet: all quiet this morning';
   const linked = (l: string) => esc(l).replace(/(https:\/\/\S+)/g, (url) => block.link(url, 'open'));
   const section = (title: string, lines: string[]) => (lines.length ? block.subheading(title) + block.list(lines.map(linked)) : '');

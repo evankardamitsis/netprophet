@@ -428,6 +428,26 @@ export type Database = {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
         Returns: Json;
       };
+      admin_email_digest: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_email_settings: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_email_test: {
+        Args: { p_kind: string };
+        Returns: string;
+      };
+      admin_emails_done: {
+        Args: { p_results: Json };
+        Returns: number;
+      };
+      admin_emails_due: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
       admin_fix_stale_twins: {
         Args: { p_dry?: boolean; p_tournament?: string };
         Returns: Json;
@@ -588,6 +608,10 @@ export type Database = {
         Args: { p: Json };
         Returns: string;
       };
+      admin_set_email_settings: {
+        Args: { p: Json };
+        Returns: Json;
+      };
       admin_set_logo: {
         Args: { p_kind: string; p_id: string; p_path: string };
         Returns: Json;
@@ -695,6 +719,10 @@ export type Database = {
       delete_my_account: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
+      };
+      email_unsubscribe: {
+        Args: { p_token: string; p_scope?: string };
+        Returns: boolean;
       };
       equip_item: {
         Args: { p_category: string; p_key: string };
