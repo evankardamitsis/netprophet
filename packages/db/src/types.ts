@@ -720,6 +720,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      email_unsubscribe: {
+        Args: { p_token: string; p_scope?: string };
+        Returns: boolean;
+      };
       equip_item: {
         Args: { p_category: string; p_key: string };
         Returns: Json;
