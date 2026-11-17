@@ -108,18 +108,18 @@ select (date_trunc('week', now() at time zone 'Europe/Athens') + interval '7 day
 select is(core.list_weekly_sweep(:'mon8'::timestamptz), 0, 'before 09:00 on Monday nothing is queued');
 select is(core.list_weekly_sweep(:'mon10'::timestamptz), 1, 'from 09:00 one weekly is queued');
 select is(core.list_weekly_sweep(:'mon10'::timestamptz + interval '1 hour'), 0, 'the next tick does not queue it again');
-select is((select s.email from core.emails e join core.list_subscribers s on s.id::text = e.payload ->> 'subscriber_id' where e.kind = 'site_weekly'),
+select is((select s.email from core.emails e join core.list_subscribers s on s.id::text = e.payload ->> 'subscriber_id' where e.kind = 'site_weekly' and e.dedupe_key like 'site_weekly:%'),
           'bea@example.com', 'only to a confirmed subscriber without an account');
 select is((select (payload -> 'upset' ->> 'pct') || ':' || (payload -> 'upset' -> 'winner' -> 0 ->> 'first') || ':' || (payload ->> 'played') || ':' || jsonb_array_length(payload -> 'titles')
-             from core.emails where kind = 'site_weekly'),
+             from core.emails where kind = 'site_weekly' and dedupe_key like 'site_weekly:%'),
           '20:Τεστ:2:1', 'the payload has the upset (20% saw it), the matches played and the title');
 
 -- an account made after it was queued: skipped at send time
 update core.email_settings set mode = 'on';
-update core.emails set due_at = now() where kind = 'site_weekly';
+update core.emails set due_at = now() where kind = 'site_weekly' and dedupe_key like 'site_weekly:%';
 select tests.create_user('bea@example.com');
 select api.admin_emails_due(50);
-select is((select status || ':' || reason from core.emails where kind = 'site_weekly'), 'skipped:has_account', 'once they have an account the list weekly stops');
+select is((select status || ':' || reason from core.emails where kind = 'site_weekly' and dedupe_key like 'site_weekly:%'), 'skipped:has_account', 'once they have an account the list weekly stops');
 
 -- the switch off still stops list emails
 update core.email_settings set mode = 'off';
