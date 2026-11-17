@@ -532,6 +532,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_offer_codes_import: {
+        Args: { p_codes: string[]; p_expires: string; p_offer?: string };
+        Returns: Json;
+      };
       admin_players: {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
