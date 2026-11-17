@@ -6,6 +6,7 @@ import type { DueEmail, Mail } from './core';
 import { LIFECYCLE_EMAILS } from './lifecycle';
 import { PRO_EMAILS } from './pro';
 import { LIST_RENDER } from './list';
+import { SERIES_EMAILS } from './series';
 
 export type { DueEmail, Mail } from './core';
 
@@ -13,6 +14,7 @@ const RENDER: Record<string, (e: DueEmail) => Mail | null> = {
   ...LIFECYCLE_EMAILS,
   ...PRO_EMAILS,
   ...LIST_RENDER,
+  ...SERIES_EMAILS,
 };
 
 /** the kinds this build can render */
