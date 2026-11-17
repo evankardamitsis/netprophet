@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderDue, type DueEmail } from './lifecycle';
+import { renderDue, type DueEmail } from './index';
 
 const base: DueEmail = {
   id: '00000000-0000-0000-0000-000000000001',

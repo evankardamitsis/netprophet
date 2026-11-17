@@ -6,65 +6,10 @@
  * Gender is not known for anyone yet (profiles.gender is empty), so no line depends on it: «Αυτό είναι το προφίλ σου»,
  * not «Αυτός είσαι εσύ». Buttons open www.netprophetapp.com/open, which opens the app or the store.
  */
-import { accusativeWord, nameGender } from '@netprophet/copy';
-import { SITE_URL, block, esc, renderEmail, type Hero } from '../emailLayout';
+import { esc, SITE_URL, block } from '../emailLayout';
+import { build, hello, OPEN_URL, type DueEmail, type Mail } from './core';
 
-export interface DueEmail {
-  id: string;
-  kind: string;
-  group: 'account' | 'game' | 'pro' | 'list';
-  to: string;
-  payload: Record<string, unknown>;
-  first_name: string | null;
-  gender: string | null;
-  lang: 'el' | 'en';
-  unsubscribe_token: string | null;
-}
-
-export interface Mail {
-  subject: string;
-  html: string;
-  text: string;
-  /** game and Pro emails: the List-Unsubscribe link Gmail and Apple Mail show */
-  unsubscribeUrl?: string;
-}
-
-export const OPEN_URL = `${SITE_URL}/open`;
-export const unsubscribeUrl = (token: string) => `${SITE_URL}/email/unsubscribe?t=${encodeURIComponent(token)}`;
-
-/** «Νίκο»: the first name as used in a greeting (the same form the medal email uses) */
-function hello(first: string | null): string | null {
-  const f = first?.trim();
-  return f ? accusativeWord(f, nameGender(f)) : null;
-}
-
-const strip = (html: string) => html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
-
-interface Parts {
-  subject: string;
-  preheader: string;
-  hero: Hero;
-  /** content blocks, already HTML */
-  body: string[];
-  /** the same content as text lines */
-  text: string[];
-  why: string;
-}
-
-function build(e: DueEmail, p: Parts): Mail {
-  const unsub = e.group !== 'account' && e.unsubscribe_token ? unsubscribeUrl(e.unsubscribe_token) : undefined;
-  const { html, text } = renderEmail({
-    lang: 'el',
-    subject: p.subject,
-    preheader: esc(p.preheader),
-    hero: p.hero,
-    bodyHtml: p.body.join('\n'),
-    bodyText: [strip(p.hero.title), p.hero.sub ? strip(p.hero.sub) : '', '', ...p.text].join('\n'),
-    why: p.why,
-    unsubscribeUrl: unsub,
-  });
-  return { subject: p.subject, html, text, unsubscribeUrl: unsub };
-}
+export type { DueEmail, Mail } from './core';
 
 const playerName = (e: DueEmail) => (typeof e.payload.player_name === 'string' && e.payload.player_name.trim()) || null;
 
@@ -167,7 +112,8 @@ export function deletedEmail(e: DueEmail): Mail {
   });
 }
 
-const RENDER: Record<string, (e: DueEmail) => Mail> = {
+/** the kinds of the first slice (20270422000000_email_core) */
+export const LIFECYCLE_EMAILS: Record<string, (e: DueEmail) => Mail | null> = {
   welcome: welcomeEmail,
   claim_ok: claimOkEmail,
   claim_no: claimNoEmail,
@@ -175,9 +121,3 @@ const RENDER: Record<string, (e: DueEmail) => Mail> = {
   new_player_no: newPlayerNoEmail,
   deleted: deletedEmail,
 };
-
-/** the email for a due row, or null for a kind this build does not know (it is reported failed, not lost) */
-export function renderDue(e: DueEmail): Mail | null {
-  const r = RENDER[e.kind];
-  return r ? r(e) : null;
-}
