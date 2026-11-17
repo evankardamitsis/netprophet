@@ -14,11 +14,14 @@ export interface Doc {
 
 const UPDATED_EL = 'Τελευταία ενημέρωση: 22 Οκτωβρίου 2026';
 const UPDATED_EN = 'Last updated: 22 October 2026';
+/** the website list was added to the privacy page (email slice 4) */
+const PRIVACY_UPDATED_EL = 'Τελευταία ενημέρωση: 17 Νοεμβρίου 2026';
+const PRIVACY_UPDATED_EN = 'Last updated: 17 November 2026';
 
 export const privacy: Record<Lang, Doc> = {
   el: {
     title: 'Απόρρητο',
-    updated: UPDATED_EL,
+    updated: PRIVACY_UPDATED_EL,
     intro:
       'Το NetProphet είναι εφαρμογή της Monad Labs. Εδώ λέμε απλά ποια στοιχεία κρατάμε, γιατί, και τι μπορείς να κάνεις με αυτά.',
     sections: [
@@ -31,6 +34,7 @@ export const privacy: Record<Lang, Doc> = {
           'Ειδοποιήσεις: ένα κλειδί της συσκευής σου, μόνο αν δεχτείς ειδοποιήσεις.',
           'Αγορές: τι αγόρασες (Pro ή αντικείμενο), από ποιο κατάστημα, πότε και μέχρι πότε ισχύει. Τα στοιχεία της κάρτας σου μένουν στο App Store ή στο Google Play και δεν τα βλέπουμε ποτέ.',
           'Χρήση της εφαρμογής: ποιες οθόνες ανοίγεις και τι πατάς, συνδεδεμένα με τον κωδικό του λογαριασμού σου, ποτέ με το email σου.',
+          'Το email της Δευτέρας στο site: αν γράψεις το email σου στο netprophetapp.com, κρατάμε το email, τη γλώσσα και πότε το επιβεβαίωσες. Σου στέλνουμε πρώτα ένα email να το επιβεβαιώσεις και μόνο μετά τα αποτελέσματα της εβδομάδας. Η βάση είναι η συγκατάθεσή σου, που την παίρνεις πίσω με ένα tap από κάθε email.',
         ],
       },
       {
@@ -51,7 +55,7 @@ export const privacy: Record<Lang, Doc> = {
       {
         heading: 'Με ποιους τα μοιραζόμαστε',
         paragraphs: [
-          'Δεν πουλάμε στοιχεία. Χρησιμοποιούμε συνεργάτες που τα επεξεργάζονται για εμάς: Supabase (βάση δεδομένων και σύνδεση), Vercel (φιλοξενία), Resend (emails σύνδεσης), PostHog στην ΕΕ (στατιστικά χρήσης), Expo (αποστολή ειδοποιήσεων), RevenueCat (διαχείριση αγορών και συνδρομών: του λέμε τον κωδικό του λογαριασμού σου και παίρνουμε πίσω τι έχεις αγοράσει και μέχρι πότε ισχύει), Apple και Google (ειδοποιήσεις και αγορές μέσα από τα καταστήματα).',
+          'Δεν πουλάμε στοιχεία. Χρησιμοποιούμε συνεργάτες που τα επεξεργάζονται για εμάς: Supabase (βάση δεδομένων και σύνδεση), Vercel (φιλοξενία), Resend (emails σύνδεσης, ειδοποιήσεις και το email της Δευτέρας), PostHog στην ΕΕ (στατιστικά χρήσης), Expo (αποστολή ειδοποιήσεων), RevenueCat (διαχείριση αγορών και συνδρομών: του λέμε τον κωδικό του λογαριασμού σου και παίρνουμε πίσω τι έχεις αγοράσει και μέχρι πότε ισχύει), Apple και Google (ειδοποιήσεις και αγορές μέσα από τα καταστήματα).',
           'Οι χορηγούμενες διαφημίσεις είναι banner που τα στήνουμε εμείς, με μια εικόνα και έναν σύνδεσμο. Δεν έχουμε διαφημιστικό SDK, δεν χρησιμοποιούμε το διαφημιστικό αναγνωριστικό της συσκευής σου και δεν δίνουμε στους χορηγούς κανένα στοιχείο σου. Αν πατήσεις έναν σύνδεσμο, ανοίγει το site του χορηγού και ισχύει η δική του πολιτική.',
           'Το όνομά σου, ο παίκτης σου, οι πόντοι και η θέση σου στην Κατάταξη φαίνονται σε άλλους χρήστες. Αν δεν θέλεις να φαίνεσαι, γράψε μας και κρύβουμε το προφίλ σου.',
         ],
@@ -60,6 +64,7 @@ export const privacy: Record<Lang, Doc> = {
         heading: 'Για πόσο',
         paragraphs: [
           'Όσο έχεις λογαριασμό. Όταν τον διαγράψεις, σβήνουμε τα στοιχεία σου μέσα σε 30 μέρες, εκτός από όσα ο νόμος μας ζητά να κρατήσουμε (για παράδειγμα αποδείξεις αγορών).',
+          'Το email της Δευτέρας: αν δεν το επιβεβαιώσεις, το email σβήνεται μετά από 30 μέρες. Αν φύγεις από τη λίστα, κρατάμε μόνο το email σου σημειωμένο ως «όχι άλλα email», για να μη σου ξαναγράψουμε.',
         ],
       },
       {
@@ -80,7 +85,7 @@ export const privacy: Record<Lang, Doc> = {
   },
   en: {
     title: 'Privacy',
-    updated: UPDATED_EN,
+    updated: PRIVACY_UPDATED_EN,
     intro: 'NetProphet is an app by Monad Labs. Here is, in plain words, what we keep, why, and what you can do about it.',
     sections: [
       {
@@ -92,6 +97,7 @@ export const privacy: Record<Lang, Doc> = {
           'Notifications: a key for your device, only if you allow notifications.',
           'Purchases: what you bought (Pro or an item), from which store, when and until when it is valid. Your card details stay with the App Store or Google Play and we never see them.',
           'App usage: which screens you open and what you tap, linked to your account id, never your email.',
+          'The Monday email on the website: if you leave your email at netprophetapp.com, we keep the email, the language and when you confirmed it. We first send you one email to confirm, and only then the week’s results. The basis is your consent, which you take back with one tap from any email.',
         ],
       },
       {
@@ -112,7 +118,7 @@ export const privacy: Record<Lang, Doc> = {
       {
         heading: 'Who we share it with',
         paragraphs: [
-          'We do not sell data. Partners process it for us: Supabase (database and sign-in), Vercel (hosting), Resend (sign-in emails), PostHog in the EU (usage statistics), Expo (sending notifications), RevenueCat (managing purchases and subscriptions: we give it your account id and get back what you bought and until when it is valid), Apple and Google (notifications and store purchases).',
+          'We do not sell data. Partners process it for us: Supabase (database and sign-in), Vercel (hosting), Resend (sign-in emails, notifications and the Monday email), PostHog in the EU (usage statistics), Expo (sending notifications), RevenueCat (managing purchases and subscriptions: we give it your account id and get back what you bought and until when it is valid), Apple and Google (notifications and store purchases).',
           'Sponsored banners are placed by us, as a picture and a link. We have no advertising SDK, we do not use your device’s advertising ID and we give sponsors none of your data. If you tap a link, the sponsor’s own site opens and its own policy applies.',
           'Your name, your player, your points and your place in the Ladder are visible to other users. If you do not want to be seen, write to us and we hide your profile.',
         ],
@@ -121,6 +127,7 @@ export const privacy: Record<Lang, Doc> = {
         heading: 'How long',
         paragraphs: [
           'For as long as you have an account. When you delete it, we erase your data within 30 days, except what the law requires us to keep (for example purchase records).',
+          'The Monday email: if you never confirm it, the email is erased after 30 days. If you leave the list, we keep only your email marked «no more emails», so we never write to you again.',
         ],
       },
       {

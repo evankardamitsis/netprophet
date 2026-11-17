@@ -896,9 +896,21 @@ export type Database = {
         Args: { p_token: string; p_kudo: string };
         Returns: undefined;
       };
+      list_confirm: {
+        Args: { p_token: string };
+        Returns: boolean;
+      };
+      list_subscribe: {
+        Args: { p_email: string; p_source?: string; p_lang?: string };
+        Returns: boolean;
+      };
       list_tournaments: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
+      };
+      list_unsubscribe: {
+        Args: { p_token: string };
+        Returns: boolean;
       };
       log_match: {
         Args: { p: Json };

@@ -2,6 +2,7 @@ import { colors } from '@netprophet/tokens';
 import { BallPerson } from './BallPerson';
 import { content, type Lang } from './content';
 import { HomeScreen, PlayerScreen, ResultsScreen, ScoutScreen, TournamentScreen } from './Screens';
+import { ListSignup } from './ListSignup';
 import { Shell } from './Shell';
 import { StoreBadges } from './StoreBadges';
 
@@ -200,6 +201,8 @@ export function Home({ lang }: { lang: Lang }) {
           ))}
         </div>
       </section>
+
+      <ListSignup lang={lang} c={c.list} />
 
       <section className="close dark">
         <div className="wrap">

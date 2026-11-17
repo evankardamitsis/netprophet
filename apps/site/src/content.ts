@@ -33,9 +33,24 @@ export interface Content {
   pro: { eyebrow: string; title: string; line: string; price: string; items: Feature[]; note: string };
   faq: { title: string; items: { q: string; a: string }[] };
   close: { title: string; line: string };
+  /** the website list (double opt-in): the week's results by email, for people without the app */
+  list: ListBox;
   footer: { by: string; contact: string };
   /** the words inside the drawn phone screens */
   screens: Screens;
+}
+
+export interface ListBox {
+  id: string;
+  eyebrow: string;
+  title: string;
+  line: string;
+  label: string;
+  placeholder: string;
+  button: string;
+  /** the consent line under the box, with the privacy page linked on its last words */
+  consent: string;
+  privacy: string;
 }
 
 export interface Screens {
@@ -202,6 +217,17 @@ export const el: Content = {
   close: {
     title: 'Η κερκίδα σε περιμένει.',
     line: 'Δωρεάν για όλους. Το Pro είναι για όσους θέλουν περισσότερα.',
+  },
+  list: {
+    id: 'list',
+    eyebrow: 'ΚΑΘΕ ΔΕΥΤΕΡΑ',
+    title: 'Η εβδομάδα στα γήπεδα, στο email σου.',
+    line: 'Η ανατροπή της εβδομάδας, οι τίτλοι και τι έρχεται. Ένα email κάθε Δευτέρα πρωί, και τίποτα άλλο.',
+    label: 'Το email σου',
+    placeholder: 'to@email.sou',
+    button: 'Στείλε μου τα αποτελέσματα της εβδομάδας',
+    consent: 'Θα σου στείλουμε πρώτα ένα email να το επιβεβαιώσεις. Χωρίς αυτό δεν στέλνουμε τίποτα. Σταματάς με ένα tap από κάθε email.',
+    privacy: 'Πώς κρατάμε το email σου',
   },
   footer: { by: 'Το NetProphet είναι εφαρμογή της Monad Labs.', contact: 'Επικοινωνία' },
   screens: {
@@ -452,6 +478,17 @@ export const en: Content = {
     title: 'The crowd is waiting.',
     line: 'Free for everyone. Pro is for those who want more.',
   },
+  list: {
+    id: 'list',
+    eyebrow: 'EVERY MONDAY',
+    title: 'The week on court, in your inbox.',
+    line: 'The upset of the week, the titles and what is next. One email every Monday morning, nothing else.',
+    label: 'Your email',
+    placeholder: 'you@email.com',
+    button: 'Send me the week’s results',
+    consent: 'First we send you one email to confirm. Without it we send nothing. Every email has a one-tap way out.',
+    privacy: 'How we keep your email',
+  },
   footer: { by: 'NetProphet is an app by Monad Labs.', contact: 'Contact' },
   screens: {
     lang: 'en',
@@ -577,4 +614,50 @@ export const en: Content = {
 };
 
 export const CONTACT = 'hello@monadlabs.gr';
+
+/** the pages the list emails land on (/email/confirm, /email/off with k=list) */
+export const listPages = {
+  el: {
+    sentTitle: 'Κοίτα τα email σου',
+    sent: 'Σου στείλαμε ένα email. Πάτα «Ναι, θέλω τα αποτελέσματα» μέσα σε αυτό και είσαι μέσα. Δεν ήρθε; Κοίτα και στα ανεπιθύμητα.',
+    badTitle: 'Αυτό δεν μοιάζει με email',
+    bad: 'Γύρνα πίσω και γράψ’ το ξανά.',
+    back: '‹ Πίσω',
+    askTitle: 'Ένα tap ακόμα',
+    ask: 'Πάτα το κουμπί και κάθε Δευτέρα πρωί έχεις στο email τι έγινε στα γήπεδα.',
+    askButton: 'Ναι, θέλω τα αποτελέσματα',
+    doneTitle: 'Είσαι μέσα',
+    done: 'Την επόμενη Δευτέρα σου έρχεται η πρώτη εβδομάδα στα γήπεδα. Αν θες να ψηφίζεις κι εσύ, η εφαρμογή είναι δωρεάν.',
+    failTitle: 'Κάτι δεν πήγε καλά',
+    fail: 'Ο σύνδεσμος δεν ισχύει πια. Γράψου ξανά από την αρχική σελίδα και σου στέλνουμε καινούργιο.',
+    err: 'Δεν μπορέσαμε να σε γράψουμε αυτή τη στιγμή. Δοκίμασε ξανά σε λίγο.',
+    offTitle: 'Δεν θες άλλα email;',
+    off: 'Θα σταματήσουμε το email της Δευτέρας και δεν θα σου ξαναγράψουμε.',
+    offButton: 'Ναι, σταμάτα τα',
+    offDoneTitle: 'Έγινε',
+    offDone: 'Δεν θα σου ξαναστείλουμε email. Αν αλλάξεις γνώμη, γράψου ξανά από την αρχική σελίδα.',
+    offFail: 'Ο σύνδεσμος δεν ισχύει πια. Γράψε μας στο hello@monadlabs.gr και σε βγάζουμε εμείς από τη λίστα.',
+  },
+  en: {
+    sentTitle: 'Check your inbox',
+    sent: 'We sent you an email. Tap «Yes, send me the results» in it and you are in. Not there? Check your spam folder too.',
+    badTitle: 'That does not look like an email',
+    bad: 'Go back and type it again.',
+    back: '‹ Back',
+    askTitle: 'One more tap',
+    ask: 'Tap the button and every Monday morning you get what happened on court.',
+    askButton: 'Yes, send me the results',
+    doneTitle: 'You are in',
+    done: 'Next Monday your first week on court arrives. If you want to call the matches too, the app is free.',
+    failTitle: 'Something went wrong',
+    fail: 'This link is no longer valid. Sign up again from the home page and we send you a new one.',
+    err: 'We could not sign you up just now. Try again in a little while.',
+    offTitle: 'No more emails?',
+    off: 'We will stop the Monday email and not write to you again.',
+    offButton: 'Yes, stop them',
+    offDoneTitle: 'Done',
+    offDone: 'We will not email you again. If you change your mind, sign up again from the home page.',
+    offFail: 'This link is no longer valid. Write to hello@monadlabs.gr and we take you off the list.',
+  },
+};
 export const content = (lang: Lang): Content => (lang === 'el' ? el : en);
