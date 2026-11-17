@@ -409,3 +409,6 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 .hm-strip { min-height: 92px; flex: none; }
 .hm-scard { min-height: 84px; }
 .hm-strip { scroll-padding-left: 12px; }
+
+/* the email landing pages (/open, /email/off): one blue pill, the one action on the page */
+.open-app { display: inline-block; background: var(--np-blue); color: var(--np-white); border: 0; border-radius: 999px; padding: 14px 28px; font: inherit; font-weight: 700; font-size: 17px; text-decoration: none; cursor: pointer; }

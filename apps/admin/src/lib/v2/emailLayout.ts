@@ -66,6 +66,31 @@ export const block = {
     `<td bgcolor="${colors.blue}" style="background-color:${colors.blue};border-radius:999px">` +
     `<a href="${esc(href)}" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:700;color:${colors.paper};text-decoration:none;border-radius:999px">${esc(text)}</a>` +
     `</td></tr></table>`,
+  /** numbered steps: an ink circle with the number, a bold start and the rest of the line */
+  steps: (items: [string, string][]) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px;width:100%">` +
+    items
+      .map(
+        ([bold, rest], i) =>
+          `<tr><td width="44" valign="top" style="padding:0 0 14px"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="32" height="32" align="center" bgcolor="${colors.ink}" style="background-color:${colors.ink};border-radius:16px;font-family:${FONT};font-size:16px;line-height:32px;font-weight:700;color:${colors.paper}">${i + 1}</td></tr></table></td>` +
+          `<td valign="top" style="padding:5px 0 14px;font-family:${FONT};font-size:16px;line-height:23px;color:${colors.ink}"><strong>${esc(bold)}</strong> ${esc(rest)}</td></tr>`,
+      )
+      .join('') +
+    `</table>`,
+  /** a list with the ✓ glyph */
+  checks: (items: string[]) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px">` +
+    items
+      .map(
+        (i) =>
+          `<tr><td width="26" valign="top" style="padding:0 0 10px;font-family:${FONT};font-size:16px;line-height:23px;font-weight:700;color:${colors.ink}">✓</td><td valign="top" style="padding:0 0 10px;font-family:${FONT};font-size:16px;line-height:23px;color:${colors.ink}">${i}</td></tr>`,
+      )
+      .join('') +
+    `</table>`,
+  /** a quiet panel with a blue edge, for a tip */
+  tip: (html: string) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;width:100%"><tr>` +
+    `<td bgcolor="${colors.paper}" style="background-color:${colors.paper};border-left:4px solid ${colors.blue};border-radius:8px;padding:12px 14px;font-family:${FONT};font-size:15px;line-height:22px;color:${colors.ink}">${html}</td></tr></table>`,
   /** something earned: ink text on a lime panel (lime means earned), a bold line and a quieter one under it */
   earned: (title: string, sub: string) =>
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px"><tr>` +
@@ -87,9 +112,44 @@ export interface EmailParts {
   bodyText: string;
   /** one short line: why they got this email */
   why: string;
+  /**
+   * The ink band under the logo (founder, 17 Nov 2026: emails "more visual"): a small kicker, a big headline, a line
+   * under it and a ball-player scene (a PNG from www.netprophetapp.com/email/art/, 536 x 190).
+   */
+  hero?: Hero;
+  /** game and Pro emails: the one-click unsubscribe link in the footer */
+  unsubscribeUrl?: string;
 }
 
-function footerHtml(lang: EmailLang, why: string): string {
+export interface Hero {
+  kicker?: string;
+  /** a huge number above the headline («2», «−50%») */
+  big?: string;
+  title: string;
+  sub?: string;
+  /** a scene name under public/email/art */
+  art?: string;
+}
+
+export const ART_URL = (name: string) => `${SITE_URL}/email/art/${name}.png`;
+
+function heroHtml(h: Hero): string {
+  const kicker = h.kicker
+    ? `<p style="margin:22px 0 0;font-family:${FONT};font-size:11px;line-height:14px;font-weight:700;letter-spacing:2px;color:#A9BBAF">${esc(h.kicker)}</p>`
+    : '';
+  const big = h.big
+    ? `<p style="margin:10px 0 0;font-family:${FONT};font-size:84px;line-height:84px;font-weight:700;color:${colors.paper}">${esc(h.big)}</p>`
+    : '';
+  const sub = h.sub
+    ? `<p style="margin:10px 0 0;font-family:${FONT};font-size:16px;line-height:23px;color:#C9D4CC">${h.sub}</p>`
+    : '';
+  const art = h.art
+    ? `<img src="${ART_URL(h.art)}" width="536" alt="" style="display:block;border:0;outline:none;width:100%;max-width:536px;height:auto;margin:18px 0 -28px">`
+    : '';
+  return `${kicker}${big}<h1 style="margin:${h.kicker || h.big ? 8 : 22}px 0 0;font-family:${FONT};font-size:32px;line-height:36px;font-weight:700;letter-spacing:-0.5px;color:${colors.paper}">${h.title}</h1>${sub}${art}`;
+}
+
+function footerHtml(lang: EmailLang, why: string, unsubscribeUrl?: string): string {
   const f = footerCopy[lang];
   const a = (href: string, text: string) =>
     `<a href="${esc(href)}" style="color:${colors.inkSoft};text-decoration:underline">${esc(text)}</a>`;
@@ -99,11 +159,13 @@ function footerHtml(lang: EmailLang, why: string): string {
     `<a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO_SMALL_URL}" width="112" height="21" alt="NetProphet" style="display:block;border:0;outline:none;width:112px;height:21px;margin:0 0 14px"></a>`,
     line(`${a(SITE_URL, 'netprophetapp.com')} &middot; ${a(f.privacyUrl, f.privacy)} &middot; ${a(f.supportUrl, f.support)}`),
     line(`${esc(f.contact)}: ${a(`mailto:${CONTACT_EMAIL}`, CONTACT_EMAIL)}`),
-    `<p style="margin:14px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${colors.inkSoft}">${esc(why)}</p>`,
+    why ? `<p style="margin:14px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${colors.inkSoft}">${esc(why)}${
+      unsubscribeUrl ? ` ${a(unsubscribeUrl, lang === 'el' ? 'Διαγραφή' : 'Unsubscribe')}` : ''
+    }</p>` : '',
   ].join('\n');
 }
 
-function footerText(lang: EmailLang, why: string): string {
+function footerText(lang: EmailLang, why: string, unsubscribeUrl?: string): string {
   const f = footerCopy[lang];
   return [
     '--',
@@ -112,7 +174,8 @@ function footerText(lang: EmailLang, why: string): string {
     `${f.contact}: ${CONTACT_EMAIL}`,
     '',
     why,
-  ].join('\n');
+    unsubscribeUrl ? `${lang === 'el' ? 'Διαγραφή' : 'Unsubscribe'}: ${unsubscribeUrl}` : '',
+  ].filter((l, i, all) => l !== '' || i < all.length - 1).join('\n');
 }
 
 /** the whole email: ink header with the logo, the content on a white card, the footer on paper */
@@ -145,13 +208,13 @@ ${pre}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bo
 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%">
 <tr><td class="np-pad" bgcolor="${colors.ink}" style="background-color:${colors.ink};border-radius:16px 16px 0 0;padding:28px 32px">
-<a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO_URL}" width="176" height="33" alt="NetProphet" style="display:block;border:0;outline:none;width:176px;height:33px"></a>
+<a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO_URL}" width="176" height="33" alt="NetProphet" style="display:block;border:0;outline:none;width:176px;height:33px"></a>${p.hero ? heroHtml(p.hero) : ''}
 </td></tr>
 <tr><td class="np-pad" bgcolor="${colors.white}" style="background-color:${colors.white};border-radius:0 0 16px 16px;padding:36px 32px 40px">
 ${p.bodyHtml}
 </td></tr>
 <tr><td class="np-pad" style="padding:28px 32px 8px">
-${footerHtml(p.lang, p.why)}
+${footerHtml(p.lang, p.why, p.unsubscribeUrl)}
 </td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
@@ -160,7 +223,7 @@ ${footerHtml(p.lang, p.why)}
 </body>
 </html>
 `;
-  return { html, text: `${p.bodyText}\n\n${footerText(p.lang, p.why)}\n` };
+  return { html, text: `${p.bodyText}\n\n${footerText(p.lang, p.why, p.unsubscribeUrl)}\n` };
 }
 
 /** Supabase sign-in code emails. `token` stays a Go template tag in the real templates. */
