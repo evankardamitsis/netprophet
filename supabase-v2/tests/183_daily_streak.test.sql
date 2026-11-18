@@ -4,7 +4,7 @@
 -- Frames once, the pushes (who, when, the cap, never after 22:00) and the emails (7+ only, no device only, the gate,
 -- the Monday line). Times are passed in, so the dates below are fixed; the switch-on backfill uses today.
 begin;
-select plan(79);
+select plan(80);
 
 update core.email_settings set mode = 'on', allowlist = '{}', start_at = '2026-01-01 00:00Z', kinds_off = '{}';
 
@@ -102,6 +102,12 @@ select is((select active from core.cosmetic_items where key = 'frame_month'), tr
 select is((select earn_rule_text from core.cosmetic_items where key = 'frame_seven'), 'Το κερδίζεις με 7 μέρες στη σειρά', 'and Επτά is earned in days');
 select is((select (core.badge_counters(:'calls'::uuid) ->> 'in_a_row')::int), 9, 'badge Στη σειρά keeps counting correct calls');
 select is((select (core.unlock_counters(:'calls'::uuid) ->> 'bestStreak')::int), 9, 'the unlock counter keeps counting correct calls');
+-- get_me on the real today (run played today, so nothing closes)
+select tests.login(:'run'::uuid);
+select is((api.get_me() -> 'game' ->> 'daily_streak')::boolean, true, 'get_me says the daily σερί is on');
+select is((api.get_me() -> 'game' ->> 'streak')::int, 3, 'get_me: the top bar reads the days');
+select is((api.get_me() -> 'game' ->> 'played_today')::boolean, true, 'get_me: played today');
+select tests.logout();
 
 -- ── counting days (fixed dates from here on; 2027-01-11 is a Monday, Athens is UTC+2) ──
 select tests.create_user('ds-a@test.local') as a \gset
@@ -197,12 +203,6 @@ select is((select count(*)::int from core.feed_inbox where user_id = :'m'::uuid 
 select is((select count(*)::int from core.user_cosmetics uc join core.cosmetic_items c on c.id = uc.item_id
             where uc.user_id = :'m'::uuid and c.key = 'frame_seven'), 1, 'and the Frame is not given twice');
 
--- ── get_me ──
-select tests.login(:'f'::uuid);
-select is((api.get_me() -> 'game' ->> 'daily_streak')::boolean, true, 'get_me says the daily σερί is on');
-select is((api.get_me() -> 'game' ->> 'streak')::int, 3, 'get_me: the top bar reads the days');
-select tests.logout();
-
 -- ── pushes ──
 -- p1 and p2 have a σερί and a device; p1 plays on the 20th, p2 does not; p3 has no device; p4 switched it off
 select tests.create_user('ds-p1@test.local') as p1 \gset
@@ -276,7 +276,7 @@ select is((select payload ->> 'n' from core.emails where kind = 'streak_reminder
           'the 20:00 reminder by email to whoever has no device');
 select is((select count(*)::int from core.emails where kind = 'streak_reminder_email' and user_id = :'p2'::uuid), 0, 'not to whoever has a device');
 select pg_temp.vote(:'e3'::uuid, '2027-01-21 19:00Z');
-select is(core.email_gate('streak_reminder_email', :'e3'::uuid, (select payload from core.emails where kind = 'streak_reminder_email' and user_id = :'e3'::uuid)),
+select is(core.email_gate('streak_reminder_email', :'e3'::uuid, jsonb_build_object('n', 2, 'day', core.athens_day() - 400)),
           '{"skip": "late"}'::jsonb, 'the gate drops a reminder that was not sent on its evening');
 -- the milestone email: m reached 30 on 2 Mar
 select core.streak_email_sweep('2027-03-02 11:05+02');
