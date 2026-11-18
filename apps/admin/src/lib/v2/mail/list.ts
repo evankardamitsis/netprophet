@@ -67,7 +67,7 @@ const CONFIRM = {
   el: {
     subject: 'Ένα tap ακόμα',
     preheader: 'Και κάθε Δευτέρα έχεις τα αποτελέσματα της εβδομάδας.',
-    sub: 'Και κάθε Δευτέρα πρωί έχεις στο email τι έγινε στα γήπεδα.',
+    sub: 'Και κάθε Δευτέρα πρωί έχεις στο email σου τι έγινε στα γήπεδα.',
     button: 'Ναι, θέλω τα αποτελέσματα',
     notYou: 'Δεν ήσουν εσύ; Αγνόησέ το και δεν θα ξανακούσεις από εμάς.',
   },
@@ -180,7 +180,7 @@ const WEEKLY = {
     titlesTitle: 'Οι τίτλοι της εβδομάδας',
     playedTitle: (n: number) => `${n} ματς την περασμένη εβδομάδα`,
     nextTitle: 'Τι έρχεται αυτή την εβδομάδα',
-    preheader: 'Τι έγινε στα γήπεδα και τι έρχεται.',
+    preheader: 'Τι έγινε στα γήπεδα και τι να περιμένεις.',
     matches: (n: number) => `${n} ματς`,
     upsets: (n: number) => (n === 1 ? '1 ανατροπή' : `${n} ανατροπές`),
     titles: (n: number) => (n === 1 ? '1 τίτλος' : `${n} τίτλοι`),
@@ -271,25 +271,29 @@ export function siteWeeklyEmail(e: DueEmail): Mail {
 export const RESEND_UNSUBSCRIBE = '{{{RESEND_UNSUBSCRIBE_URL}}}';
 
 export const LAUNCH_FEATURES: [string, string, string][] = [
-  ['feat-01-vote', 'Ψήφισε ποιος κερδίζει', 'Ένα tap στο όνομα που πιστεύεις.'],
-  ['feat-02-result', 'Μάθε αν έπεσες μέσα', 'Αποτελέσματα με σκορ, μέσα στη μέρα.'],
-  ['feat-04-ladder', 'Ανέβα στην Κατάταξη', 'Μηνιαία και για όλη τη σεζόν. Θα πέσεις πιο μέσα από την παρέα σου;'],
-  ['feat-09-baller', 'Ντύσε τον Baller σου', 'Ο παίκτης σου, ένα μπαλάκι με χαρακτήρα.'],
-  ['feat-07-player', 'Η κάρτα κάθε παίκτη', 'Φόρμα, τελευταία ματς, ρεκόρ.'],
-  ['feat-stats', 'Τα στατιστικά σου · Pro', 'Νίκες, σετ, επιφάνειες, μονά και διπλά.'],
+  ['big-01-vote', 'Ψήφισε ποιος κερδίζει', 'Ένα tap στο όνομα που πιστεύεις.'],
+  ['big-02-result', 'Μάθε αν έπεσες μέσα', 'Αποτελέσματα με σκορ, μέσα στη μέρα.'],
+  ['big-04-ladder', 'Ανέβα στην Κατάταξη', 'Μηνιαία και για όλη τη σεζόν. Θα πέσεις πιο μέσα από την παρέα σου;'],
+  ['big-09-baller', 'Ντύσε τον Baller σου', 'Ο παίκτης σου, ένα μπαλάκι με χαρακτήρα.'],
+  ['big-07-player', 'Μάθε τα πάντα για τους αντιπάλους σου', 'Η φόρμα τους, τα τελευταία τους ματς και το ρεκόρ τους, πριν τους βρεις απέναντι.'],
+  ['big-stats', 'Τα στατιστικά σου · Pro', 'Νίκες, σετ, επιφάνειες, μονά και διπλά.'],
 ];
 
-/** a feature row: the app screen on the left, a bold line and a quieter one on the right */
+/**
+ * The features (founder, 18 Nov 2026: «1 big image with title below»): each one a full-width app screen, the bold
+ * title and a quieter line under it, one after the other.
+ */
 function featureRows(items: [string, string, string][]): string {
   return (
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px;width:100%">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 8px;width:100%">` +
     items
       .map(
-        ([img, title, line], i) =>
-          `<tr><td width="132" valign="top" style="padding:${i ? 12 : 2}px 14px 12px 0;${i ? `border-top:1px solid ${colors.paper};` : ''}">` +
-          `<img src="${SCREEN_URL(img)}" width="132" alt="" style="display:block;border:0;outline:none;width:132px;height:auto;border-radius:12px"></td>` +
-          `<td valign="middle" style="padding:${i ? 12 : 2}px 0 12px;${i ? `border-top:1px solid ${colors.paper};` : ''}font-family:${FONT};font-size:14px;line-height:20px;color:${colors.inkSoft}">` +
-          `<strong style="display:block;margin:0 0 4px;font-size:16px;line-height:22px;color:${colors.ink}">${esc(title)}</strong>${esc(line)}</td></tr>`,
+        ([img, title, line]) =>
+          `<tr><td style="padding:0 0 26px">` +
+          `<img src="${SCREEN_URL(img)}" width="536" alt="" style="display:block;border:0;outline:none;width:100%;max-width:536px;height:auto;border-radius:14px">` +
+          `<p style="margin:14px 0 4px;font-family:${FONT};font-size:19px;line-height:25px;font-weight:700;color:${colors.ink}">${esc(title)}</p>` +
+          `<p style="margin:0;font-family:${FONT};font-size:15px;line-height:22px;color:${colors.inkSoft}">${esc(line)}</p>` +
+          `</td></tr>`,
       )
       .join('') +
     `</table>`
@@ -306,7 +310,7 @@ export function launchEmail(opts: { unsubscribeUrl?: string } = {}): Mail {
   const free = 'Δωρεάν για iPhone και Android';
   return compose({
     lang: 'el',
-    subject: 'Το NetProphet άλλαξε. Έλα να το δεις.',
+    subject: 'Το NetProphet άλλαξε. Έλα να το ανακαλύψεις.',
     preheader: 'Ψήφισε, μάθε αν έπεσες μέσα, ανέβα level. Δωρεάν.',
     hero: {
       kicker: 'ΤΟ ΝΕΟ NETPROPHET',

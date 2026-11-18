@@ -103,7 +103,7 @@ export function day1VoteEmail(e: DueEmail): Mail {
   const cards: Card[] = list(p, 'matches')
     .filter((m) => pairing(m))
     .map((m) => ({ kicker: kicker(str(m, 'time'), str(m, 'tournament')) || undefined, title: pairing(m) }));
-  const how = 'Στο NetProphet πατάς όποιον πιστεύεις ότι κερδίζει.';
+  const how = 'Στο NetProphet ψηφίζεις όποιον πιστεύεις ότι θα κερδίσει.';
   return build(e, {
     subject,
     preheader: lead,
@@ -124,7 +124,7 @@ export function day3FollowEmail(e: DueEmail): Mail {
       const n = num(x, 'matches');
       return { title: str(x, 'name')!, sub: n ? `${count(n, 'ματς', 'ματς')} φέτος` : undefined };
     });
-  const sub = 'Ακολούθησέ τους. Δες τους αγώνες τους πρώτα και μάθε τα αποτελέσματα αμέσως.';
+  const sub = 'Ακολούθησέ τους. Δες τους αγώνες τους πρώτα και μάθε τα αποτελέσματά τους αμέσως.';
   const intro = 'Μερικοί που παίζουν συχνά:';
   return build(e, {
     subject: 'Ποιους ξέρεις στα γήπεδα;',
@@ -171,8 +171,8 @@ export function day7WeekEmail(e: DueEmail): Mail {
   const where =
     place === null ? null
     : toMedal !== null
-      ? `Είσαι στη θέση ${fmt(place)}. Οι 3 πρώτοι στο τέλος του μήνα παίρνουν μετάλλιο, Frame και badge. ${toMedal === 1 ? 'Μία θέση ακόμα.' : `${count(toMedal, 'θέση', 'θέσεις')} ακόμα.`}`
-      : `Είσαι στη θέση ${fmt(place)}. Οι 3 πρώτοι στο τέλος του μήνα παίρνουν μετάλλιο, Frame και badge. Κράτα τη!`;
+      ? `Είσαι στη θέση ${fmt(place)}. Οι 3 πρώτοι στο τέλος του μήνα παίρνουν δώρα, frames και badges. Θα είσαι ένας από αυτούς;`
+      : `Είσαι στη θέση ${fmt(place)}. Οι 3 πρώτοι στο τέλος του μήνα παίρνουν δώρα, frames και badges. Κράτα τη!`;
   return build(e, {
     subject,
     preheader,

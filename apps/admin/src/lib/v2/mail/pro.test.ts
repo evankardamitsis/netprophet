@@ -66,7 +66,7 @@ describe('the Pro emails', () => {
   it('pro_welcome: the free week end date and the price after it', () => {
     const m = renderDue(base)!;
     expect(m.subject).toBe('Είσαι Pro!');
-    expect(m.html).toContain('Ο βοηθός της σεζόν σου ξεκίνησε');
+    expect(m.html).toContain('Καλωσήρθες στο Pro!');
     expect(m.text).toContain('Η δωρεάν εβδομάδα τελειώνει στις 24/11. Μετά 49,99€ τον πρώτο χρόνο, 69,99€ από εκεί και πέρα.');
     expect(m.text).toContain('Άνοιξε τις ειδοποιήσεις');
     expect(m.text).toContain('12 ερωτήσεις');
@@ -110,7 +110,8 @@ describe('the Pro emails', () => {
     expect(m.html).toContain('4,49€');
     expect(m.html).toContain('<s>8,99€</s>');
     expect(m.html).toContain('href="https://apps.apple.com/redeem?ctx=offercodes&amp;id=6824998331&amp;code=ABC12345"');
-    expect(m.text).toContain('Ο κωδικός σου: ABC12345');
+    expect(m.text).not.toContain('Ο κωδικός σου');
+    expect(m.html.split('ABC12345').length - 1).toBe(1); // only inside the button's link
     expect(m.text).toContain('ισχύει ως τις 15/1');
   });
 
