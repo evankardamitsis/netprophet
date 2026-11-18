@@ -10,6 +10,7 @@
 import { accusativeWord, getCopy, greekCaps } from '@netprophet/copy';
 import { block, esc } from '../emailLayout';
 import { OPEN_URL, build, hello, type DueEmail, type Mail } from './core';
+import { mondayStreakLines } from './streak';
 
 const el = getCopy('el');
 
@@ -240,18 +241,24 @@ export function mondayEmail(e: DueEmail): Mail {
     .map((m) => ({ kicker: kicker(weekday(str(m, 'date')), str(m, 'time'), str(m, 'tournament')) || undefined, title: pairing(m) }));
   const head = 'Παίζουν οι δικοί σου:';
   const date = dayMonth(str(p, 'date'));
+  // the daily σερί line, only when it is on (payload.days)
+  const days = mondayStreakLines(p) ?? [];
   return build(e, {
     subject: title,
     preheader: games.length ? 'Η εβδομάδα σου και ποιοι δικοί σου παίζουν.' : 'Η εβδομάδα σου σε νούμερα.',
     hero: { kicker: kicker('Δευτέρα', date), title: esc(title) },
     body: [
       tiles.length ? block.tiles(tiles) : '',
+      ...days.map((l) => block.paragraph(esc(l))),
       games.length ? block.subheading(head) : '',
       cardsHtml(games),
       block.button(OPEN_URL, 'Ψήφισε την εβδομάδα'),
     ],
-    text: [tiles.map((t) => `${t.value} ${t.label}`).join(' · '), ...(games.length ? ['', head, ...cardsText(games)] : []), '', `Ψήφισε την εβδομάδα: ${OPEN_URL}`],
-    why: 'Πήρες αυτό το email επειδή ψήφισες την προηγούμενη εβδομάδα στο NetProphet.',
+    text: [tiles.map((t) => `${t.value} ${t.label}`).join(' · '), ...days, ...(games.length ? ['', head, ...cardsText(games)] : []), '', `Ψήφισε την εβδομάδα: ${OPEN_URL}`],
+    // a quiz-only week (the daily σερί): they played, they did not vote
+    why: (num(p, 'votes') ?? 0) > 0
+      ? 'Πήρες αυτό το email επειδή ψήφισες την προηγούμενη εβδομάδα στο NetProphet.'
+      : 'Πήρες αυτό το email επειδή έπαιξες την προηγούμενη εβδομάδα στο NetProphet.',
   });
 }
 

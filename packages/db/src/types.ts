@@ -384,6 +384,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_daily_streak: {
+        Args: { p_on?: boolean };
+        Returns: Json;
+      };
       admin_decide_identity: {
         Args: { p_flag: string; p_action: string };
         Returns: Json;

@@ -153,6 +153,24 @@ export function withArticleAccusative(firstName: string, surname: string, known?
     return `${g === 'f' ? 'την' : 'τον'} ${accusativeName(firstName, surname, g)}`;
 }
 
+const WEEKDAY_ACC = ['την Κυριακή', 'τη Δευτέρα', 'την Τρίτη', 'την Τετάρτη', 'την Πέμπτη', 'την Παρασκευή', 'το Σάββατο'];
+
+/**
+ * A day of the week as the object of a verb, with its article («Η Ασφάλεια κάλυψε την Τρίτη»): «τη Δευτέρα», «την
+ * Τρίτη», «την Τετάρτη», «την Πέμπτη», «την Παρασκευή», «το Σάββατο», «την Κυριακή» (the final ν stays before
+ * τ, π, κ and vowels). `day` is 0 for Sunday, as Date.getUTCDay; a `YYYY-MM-DD` string is read as that date.
+ */
+export function weekdayAccusative(day: number | string): string | null {
+    let dow: number;
+    if (typeof day === 'number') dow = day;
+    else {
+        const d = /^\d{4}-\d{2}-\d{2}$/.test(day) ? new Date(`${day}T12:00:00Z`) : null;
+        if (!d || Number.isNaN(d.getTime())) return null;
+        dow = d.getUTCDay();
+    }
+    return WEEKDAY_ACC[dow] ?? null;
+}
+
 /** «4», «4,5»: levels go in halves (founder, 12 Oct 2026); Greek writes the decimal with a comma */
 export function levelNumber(level: number, locale: 'el' | 'en' = 'el'): string {
     const text = String(Math.floor(level * 2) / 2);

@@ -2,7 +2,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { Banner, Toast, useToast, type Tone } from "../feedback";
 import { Badge, Card, Empty, PageHeader, Primary, Secondary, Section, SkeletonCards, SkeletonRows, Stats, Table, Tabs } from "../kit";
-import { closeMonth, leaguePreview, loadConfig, type ActionResult } from "./actions";
+import { closeMonth, dailyStreakStatus, leaguePreview, loadConfig, setDailyStreak, type ActionResult } from "./actions";
 
 interface Condition {
   counter: string;
@@ -18,6 +18,16 @@ export interface GameConfig {
     | null;
   league: Record<string, number>;
   quiz: Record<string, string | number>;
+}
+
+/** api.admin_daily_streak */
+export interface DailyStreakStatus {
+  on: boolean;
+  since: string | null;
+  backfilled: number | null;
+  players: number;
+  best: number;
+  played_today: number;
 }
 
 export interface LeaguePreview {
@@ -301,8 +311,94 @@ export function Game() {
           />
         )}
       </Section>
+      <DailyStreak />
       <MonthClose />
     </>
+  );
+}
+
+/** The daily σερί switch (founder, 18 Nov 2026): off until app 1.0.1 ships; switching on computes everyone's start. */
+function DailyStreak() {
+  const [st, setSt] = useState<DailyStreakStatus | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  const [saving, save] = useTransition();
+  const { toast, notify } = useToast();
+
+  useEffect(() => {
+    dailyStreakStatus()
+      .then(setSt)
+      .catch((e: Error) => setNotice({ tone: "problem", title: "Couldn’t load the daily σερί", detail: e.message }));
+  }, []);
+
+  const flip = (on: boolean) => {
+    setNotice({
+      tone: "working",
+      title: on ? "Switching the daily σερί on…" : "Switching the daily σερί off…",
+      detail: on ? "Working out everyone’s starting σερί from the days they played." : "Putting back the σερί of right picks.",
+    });
+    save(async () => {
+      const r = await setDailyStreak(on);
+      setConfirm(false);
+      if (r.ok) {
+        if (r.status) setSt(r.status);
+        setNotice({ tone: "done", title: r.message });
+        notify(r.message);
+      } else {
+        setNotice({ tone: "problem", title: "Nothing changed", detail: r.message });
+      }
+    });
+  };
+
+  const on = st?.on === true;
+  return (
+    <Section title="Daily σερί">
+      <div className={`v2-card v2-enter${saving ? " busy" : ""}`} aria-busy={saving || undefined}>
+        <div className="v2-row">
+          <h3 className="v2-h3">The σερί counts {on ? "days in a row" : "right picks in a row"}</h3>
+          {st ? <Badge tone={on ? "done" : "neutral"}>{on ? "✓ On" : "Off"}</Badge> : null}
+        </div>
+        <span className="v2-muted">
+          On: a day counts with one vote or the day’s quiz, an Ασφάλεια covers a missed day, and the 20:00 reminder, the morning pushes and the σερί emails go
+          out. Switch it on together with app 1.0.1: build 39 shows the days, but its words still talk about right picks.
+        </span>
+        {on && st ? (
+          <Stats
+            items={[
+              { label: "players with a σερί", value: st.players, ink: true },
+              { label: "played today", value: st.played_today },
+              { label: "longest σερί now", value: st.best },
+            ]}
+          />
+        ) : null}
+        {!confirm ? (
+          <div className="v2-row">
+            <Secondary disabled={!st || saving} onClick={() => setConfirm(true)}>
+              {on ? "Switch it off" : "Switch it on"}
+            </Secondary>
+          </div>
+        ) : (
+          <div className="v2-confirm">
+            <b>{on ? "Switch the daily σερί off?" : "Switch the daily σερί on?"}</b>
+            <span className="v2-muted">
+              {on
+                ? "The σερί goes back to right picks in a row. The days stay recorded; switching on again starts from them."
+                : "Everyone gets a σερί from the days in a row they really played, ending today or yesterday. Pushes and emails start tonight."}
+            </span>
+            <div className="v2-row">
+              <Secondary small busy={saving} onClick={() => flip(!on)}>
+                {saving ? "Working…" : on ? "Yes, switch it off" : "Yes, switch it on"}
+              </Secondary>
+              <Secondary small disabled={saving} onClick={() => setConfirm(false)}>
+                Cancel
+              </Secondary>
+            </div>
+          </div>
+        )}
+        {notice ? <Banner {...notice} /> : null}
+      </div>
+      <Toast text={toast} />
+    </Section>
   );
 }
 
