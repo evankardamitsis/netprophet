@@ -76,7 +76,7 @@ const PRO_FEATURES: [string, string][] = [
   ['Ειδοποιήσεις live', 'Η κλήρωση, η ώρα σου, κάθε αλλαγή, τη στιγμή που γίνεται.'],
   ['Ο αντίπαλός σου', 'Αναλυτικά στατιστικά, τα μεταξύ σας, πώς παίζει.'],
   ['Τα στατιστικά σου', 'Νίκες, σετ, επιφάνειες, μονά και διπλά.'],
-  ['12 ερωτήσεις', 'Το quiz κάθε μέρας, διπλό.'],
+  ['12 ερωτήσεις', 'Το quiz κάθε μέρας, με διπλάσιες ερωτήσεις.'],
 ];
 
 /** feature rows: an ink circle with +, a bold name and a quieter line under it */
@@ -109,17 +109,6 @@ function offer(): string {
   );
 }
 
-/** the offer code as text, for whoever cannot tap the button */
-function codeBox(code: string): string {
-  return (
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px"><tr>` +
-    `<td bgcolor="${colors.paper}" style="background-color:${colors.paper};border-radius:10px;padding:10px 16px;font-family:${FONT};color:${colors.ink}">` +
-    `<p style="margin:0;font-size:12px;line-height:16px;color:${colors.inkSoft}">Ο κωδικός σου</p>` +
-    `<p style="margin:2px 0 0;font-size:20px;line-height:26px;font-weight:700;letter-spacing:2px">${esc(code)}</p>` +
-    `</td></tr></table>`
-  );
-}
-
 export function proWelcomeEmail(e: DueEmail): Mail {
   const p = pay(e);
   const checks = [
@@ -134,7 +123,7 @@ export function proWelcomeEmail(e: DueEmail): Mail {
   return build(e, {
     subject: 'Είσαι Pro!',
     preheader: 'Ο βοηθός της σεζόν σου ξεκίνησε.',
-    hero: { kicker: 'PRO', title: 'Ο βοηθός της σεζόν σου ξεκίνησε', sub: 'Μαθαίνεις πρώτα απ’ όλους πότε και με ποιον παίζεις.' },
+    hero: { kicker: 'PRO', title: 'Καλωσήρθες στο Pro!', sub: 'Ο βοηθός της σεζόν σου ξεκίνησε. Μάθε τα πάντα για τους αντιπάλους και τα στατιστικά σου.' },
     body: [
       features(PRO_FEATURES),
       block.checks(checks.map(esc)),
@@ -225,7 +214,8 @@ export function proWinbackEmail(e: DueEmail): Mail | null {
   const until = date(p.code_expires_at);
   const offerLine = `${WINBACK.months} μήνες Pro στα ${euro(WINBACK.price)} τον μήνα, αντί για ${euro(WINBACK.full)}. Μετά ${euro(WINBACK.full)} τον μήνα, ακυρώνεις όποτε θες.`;
   const checks = ['Ειδοποιήσεις live για την κλήρωση και την ώρα σου.', 'Τα αναλυτικά στατιστικά του αντιπάλου σου.', 'Τα στατιστικά σου και η σεζόν σου.'];
-  const how = `Ο κωδικός ανοίγει στο App Store, με τον λογαριασμό Apple του iPhone σου. Είναι μόνο για σένα${until ? ` και ισχύει ως τις ${until}` : ''}.`;
+  // founder, 18 Nov 2026: no code to copy; the button carries the person's own code
+  const how = `Πάτα το κουμπί από το iPhone σου και η έκπτωση περνάει μόνη της στο App Store. Είναι μόνο για σένα${until ? ` και ισχύει ως τις ${until}` : ''}.`;
   const once = 'Δεν θα σου ξαναστείλουμε αυτή την προσφορά.';
   return build(e, {
     subject: 'Το Pro σου έληξε. Γύρνα με τη μισή τιμή',
@@ -240,10 +230,9 @@ export function proWinbackEmail(e: DueEmail): Mail | null {
       offer(),
       block.checks(checks.map(esc)),
       block.button(url, 'Γύρνα στο Pro με −50%'),
-      codeBox(code),
       block.note(`${esc(how)}<br>${esc(once)}`),
     ],
-    text: [offerLine, '', ...checks.map((c) => `✓ ${c}`), '', `Γύρνα στο Pro με −50%: ${url}`, '', `Ο κωδικός σου: ${code}`, how, '', once],
+    text: [offerLine, '', ...checks.map((c) => `✓ ${c}`), '', `Γύρνα στο Pro με −50%: ${url}`, '', how, '', once],
     why: 'Πήρες αυτό το email επειδή είχες Pro στο NetProphet.',
   });
 }

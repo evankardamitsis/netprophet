@@ -121,7 +121,7 @@ describe('the website list emails', () => {
 
   it('launch_v1: the founder’s line, six features with app screens from the site, Resend’s unsubscribe', () => {
     const m = launchEmail();
-    expect(m.subject).toBe('Το NetProphet άλλαξε. Έλα να το δεις.');
+    expect(m.subject).toBe('Το NetProphet άλλαξε. Έλα να το ανακαλύψεις.');
     expect(m.html).toContain('Δεν πιστεύω να νόμιζες ότι σταματήσαμε. Ίσα ίσα, το φτιάξαμε όλο από την αρχή και τώρα είναι έτοιμο να το κατεβάσεις.');
     expect(LAUNCH_FEATURES).toHaveLength(6);
     for (const [img] of LAUNCH_FEATURES) expect(m.html).toContain(`https://www.netprophetapp.com/email/screens/${img}.jpg`);
