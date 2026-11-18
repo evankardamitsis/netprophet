@@ -91,6 +91,33 @@ export const block = {
   tip: (html: string) =>
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;width:100%"><tr>` +
     `<td bgcolor="${colors.paper}" style="background-color:${colors.paper};border-left:4px solid ${colors.blue};border-radius:8px;padding:12px 14px;font-family:${FONT};font-size:15px;line-height:22px;color:${colors.ink}">${html}</td></tr></table>`,
+  /**
+   * A row of big numbers with a small label under each («9/14 μέσα», «4 σερί»). `lime` marks what happened (the
+   * correct calls); the rest sit on paper.
+   */
+  tiles: (items: { value: string; label: string; lime?: boolean }[]) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;width:100%"><tr>` +
+    items
+      .map((t, i) => {
+        const bg = t.lime ? colors.lime : colors.paper;
+        return (
+          `<td width="${Math.floor(100 / items.length)}%" align="center" bgcolor="${bg}" style="background-color:${bg};border-radius:12px;padding:14px 6px${i < items.length - 1 ? ';border-right:6px solid ' + colors.white : ''}">` +
+          `<p style="margin:0;font-family:${FONT};font-size:28px;line-height:32px;font-weight:700;color:${colors.ink}">${esc(t.value)}</p>` +
+          `<p style="margin:4px 0 0;font-family:${FONT};font-size:13px;line-height:17px;color:${colors.ink}">${esc(t.label)}</p></td>`
+        );
+      })
+      .join('') +
+    `</tr></table>`,
+  /** a card on paper: a small kicker («17:00 · Athens Tennis»), a bold line and a quieter one; all text is escaped */
+  card: (c: { kicker?: string; title: string; sub?: string }) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px;width:100%"><tr>` +
+    `<td bgcolor="${colors.paper}" style="background-color:${colors.paper};border-radius:12px;padding:12px 16px">` +
+    (c.kicker
+      ? `<p style="margin:0 0 4px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;letter-spacing:1px;color:${colors.inkSoft}">${esc(c.kicker)}</p>`
+      : '') +
+    `<p style="margin:0;font-family:${FONT};font-size:16px;line-height:22px;font-weight:700;color:${colors.ink}">${esc(c.title)}</p>` +
+    (c.sub ? `<p style="margin:2px 0 0;font-family:${FONT};font-size:14px;line-height:20px;color:${colors.inkSoft}">${esc(c.sub)}</p>` : '') +
+    `</td></tr></table>`,
   /** something earned: ink text on a lime panel (lime means earned), a bold line and a quieter one under it */
   earned: (title: string, sub: string) =>
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px"><tr>` +
