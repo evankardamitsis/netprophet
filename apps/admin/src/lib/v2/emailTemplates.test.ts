@@ -14,7 +14,7 @@ const root = (p: string) => fileURLToPath(new URL(`../../../../../${p}`, import.
 const update = process.env.UPDATE_EMAIL_TEMPLATES === '1';
 const kinds: AuthTemplate[] = ['magic_link', 'confirmation'];
 
-const forPreview = (html: string) => html.split(LOGO_URL).join('./logo@2x.png').split(LOGO_SMALL_URL).join('./logo-small@2x.png');
+const forPreview = (html: string) => html.split(LOGO_URL).join('./logo-on-dark@2x.png').split(LOGO_SMALL_URL).join('./logo-footer@2x.png');
 
 describe('the Supabase auth templates', () => {
   for (const kind of kinds) {
@@ -40,7 +40,8 @@ describe('the shared layout', () => {
     expect(e.html).toContain('max-width:600px');
     expect(e.html).toContain(`src="${LOGO_URL}" width="176" height="33" alt="NetProphet"`);
     expect(e.html).toContain(`src="${LOGO_SMALL_URL}" width="112" height="21" alt="NetProphet"`);
-    expect(LOGO_URL).toBe('https://www.netprophetapp.com/email/logo@2x.png');
+    expect(LOGO_URL).toBe('https://www.netprophetapp.com/email/logo-on-dark@2x.png');
+    expect(LOGO_SMALL_URL).toBe('https://www.netprophetapp.com/email/logo-footer@2x.png');
   });
   it('signs off with the publisher, the links, the contact and why', () => {
     for (const s of ['https://www.netprophetapp.com/privacy', 'https://www.netprophetapp.com/support', 'mailto:hello@monadlabs.gr', 'Γιατί.'])
@@ -65,8 +66,8 @@ describe('the shared layout', () => {
 it.runIf(update)('writes the previews to docs/v2/emails', () => {
   const dir = root('docs/v2/emails');
   mkdirSync(dir, { recursive: true });
-  copyFileSync(root('apps/site/public/email/logo@2x.png'), `${dir}/logo@2x.png`);
-  copyFileSync(root('apps/site/public/email/logo-small@2x.png'), `${dir}/logo-small@2x.png`);
+  copyFileSync(root('apps/site/public/email/logo-on-dark@2x.png'), `${dir}/logo-on-dark@2x.png`);
+  copyFileSync(root('apps/site/public/email/logo-footer@2x.png'), `${dir}/logo-footer@2x.png`);
   const morning = morningEmail({
     date: '2026-10-20',
     recipients: [],

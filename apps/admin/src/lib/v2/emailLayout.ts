@@ -2,9 +2,11 @@
  * The one layout every v2 email uses: the Supabase sign-in code emails (generated into supabase-v2/templates by
  * emailTemplates.test.ts), the Team invite, the 08:30 staff email and the month medal email (all through Resend).
  *
- * Email-client safe on purpose: tables, inline styles, bgcolor attributes, 600px wide, hosted PNG logos with their
- * background baked in (Gmail and Outlook block SVG and data URIs, and a transparent logo vanishes in dark mode).
- * The logos are served by apps/site from www.netprophetapp.com/email/.
+ * Email-client safe on purpose: tables, inline styles, bgcolor attributes, 600px wide, hosted PNG logos (Gmail and
+ * Outlook block SVG and data URIs). The logos are transparent (founder, 18 Nov 2026: no box around the logo on a
+ * phone in dark mode): the header one has light text and sits on the ink band, which stays dark in every client;
+ * the footer one is slate, which reads on paper and on a darkened footer alike. Served by apps/site from
+ * www.netprophetapp.com/email/ (the older boxed logo files stay there for emails already sent).
  */
 import { colors } from '@netprophet/tokens';
 
@@ -13,10 +15,10 @@ export type EmailLang = 'el' | 'en';
 /** the canonical host: netprophetapp.com answers with a redirect to www, which some image proxies skip */
 export const SITE_URL = 'https://www.netprophetapp.com';
 export const CONTACT_EMAIL = 'hello@monadlabs.gr';
-/** on ink, 176 x 33 shown, 352 x 66 file */
-export const LOGO_URL = `${SITE_URL}/email/logo@2x.png`;
-/** on paper, 112 x 21 shown, 224 x 42 file */
-export const LOGO_SMALL_URL = `${SITE_URL}/email/logo-small@2x.png`;
+/** transparent, light text for the ink band; 176 x 33 shown, 352 x 66 file */
+export const LOGO_URL = `${SITE_URL}/email/logo-on-dark@2x.png`;
+/** transparent, slate for the footer on paper or dark; 112 x 21 shown, 224 x 42 file */
+export const LOGO_SMALL_URL = `${SITE_URL}/email/logo-footer@2x.png`;
 
 const FONT = 'Helvetica,Arial,sans-serif';
 
