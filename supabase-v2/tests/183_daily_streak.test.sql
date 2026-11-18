@@ -4,7 +4,7 @@
 -- Frames once, the pushes (who, when, the cap, never after 22:00) and the emails (7+ only, no device only, the gate,
 -- the Monday line). Times are passed in, so the dates below are fixed; the switch-on backfill uses today.
 begin;
-select plan(80);
+select plan(83);
 
 update core.email_settings set mode = 'on', allowlist = '{}', start_at = '2026-01-01 00:00Z', kinds_off = '{}';
 
@@ -292,6 +292,21 @@ select pg_temp.vote(:'mon'::uuid, ('2027-03-01'::date + k + time '12:00') at tim
 select core.email_series_sweep('2027-03-08 09:05+02');
 select is((select payload -> 'days' from core.emails where kind = 'monday' and user_id = :'mon'::uuid),
           '{"n": 6, "played": 6, "frozen": ["2027-03-04"]}'::jsonb, 'the Monday email carries the σερί line');
+
+-- quiz-only: qo finished the quiz on 6 and 7 Mar and voted on no match; the Monday email still comes, with the line
+select tests.create_user('ds-qo@test.local') as qo \gset
+select pg_temp.quiz(:'qo'::uuid, '2027-03-06', 6, 6, pg_temp.at('2027-03-06', '10:00'));
+select pg_temp.quiz(:'qo'::uuid, '2027-03-07', 6, 6, pg_temp.at('2027-03-07', '10:00'));
+select core.email_series_sweep('2027-03-08 09:10+02');
+select is((select (payload ->> 'votes') || '|' || (payload -> 'days' ->> 'n') from core.emails where kind = 'monday' and user_id = :'qo'::uuid),
+          '0|2', 'the Monday email goes to a quiz-only σερί too');
+
+-- the weekly cap: two game emails this week hold the Monday email, not the σερί-lost or milestone ones
+select tests.create_user('ds-cap@test.local') as cap \gset
+insert into core.emails (user_id, kind, dedupe_key, payload, due_at, status, sent_at)
+select :'cap'::uuid, 'day1_vote', 'ds-cap:' || g, '{}', now(), 'sent', now() from generate_series(1, 2) g;
+select is(core.email_gate('monday', :'cap'::uuid, '{}'), '{"skip": "cap"}'::jsonb, 'the cap holds the Monday email');
+select is(core.email_gate('streak_milestone', :'cap'::uuid, '{"n": 30}') ->> 'skip', null, 'the milestone email skips the cap');
 
 -- ── switching off: back to correct calls ──
 select tests.login(:'adm'::uuid);

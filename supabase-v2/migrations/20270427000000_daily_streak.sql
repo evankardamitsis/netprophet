@@ -994,8 +994,10 @@ begin
   if coalesce(p_payload ->> 'test', 'false') = 'true' then return null; end if;
 
   -- the weekly cap (20270426000000_email_series): a game email waits out the week when the person already had 2
-  -- game emails sent in the last 7 days (account emails never count; «Send me a test» rows neither count nor wait)
+  -- game emails sent in the last 7 days (account emails never count; «Send me a test» rows neither count nor wait).
+  -- The σερί-lost and milestone emails skip it (founder, 18 Nov): rare and timely; they still count for the others.
   if (select grp from core.email_kinds where kind = p_kind) = 'game'
+     and p_kind not in ('streak_lost', 'streak_milestone')
      and (select count(*) from core.emails e join core.email_kinds k on k.kind = e.kind
            where e.user_id = p_user and k.grp = 'game' and e.status in ('sent', 'sending')
              and e.dedupe_key not like 'test:%'
@@ -1225,14 +1227,19 @@ begin
     end loop;
   end if;
 
-  -- ── monday: 09:00, everyone with a match vote last week (Monday to Sunday) ──
+  -- ── monday: 09:00, everyone with a match vote last week (Monday to Sunday), and while the daily σερί is on
+  --    everyone with a σερί too, so quiz-only players see their line (founder, 18 Nov) ──
   if extract(isodow from v_today) = 1 and p_now >= v_nine and p_now < v_nine + interval '4 hours' and v_nine >= s.start_at then
     for r in
-      select distinct v.user_id from core.votes v
-        join core.profiles pr on pr.user_id = v.user_id and pr.deleted_at is null
-       where v.subject_type = 'match' and v.day_key between v_today - 7 and v_today - 1
-         and not exists (select 1 from core.emails e
-                          where e.dedupe_key = 'monday:' || v.user_id || ':' || to_char(v_today, 'IYYY-IW'))
+      select w.user_id from (
+        select v.user_id from core.votes v
+         where v.subject_type = 'match' and v.day_key between v_today - 7 and v_today - 1
+        union
+        select g.user_id from core.user_game_state g
+         where core.daily_streak_on() and g.streak > 0) w
+        join core.profiles pr on pr.user_id = w.user_id and pr.deleted_at is null
+       where not exists (select 1 from core.emails e
+                          where e.dedupe_key = 'monday:' || w.user_id || ':' || to_char(v_today, 'IYYY-IW'))
     loop
       continue when not core.email_game_ok(r.user_id, p_now);
       select jsonb_build_object(

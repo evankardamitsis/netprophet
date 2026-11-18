@@ -255,7 +255,10 @@ export function mondayEmail(e: DueEmail): Mail {
       block.button(OPEN_URL, 'Ψήφισε την εβδομάδα'),
     ],
     text: [tiles.map((t) => `${t.value} ${t.label}`).join(' · '), ...days, ...(games.length ? ['', head, ...cardsText(games)] : []), '', `Ψήφισε την εβδομάδα: ${OPEN_URL}`],
-    why: 'Πήρες αυτό το email επειδή ψήφισες την προηγούμενη εβδομάδα στο NetProphet.',
+    // a quiz-only week (the daily σερί): they played, they did not vote
+    why: (num(p, 'votes') ?? 0) > 0
+      ? 'Πήρες αυτό το email επειδή ψήφισες την προηγούμενη εβδομάδα στο NetProphet.'
+      : 'Πήρες αυτό το email επειδή έπαιξες την προηγούμενη εβδομάδα στο NetProphet.',
   });
 }
 
