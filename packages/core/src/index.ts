@@ -2,6 +2,7 @@ export * from './types';
 export * from './time';
 export * from './rules/points';
 export * from './rules/streak';
+export * from './rules/dailyStreak';
 export * from './rules/resolution';
 export * from './rules/quests';
 export * from './rules/badges';

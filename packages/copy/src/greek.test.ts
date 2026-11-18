@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
-    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, tidyName, nameShapeOk, nameKey, sameNamedPerson } from './greek';
+    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, tidyName, nameShapeOk, nameKey, sameNamedPerson, weekdayAccusative } from './greek';
 import nameVectors from '../../core/test-vectors/name-keys.json';
+
+describe('weekdayAccusative', () => {
+    it('gives every day its article, the final ν only where it belongs', () => {
+        // 2027-03-01 is a Monday
+        const week = ['2027-03-01', '2027-03-02', '2027-03-03', '2027-03-04', '2027-03-05', '2027-03-06', '2027-03-07'].map(weekdayAccusative);
+        expect(week).toEqual(['τη Δευτέρα', 'την Τρίτη', 'την Τετάρτη', 'την Πέμπτη', 'την Παρασκευή', 'το Σάββατο', 'την Κυριακή']);
+        expect(weekdayAccusative(0)).toBe('την Κυριακή');
+        expect(weekdayAccusative('not a day')).toBeNull();
+    });
+});
 
 describe('greekCaps', () => {
     it('drops accents, which toUpperCase does not', () => {

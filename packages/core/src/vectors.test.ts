@@ -3,6 +3,14 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  addDays,
+  backfillDailyStreak,
+  dayKey,
+  dayStreakMoment,
+  recordDayPlayed,
+  rolloverDays,
+  type DailyStreakState,
+  type DayStreakEvent,
   applyOutcome,
   streakMoment,
   type StreakEvent,
@@ -41,6 +49,7 @@ import {
 } from './index';
 import pointsVectors from '../test-vectors/points.json';
 import streakVectors from '../test-vectors/streak.json';
+import dailyStreakVectors from '../test-vectors/daily-streak.json';
 import questTimeVectors from '../test-vectors/quests-time.json';
 import questVectors from '../test-vectors/quests.json';
 import unlockVectors from '../test-vectors/unlocks.json';
@@ -113,6 +122,41 @@ run(streakVectors, {
       }
     }
     return { events, final: state };
+  },
+});
+
+run(dailyStreakVectors, {
+  dayStreakMoment: (i: DayStreakEvent) => dayStreakMoment(i),
+  backfillDailyStreak: (i: { days: string[]; today: string }) => backfillDailyStreak(i),
+  dailyStreakSequence: (i: { initial: DailyStreakState; steps: Array<Record<string, any>> }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    let s = i.initial;
+    const events: unknown[] = [];
+    for (const step of i.steps) {
+      const out: unknown[] = [];
+      if (step.op === 'play' || step.op === 'play_at') {
+        const r = recordDayPlayed(s, step.op === 'play' ? (step.day as string) : dayKey(step.at as string));
+        s = r.state;
+        out.push(...r.events);
+      } else if (step.op === 'play_days') {
+        for (let k = 0; k < (step.count as number); k++) {
+          const r = recordDayPlayed(s, addDays(step.from as string, k));
+          s = r.state;
+          out.push(...r.events);
+        }
+      } else if (step.op === 'rollover') {
+        const r = rolloverDays(s, step.today as string);
+        s = r.state;
+        out.push(...r.events);
+      } else if (step.op === 'buy_freeze') {
+        const r = buyFreeze({ ...initialStreak(), freezes: s.freezes });
+        if (r.ok) {
+          s = { ...s, freezes: r.state.freezes };
+          out.push({ kind: 'bought' });
+        } else out.push({ kind: 'rejected', reason: r.reason });
+      }
+      if (step.quiet !== true) events.push(...out);
+    }
+    return { events, final: s };
   },
 });
 

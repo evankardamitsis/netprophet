@@ -115,6 +115,11 @@ export const cosmetics = {
     grassLight: '#68B84A',
     grassPlate: '#2E7D3A',
     grassPlateLight: '#3E9244',
+    /** «Μήνας» (30 days in a row) and «Εκατό» (100), the daily σερί's Frames: drawn from app 1.0.1 */
+    monthRing: '#5FB3A1',
+    monthRingDeep: '#2E6F62',
+    hundredRing: '#E6E8EC',
+    hundredRingDeep: '#8E96A3',
   },
   /** shirt and racket colours of the kits */
   kit: {

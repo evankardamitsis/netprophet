@@ -1,0 +1,1646 @@
+{
+ "suite": "daily-streak",
+ "version": 1,
+ "notes": "The daily σερί (founder, 18 Nov 2026): days in a row with a match vote or the day's quiz finished, Athens days. fn dailyStreakSequence: steps play {day}, play_at {at: instant, the day is its Athens day}, play_days {from, count: consecutive days}, rollover {today: closes the days before it}, buy_freeze; a step with quiet: true leaves its events out. Events: played {day, current, milestone, newBest, freezeGranted, record}, same_day, frozen {day, freezeUsed, current, left}, broken {day, lostStreak, best}, bought, rejected. A freeze covers one missed day (free first), the number stays; one free freeze at day 3 and on every 7th day, only into a free slot (max 2). Milestones 3, 7, 10, 30, 50, 100. fn dayStreakMoment: the streakMoment rule on a played day. fn backfillDailyStreak: the starting σερί from real days (ending today or yesterday) and the longest run as the ΠΡ. SQL: core.day_streak_play, core.day_streak_rollover, core.day_streak_moment, core.day_streak_backfill (pgTAP 182).",
+ "groups": [
+  {
+   "fn": "dailyStreakSequence",
+   "cases": [
+    {
+     "name": "three days in a row: +1 each day, milestone 3 and the first free freeze",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play",
+        "day": "2026-11-18"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-19"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-20"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-18",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-19",
+        "current": 2,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-20",
+        "current": 3,
+        "milestone": 3,
+        "newBest": true,
+        "freezeGranted": true,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 3,
+       "best": 3,
+       "lastPlayed": "2026-11-20",
+       "through": "2026-11-20",
+       "freezes": [
+        "free"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "a second action the same day changes nothing (vote and quiz, or two votes)",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play",
+        "day": "2026-11-18"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-18"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-18",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "same_day",
+        "day": "2026-11-18"
+       }
+      ],
+      "final": {
+       "current": 1,
+       "best": 1,
+       "lastPlayed": "2026-11-18",
+       "through": "2026-11-18",
+       "freezes": [],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "Athens midnight: 23:59 and 00:01 are two days (UTC+2 in winter)",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_at",
+        "at": "2026-11-18T21:59:00Z"
+       },
+       {
+        "op": "play_at",
+        "at": "2026-11-18T22:01:00Z"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-18",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-19",
+        "current": 2,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 2,
+       "best": 2,
+       "lastPlayed": "2026-11-19",
+       "through": "2026-11-19",
+       "freezes": [],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "Athens midnight in summer is 21:00Z (UTC+3)",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_at",
+        "at": "2026-07-01T20:59:00Z"
+       },
+       {
+        "op": "play_at",
+        "at": "2026-07-01T21:01:00Z"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-07-01",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-07-02",
+        "current": 2,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 2,
+       "best": 2,
+       "lastPlayed": "2026-07-02",
+       "through": "2026-07-02",
+       "freezes": [],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "the DST night (25 Oct 2026 has 25 hours): 00:30 and 23:30 Athens are the same day",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_at",
+        "at": "2026-10-24T21:30:00Z"
+       },
+       {
+        "op": "play_at",
+        "at": "2026-10-25T21:30:00Z"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-10-25",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "same_day",
+        "day": "2026-10-25"
+       }
+      ],
+      "final": {
+       "current": 1,
+       "best": 1,
+       "lastPlayed": "2026-10-25",
+       "through": "2026-10-25",
+       "freezes": [],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "a fully missed day without a freeze breaks it; the next day starts at 1",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_days",
+        "from": "2026-11-10",
+        "count": 2
+       },
+       {
+        "op": "rollover",
+        "today": "2026-11-13"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-13"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-10",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-11",
+        "current": 2,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "broken",
+        "day": "2026-11-12",
+        "lostStreak": 2,
+        "best": 2
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-13",
+        "current": 1,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 1,
+       "best": 2,
+       "lastPlayed": "2026-11-13",
+       "through": "2026-11-13",
+       "freezes": [],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "the day-3 freeze covers the next missed day, the one after breaks",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_days",
+        "from": "2026-11-10",
+        "count": 4
+       },
+       {
+        "op": "rollover",
+        "today": "2026-11-15"
+       },
+       {
+        "op": "rollover",
+        "today": "2026-11-16"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-16"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-10",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-11",
+        "current": 2,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-12",
+        "current": 3,
+        "milestone": 3,
+        "newBest": true,
+        "freezeGranted": true,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-13",
+        "current": 4,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "frozen",
+        "day": "2026-11-14",
+        "freezeUsed": "free",
+        "current": 4,
+        "left": 0
+       },
+       {
+        "kind": "broken",
+        "day": "2026-11-15",
+        "lostStreak": 4,
+        "best": 4
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-16",
+        "current": 1,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 1,
+       "best": 4,
+       "lastPlayed": "2026-11-16",
+       "through": "2026-11-16",
+       "freezes": [],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "a missed day with a freeze: the freeze covers it, the number stays, the next day is +1",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [
+        "paid"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_days",
+        "from": "2026-11-10",
+        "count": 2
+       },
+       {
+        "op": "rollover",
+        "today": "2026-11-13"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-13"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-10",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-11",
+        "current": 2,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "frozen",
+        "day": "2026-11-12",
+        "freezeUsed": "paid",
+        "current": 2,
+        "left": 0
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-13",
+        "current": 3,
+        "milestone": 3,
+        "newBest": true,
+        "freezeGranted": true,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 3,
+       "best": 3,
+       "lastPlayed": "2026-11-13",
+       "through": "2026-11-13",
+       "freezes": [
+        "free"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "the rollover is idempotent: the same day is covered once and one freeze is spent",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [
+        "free",
+        "paid"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play",
+        "day": "2026-11-10"
+       },
+       {
+        "op": "rollover",
+        "today": "2026-11-12"
+       },
+       {
+        "op": "rollover",
+        "today": "2026-11-12"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-10",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "frozen",
+        "day": "2026-11-11",
+        "freezeUsed": "free",
+        "current": 1,
+        "left": 1
+       }
+      ],
+      "final": {
+       "current": 1,
+       "best": 1,
+       "lastPlayed": "2026-11-10",
+       "through": "2026-11-11",
+       "freezes": [
+        "paid"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "a free freeze is spent before a paid one",
+     "input": {
+      "initial": {
+       "current": 5,
+       "best": 5,
+       "lastPlayed": "2026-11-10",
+       "through": "2026-11-10",
+       "freezes": [
+        "paid",
+        "free"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "rollover",
+        "today": "2026-11-12"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "frozen",
+        "day": "2026-11-11",
+        "freezeUsed": "free",
+        "current": 5,
+        "left": 1
+       }
+      ],
+      "final": {
+       "current": 5,
+       "best": 5,
+       "lastPlayed": "2026-11-10",
+       "through": "2026-11-11",
+       "freezes": [
+        "paid"
+       ],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "two missed days and one freeze: the first is covered, the second breaks",
+     "input": {
+      "initial": {
+       "current": 6,
+       "best": 6,
+       "lastPlayed": "2026-11-10",
+       "through": "2026-11-10",
+       "freezes": [
+        "free"
+       ],
+       "recordRun": true
+      },
+      "steps": [
+       {
+        "op": "rollover",
+        "today": "2026-11-13"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "frozen",
+        "day": "2026-11-11",
+        "freezeUsed": "free",
+        "current": 6,
+        "left": 0
+       },
+       {
+        "kind": "broken",
+        "day": "2026-11-12",
+        "lostStreak": 6,
+        "best": 6
+       }
+      ],
+      "final": {
+       "current": 0,
+       "best": 6,
+       "lastPlayed": "2026-11-10",
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "no nightly run: the next action rolls the missed days over first",
+     "input": {
+      "initial": {
+       "current": 4,
+       "best": 9,
+       "lastPlayed": "2026-11-10",
+       "through": "2026-11-10",
+       "freezes": [
+        "free"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play",
+        "day": "2026-11-12"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "frozen",
+        "day": "2026-11-11",
+        "freezeUsed": "free",
+        "current": 4,
+        "left": 0
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-12",
+        "current": 5,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 5,
+       "best": 9,
+       "lastPlayed": "2026-11-12",
+       "through": "2026-11-12",
+       "freezes": [],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "played yesterday, today is +1 (a wrong vote has no say here)",
+     "input": {
+      "initial": {
+       "current": 2,
+       "best": 2,
+       "lastPlayed": "2026-11-17",
+       "through": "2026-11-17",
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "rollover",
+        "today": "2026-11-18"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-18"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-18",
+        "current": 3,
+        "milestone": 3,
+        "newBest": true,
+        "freezeGranted": true,
+        "record": 3
+       }
+      ],
+      "final": {
+       "current": 3,
+       "best": 3,
+       "lastPlayed": "2026-11-18",
+       "through": "2026-11-18",
+       "freezes": [
+        "free"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "a σερί of 0 has nothing to roll over and spends no freeze",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [
+        "free"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "rollover",
+        "today": "2026-11-18"
+       }
+      ]
+     },
+     "expected": {
+      "events": [],
+      "final": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [
+        "free"
+       ],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "a freeze on day 3 and on every 7th day, into a free slot only (max 2)",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_days",
+        "from": "2026-11-01",
+        "count": 14
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-01",
+        "current": 1,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-02",
+        "current": 2,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-03",
+        "current": 3,
+        "milestone": 3,
+        "newBest": true,
+        "freezeGranted": true,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-04",
+        "current": 4,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-05",
+        "current": 5,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-06",
+        "current": 6,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-07",
+        "current": 7,
+        "milestone": 7,
+        "newBest": true,
+        "freezeGranted": true,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-08",
+        "current": 8,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-09",
+        "current": 9,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-10",
+        "current": 10,
+        "milestone": 10,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-11",
+        "current": 11,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-12",
+        "current": 12,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-13",
+        "current": 13,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-14",
+        "current": 14,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 14,
+       "best": 14,
+       "lastPlayed": "2026-11-14",
+       "through": "2026-11-14",
+       "freezes": [
+        "free",
+        "free"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "both slots full: day 7 gives nothing extra and nothing waits",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [
+        "paid",
+        "paid"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_days",
+        "from": "2026-11-01",
+        "count": 6,
+        "quiet": true
+       },
+       {
+        "op": "play",
+        "day": "2026-11-07"
+       },
+       {
+        "op": "buy_freeze"
+       },
+       {
+        "op": "rollover",
+        "today": "2026-11-09"
+       },
+       {
+        "op": "play",
+        "day": "2026-11-09"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-07",
+        "current": 7,
+        "milestone": 7,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "rejected",
+        "reason": "max_freezes"
+       },
+       {
+        "kind": "frozen",
+        "day": "2026-11-08",
+        "freezeUsed": "paid",
+        "current": 7,
+        "left": 1
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-09",
+        "current": 8,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 8,
+       "best": 8,
+       "lastPlayed": "2026-11-09",
+       "through": "2026-11-09",
+       "freezes": [
+        "paid"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "buying a freeze with a free slot",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [
+        "free"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "buy_freeze"
+       },
+       {
+        "op": "buy_freeze"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "bought"
+       },
+       {
+        "kind": "rejected",
+        "reason": "max_freezes"
+       }
+      ],
+      "final": {
+       "current": 0,
+       "best": 0,
+       "lastPlayed": null,
+       "through": null,
+       "freezes": [
+        "free",
+        "paid"
+       ],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "milestones 10, 30, 50 and 100 days",
+     "input": {
+      "initial": {
+       "current": 9,
+       "best": 9,
+       "lastPlayed": "2026-01-09",
+       "through": "2026-01-09",
+       "freezes": [
+        "free",
+        "free"
+       ],
+       "recordRun": true
+      },
+      "steps": [
+       {
+        "op": "play",
+        "day": "2026-01-10"
+       },
+       {
+        "op": "play_days",
+        "from": "2026-01-11",
+        "count": 19,
+        "quiet": true
+       },
+       {
+        "op": "play",
+        "day": "2026-01-30"
+       },
+       {
+        "op": "play_days",
+        "from": "2026-01-31",
+        "count": 19,
+        "quiet": true
+       },
+       {
+        "op": "play",
+        "day": "2026-02-19"
+       },
+       {
+        "op": "play_days",
+        "from": "2026-02-20",
+        "count": 49,
+        "quiet": true
+       },
+       {
+        "op": "play",
+        "day": "2026-04-10"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-01-10",
+        "current": 10,
+        "milestone": 10,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-01-30",
+        "current": 30,
+        "milestone": 30,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-02-19",
+        "current": 50,
+        "milestone": 50,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-04-10",
+        "current": 100,
+        "milestone": 100,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 100,
+       "best": 100,
+       "lastPlayed": "2026-04-10",
+       "through": "2026-04-10",
+       "freezes": [
+        "free",
+        "free"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "coming back to 3 after a break gives a freeze into the free slot (a moment again); 7 with both slots full gives nothing",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 12,
+       "lastPlayed": "2026-11-01",
+       "through": null,
+       "freezes": [
+        "paid"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_days",
+        "from": "2026-11-05",
+        "count": 7
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-05",
+        "current": 1,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-06",
+        "current": 2,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-07",
+        "current": 3,
+        "milestone": 3,
+        "newBest": false,
+        "freezeGranted": true,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-08",
+        "current": 4,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-09",
+        "current": 5,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-10",
+        "current": 6,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-11",
+        "current": 7,
+        "milestone": 7,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 7,
+       "best": 12,
+       "lastPlayed": "2026-11-11",
+       "through": "2026-11-11",
+       "freezes": [
+        "paid",
+        "free"
+       ],
+       "recordRun": false
+      }
+     }
+    },
+    {
+     "name": "Νέο ρεκόρ once per run, on the first day past the old ΠΡ",
+     "input": {
+      "initial": {
+       "current": 0,
+       "best": 4,
+       "lastPlayed": "2026-11-01",
+       "through": null,
+       "freezes": [
+        "free",
+        "free"
+       ],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play_days",
+        "from": "2026-11-05",
+        "count": 6
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "played",
+        "day": "2026-11-05",
+        "current": 1,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-06",
+        "current": 2,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-07",
+        "current": 3,
+        "milestone": 3,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-08",
+        "current": 4,
+        "milestone": null,
+        "newBest": false,
+        "freezeGranted": false,
+        "record": null
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-09",
+        "current": 5,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": 5
+       },
+       {
+        "kind": "played",
+        "day": "2026-11-10",
+        "current": 6,
+        "milestone": null,
+        "newBest": true,
+        "freezeGranted": false,
+        "record": null
+       }
+      ],
+      "final": {
+       "current": 6,
+       "best": 6,
+       "lastPlayed": "2026-11-10",
+       "through": "2026-11-10",
+       "freezes": [
+        "free",
+        "free"
+       ],
+       "recordRun": true
+      }
+     }
+    },
+    {
+     "name": "an older day than the last one played is ignored",
+     "input": {
+      "initial": {
+       "current": 3,
+       "best": 3,
+       "lastPlayed": "2026-11-18",
+       "through": "2026-11-18",
+       "freezes": [],
+       "recordRun": false
+      },
+      "steps": [
+       {
+        "op": "play",
+        "day": "2026-11-17"
+       }
+      ]
+     },
+     "expected": {
+      "events": [
+       {
+        "kind": "same_day",
+        "day": "2026-11-17"
+       }
+      ],
+      "final": {
+       "current": 3,
+       "best": 3,
+       "lastPlayed": "2026-11-18",
+       "through": "2026-11-18",
+       "freezes": [],
+       "recordRun": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "fn": "dayStreakMoment",
+   "cases": [
+    {
+     "name": "milestone 30, first time",
+     "input": {
+      "kind": "played",
+      "day": "2026-11-18",
+      "current": 30,
+      "milestone": 30,
+      "newBest": true,
+      "freezeGranted": false,
+      "record": null
+     },
+     "expected": {
+      "type": "milestone",
+      "streak": 30
+     }
+    },
+    {
+     "name": "milestone 7 again with a freeze",
+     "input": {
+      "kind": "played",
+      "day": "2026-11-18",
+      "current": 7,
+      "milestone": 7,
+      "newBest": false,
+      "freezeGranted": true,
+      "record": null
+     },
+     "expected": {
+      "type": "milestone",
+      "streak": 7
+     }
+    },
+    {
+     "name": "milestone 10 again, nothing given",
+     "input": {
+      "kind": "played",
+      "day": "2026-11-18",
+      "current": 10,
+      "milestone": 10,
+      "newBest": false,
+      "freezeGranted": false,
+      "record": null
+     },
+     "expected": null
+    },
+    {
+     "name": "a record day",
+     "input": {
+      "kind": "played",
+      "day": "2026-11-18",
+      "current": 13,
+      "milestone": null,
+      "newBest": true,
+      "freezeGranted": false,
+      "record": 13
+     },
+     "expected": {
+      "type": "record",
+      "streak": 13
+     }
+    },
+    {
+     "name": "a plain day",
+     "input": {
+      "kind": "played",
+      "day": "2026-11-18",
+      "current": 4,
+      "milestone": null,
+      "newBest": true,
+      "freezeGranted": false,
+      "record": null
+     },
+     "expected": null
+    },
+    {
+     "name": "a frozen day",
+     "input": {
+      "kind": "frozen",
+      "day": "2026-11-18",
+      "freezeUsed": "free",
+      "current": 4,
+      "left": 0
+     },
+     "expected": null
+    }
+   ]
+  },
+  {
+   "fn": "backfillDailyStreak",
+   "cases": [
+    {
+     "name": "no days",
+     "input": {
+      "days": [],
+      "today": "2026-11-18"
+     },
+     "expected": {
+      "current": 0,
+      "best": 0,
+      "lastPlayed": null,
+      "recordRun": false
+     }
+    },
+    {
+     "name": "a run ending today",
+     "input": {
+      "days": [
+       "2026-11-16",
+       "2026-11-17",
+       "2026-11-18"
+      ],
+      "today": "2026-11-18"
+     },
+     "expected": {
+      "current": 3,
+      "best": 3,
+      "lastPlayed": "2026-11-18",
+      "recordRun": true
+     }
+    },
+    {
+     "name": "a run ending yesterday still counts",
+     "input": {
+      "days": [
+       "2026-11-15",
+       "2026-11-16",
+       "2026-11-17"
+      ],
+      "today": "2026-11-18"
+     },
+     "expected": {
+      "current": 3,
+      "best": 3,
+      "lastPlayed": "2026-11-17",
+      "recordRun": true
+     }
+    },
+    {
+     "name": "a run ending two days ago is 0, the ΠΡ stays",
+     "input": {
+      "days": [
+       "2026-11-14",
+       "2026-11-15",
+       "2026-11-16"
+      ],
+      "today": "2026-11-18"
+     },
+     "expected": {
+      "current": 0,
+      "best": 3,
+      "lastPlayed": "2026-11-16",
+      "recordRun": false
+     }
+    },
+    {
+     "name": "the ΠΡ is the longest run ever, duplicates and order do not matter",
+     "input": {
+      "days": [
+       "2026-11-18",
+       "2026-10-01",
+       "2026-10-02",
+       "2026-10-03",
+       "2026-10-04",
+       "2026-11-17",
+       "2026-10-02"
+      ],
+      "today": "2026-11-18"
+     },
+     "expected": {
+      "current": 2,
+      "best": 4,
+      "lastPlayed": "2026-11-18",
+      "recordRun": false
+     }
+    },
+    {
+     "name": "across the DST change and a month end",
+     "input": {
+      "days": [
+       "2026-10-24",
+       "2026-10-25",
+       "2026-10-26",
+       "2026-10-31",
+       "2026-11-01"
+      ],
+      "today": "2026-11-01"
+     },
+     "expected": {
+      "current": 2,
+      "best": 3,
+      "lastPlayed": "2026-11-01",
+      "recordRun": false
+     }
+    },
+    {
+     "name": "a future day is ignored",
+     "input": {
+      "days": [
+       "2026-11-18",
+       "2026-11-19"
+      ],
+      "today": "2026-11-18"
+     },
+     "expected": {
+      "current": 1,
+      "best": 1,
+      "lastPlayed": "2026-11-18",
+      "recordRun": true
+     }
+    }
+   ]
+  }
+ ]
+}
