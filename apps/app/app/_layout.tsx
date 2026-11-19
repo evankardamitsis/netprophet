@@ -16,6 +16,7 @@ import { prepareStore } from "../src/lib/store";
 import { api, isLive } from "../src/lib/supabase";
 import { colors } from "../src/theme";
 import { initSounds } from "../src/lib/sound";
+import { watchOtaUpdates } from "../src/lib/otaUpdates";
 import { Loading } from "../src/components/Loading";
 import { LocaleProvider, syncProfileLocale } from "../src/lib/LocaleProvider";
 import { useLocale } from "../src/i18n";
@@ -43,6 +44,8 @@ export default function RootLayout() {
   useEffect(() => {
     void initSounds();
   }, []);
+  // over-the-air updates: a check on coming back to the app, applied at the next cold start, never mid-session
+  useEffect(() => watchOtaUpdates(), []);
   useEffect(() => {
     const id = setTimeout(() => setMinDone(true), LOADING_MIN_MS);
     return () => clearTimeout(id);
