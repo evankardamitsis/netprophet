@@ -40,7 +40,7 @@ select is((select title || '|' || body from core.ntext_for(:'el'::uuid, 'results
 select is((select title || '|' || body from core.ntext_for(:'en'::uuid, 'results_many', '{"n": 3}')),
           '3 results are in|How many did you call? Come and see.', 'English profile: English');
 select is((select title || '|' || body from core.ntext_for(:'en'::uuid, 'streak_saved', '{"n": 9, "left": 2}')),
-          'Insurance saved your streak|You didn''t play yesterday, your streak stays at 9. You have 2 Insurance left.', 'English: the streak');
+          'A Streak Freeze saved your streak|You didn''t play yesterday, your streak stays at 9. You have 2 Streak Freezes left.', 'English: the streak');
 
 -- ── values fill in both, the English stand-ins in English only ──
 select is((select title || '|' || body from core.ntext_in('schedule_new',

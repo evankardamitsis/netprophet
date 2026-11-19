@@ -63,9 +63,9 @@ update core.notification_texts n set title_en = v.title_en, body_en = v.body_en
     ('quiz_nudge_rest', 'You''ve done {done} of {total}', 'You got the +30. Finish the rest too.'),
     ('streak_risk', 'Your streak is at risk', '{n} days in a row. One vote or the quiz keeps it alive.'),
     ('streak_risk_one', 'Your streak is at risk', 'You started a streak yesterday. Play today to make it 2.'),
-    ('streak_saved', 'Insurance saved your streak', 'You didn''t play yesterday, your streak stays at {n}. You have {left} Insurance left.'),
-    ('streak_saved_one', 'Insurance saved your streak', 'You didn''t play yesterday, your streak stays at {n}. You have 1 Insurance left.'),
-    ('streak_saved_none', 'Insurance saved your streak', 'You didn''t play yesterday, your streak stays at {n}. No Insurance left.'),
+    ('streak_saved', 'A Streak Freeze saved your streak', 'You didn''t play yesterday, your streak stays at {n}. You have {left} Streak Freezes left.'),
+    ('streak_saved_one', 'A Streak Freeze saved your streak', 'You didn''t play yesterday, your streak stays at {n}. You have 1 Streak Freeze left.'),
+    ('streak_saved_none', 'A Streak Freeze saved your streak', 'You didn''t play yesterday, your streak stays at {n}. No Streak Freezes left.'),
     ('streak_lost', 'Your streak broke at {n}', 'Start a new one today. Your best is {best}.'),
     ('streak_lost_one', 'Your streak broke', 'Start a new one today. Your best is {best}.')
   ) v(key, title_en, body_en)
