@@ -665,7 +665,7 @@ export type Database = {
         Returns: Json;
       };
       admin_update_notification_text: {
-        Args: { p_key: string; p_title: string; p_body: string };
+        Args: { p_key: string; p_title: string; p_body: string; p_title_en?: string; p_body_en?: string };
         Returns: Json;
       };
       admin_update_player: {

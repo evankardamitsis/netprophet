@@ -725,6 +725,9 @@ export const el = {
     /** the winners' email when the month closes (2 Nov 2026), on unless switched off */
     medalEmail: 'Email για τα μετάλλια',
     medalEmailLine: 'Όταν μπαίνεις στους 3 πρώτους της Κατηγορίας σου.',
+    /** the game emails switch (notification_prefs.game_email, same key as the unsubscribe link), on unless switched off */
+    gameEmail: 'Emails από το NetProphet',
+    gameEmailLine: 'Η εβδομάδα σου, τα νέα του παιχνιδιού και προσφορές. Τα emails για τον λογαριασμό σου έρχονται πάντα.',
     /** Pro pushes (21 Oct), saved on the account, on unless switched off; never 23:00 to 08:00 */
     tournamentsPush: 'Τα τουρνουά σου',
     tournamentsPushLine: 'Η κλήρωση μόλις βγει, η μέρα και η ώρα σου, κάθε αλλαγή και οι δηλώσεις που κλείνουν. Ποτέ από τις 23:00 ως τις 08:00.',

@@ -20,3 +20,22 @@ describe('app.json for Google Play', () => {
     expect(asked.filter((p) => sensitive.test(p))).toEqual([]);
   });
 });
+
+// Over-the-air updates (docs/v2/ota-updates.md): the URL is this project's, a build only takes updates published for
+// its own version, and the UIScene plugin (iOS 27 launch crash) stays in the list.
+describe('app.json for over-the-air updates', () => {
+  it('points at the EAS Update URL of this project', () => {
+    expect(app.updates.enabled).toBe(true);
+    expect(app.updates.url).toBe(`https://u.expo.dev/${app.extra.eas.projectId}`);
+  });
+  it('never waits for the network at launch', () => {
+    expect(app.updates.checkAutomatically).toBe('ON_LOAD');
+    expect(app.updates.fallbackToCacheTimeout).toBe(0);
+  });
+  it('ties updates to the app version', () => {
+    expect(app.runtimeVersion).toEqual({ policy: 'appVersion' });
+  });
+  it('keeps the scene life cycle plugin', () => {
+    expect(app.plugins).toContain('./plugins/withSceneLifecycle');
+  });
+});

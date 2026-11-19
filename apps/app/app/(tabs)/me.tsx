@@ -1057,6 +1057,8 @@ function PushRows({ pro }: { pro: boolean }) {
     { key: 'reactions', title: t.me.reactionsPush, line: t.me.reactionsPushLine },
     // an email, not a push, but the same account switches (2 Nov 2026)
     { key: 'medal_email', title: t.me.medalEmail, line: t.me.medalEmailLine },
+    // the game emails (weekly summary, series, streak): the key the unsubscribe link writes too (19 Nov 2026)
+    { key: 'game_email', title: t.me.gameEmail, line: t.me.gameEmailLine },
   ];
   return (
     <>

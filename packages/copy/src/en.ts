@@ -605,6 +605,8 @@ export const en: Copy = {
     followedPushLine: "The draw, tomorrow's schedule, the semifinals and the finals. Never from 23:00 to 08:00.",
     medalEmail: 'Medal emails',
     medalEmailLine: 'When you finish in the top 3 of your Ladder.',
+    gameEmail: 'Emails from NetProphet',
+    gameEmailLine: 'Your week, game news and offers. Emails about your account always arrive.',
     tournamentsPush: 'Your tournaments',
     tournamentsPushLine: 'The draw as soon as it is out, your day and time, every change and entries about to close. Never from 23:00 to 08:00.',
     remindersPush: 'Before your match',

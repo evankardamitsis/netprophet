@@ -9,6 +9,15 @@
     "backgroundColor": "#F3F5EE",
     "icon": "./assets/icon.png",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/7136d3b3-4932-48d5-a8f6-64b527e13d2a",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "ios": {
       "bundleIdentifier": "gr.monadlabs.netprophet",
       "supportsTablet": false,
