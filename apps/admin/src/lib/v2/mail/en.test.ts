@@ -109,6 +109,7 @@ describe('the emails in English', () => {
   it('the footer, the Unsubscribe link and the account deletion page are in English', () => {
     const m = render('welcome');
     expect(m.html).toContain('Unsubscribe');
+    expect(m.unsubscribeUrl).toBe(`https://www.netprophetapp.com/email/unsubscribe?t=${TOKEN}&l=en`);
     expect(m.html).not.toContain('Διαγραφή');
     expect(m.html).toContain('/en/privacy');
     expect(m.html).toContain('You got this email because you made a NetProphet account.');
@@ -119,7 +120,7 @@ describe('the emails in English', () => {
     expect(euro(8.99, 'en')).toBe('€8.99');
     expect(dayMonth(ENDS, 'en')).toBe('24 November');
     expect(dayMonth('2026-12-31T23:30:00Z', 'en')).toBe('1 January');
-    expect(planPrice({ price: 49.99, renews: 69.99, period: 'year' }, 'en')?.full).toBe('€49.99 for the first year, then €69.99 a year');
+    expect(planPrice({ price: 49.99, renews: 69.99, period: 'year' }, 'en')?.full).toBe('€49.99 for the first year, €69.99 a year after that');
     expect(planPrice({ price: 8.99, period: 'month' }, 'en')?.full).toBe('€8.99 a month');
     expect(render('day7_week', CASES[16]![1]).html).toContain('1,210');
     expect(render('away30', CASES[23]![1]).text).toContain('1,312 matches have been played since.');
@@ -127,7 +128,7 @@ describe('the emails in English', () => {
 
   it('pro: the dates, the prices and the store in English', () => {
     expect(render('pro_welcome', { group: 'pro', payload: PRO }).text).toContain(
-      'Your free week ends on 24 November. Then €49.99 for the first year, then €69.99 a year.',
+      'Your free week ends on 24 November. Then €49.99 for the first year, €69.99 a year after that.',
     );
     const day5 = render('pro_trial_day5', { group: 'pro', payload: { ...PRO, price: 8.99, renews: null, period: 'month' } });
     expect(day5.subject).toBe('2 more days free');

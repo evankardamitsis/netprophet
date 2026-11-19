@@ -44,7 +44,7 @@ const date = (v: unknown, lang: EmailLang = 'el') => (typeof v === 'string' && !
 
 /**
  * what the plan costs from the first charge: «8,99€ τον μήνα», «49,99€ τον πρώτο χρόνο, 69,99€ από εκεί και πέρα»;
- * in English «€8.99 a month», «€49.99 for the first year, then €69.99 a year»
+ * in English «€8.99 a month», «€49.99 for the first year, €69.99 a year after that»
  */
 export function planPrice(p: ProPayload, lang: EmailLang = 'el'): { first: string; full: string } | null {
   const price = num(p.price);
@@ -58,7 +58,7 @@ export function planPrice(p: ProPayload, lang: EmailLang = 'el'): { first: strin
   const renews = num(p.renews);
   if (renews !== null && renews !== price) {
     return en
-      ? { first: `${eur(price)} for the first year`, full: `${eur(price)} for the first year, then ${eur(renews)} a year` }
+      ? { first: `${eur(price)} for the first year`, full: `${eur(price)} for the first year, ${eur(renews)} a year after that` }
       : { first: `${eur(price)} τον πρώτο χρόνο`, full: `${eur(price)} τον πρώτο χρόνο, ${eur(renews)} από εκεί και πέρα` };
   }
   const line = en ? `${eur(price)} a year` : `${eur(price)} τον χρόνο`;

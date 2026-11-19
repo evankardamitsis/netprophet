@@ -27,7 +27,9 @@ export interface Mail {
 }
 
 export const OPEN_URL = `${SITE_URL}/open`;
-export const unsubscribeUrl = (token: string) => `${SITE_URL}/email/unsubscribe?t=${encodeURIComponent(token)}`;
+/** the one-click unsubscribe page; l=en keeps it in English (apps/site app/email/unsubscribe) */
+export const unsubscribeUrl = (token: string, lang: EmailLang = 'el') =>
+  `${SITE_URL}/email/unsubscribe?t=${encodeURIComponent(token)}${lang === 'en' ? '&l=en' : ''}`;
 
 /** the row's language: English only when it says so, Greek otherwise (an old row, a test) */
 export const langOf = (e: DueEmail): EmailLang => (e.lang === 'en' ? 'en' : 'el');
@@ -66,7 +68,7 @@ export interface Parts {
 }
 
 export function build(e: DueEmail, p: Parts): Mail {
-  const unsub = e.group !== 'account' && e.unsubscribe_token ? unsubscribeUrl(e.unsubscribe_token) : undefined;
+  const unsub = e.group !== 'account' && e.unsubscribe_token ? unsubscribeUrl(e.unsubscribe_token, langOf(e)) : undefined;
   const { html, text } = renderEmail({
     lang: langOf(e),
     subject: p.subject,
