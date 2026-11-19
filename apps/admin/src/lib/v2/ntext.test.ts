@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkText, fillText, placeholderNames, problemFromError } from './ntext';
+import { checkEnglish, checkText, fillText, placeholderNames, problemFromError } from './ntext';
 
 // the same cases as supabase-v2/tests/120_notification_texts.test.sql
 describe('fillText', () => {
@@ -37,5 +37,32 @@ describe('checkText', () => {
     expect(problemFromError('unknown_placeholder: count')).toEqual({ code: 'unknown_placeholder', name: 'count' });
     expect(problemFromError('em_dash')).toEqual({ code: 'em_dash' });
     expect(problemFromError('forbidden')).toBeNull();
+  });
+});
+
+// the English text (supabase-v2/tests/186_i18n_pushes.test.sql)
+describe('checkEnglish', () => {
+  const allowed = ['n'];
+  it('passes a good text, and no English at all', () => {
+    expect(checkEnglish('{n} results are in', 'Come and see.', allowed)).toBeNull();
+    expect(checkEnglish('  ', '', allowed)).toBeNull();
+  });
+  it('is both or neither', () => {
+    expect(checkEnglish('Only a title', '', allowed)).toEqual({ code: 'en_incomplete' });
+    expect(checkEnglish('', 'Only a body', allowed)).toEqual({ code: 'en_incomplete' });
+  });
+  it('refuses what the database refuses, with its own length codes', () => {
+    expect(checkEnglish('{count} results', 'x', allowed)).toEqual({ code: 'unknown_placeholder', name: 'count' });
+    expect(checkEnglish('a'.repeat(61), 'x', allowed)).toEqual({ code: 'title_en_too_long' });
+    expect(checkEnglish('x', 'a'.repeat(181), allowed)).toEqual({ code: 'body_en_too_long' });
+    expect(checkEnglish('A result \u2014 see', 'x', allowed)).toEqual({ code: 'em_dash' });
+  });
+  it('reads the English database errors', () => {
+    expect(problemFromError('en_incomplete')).toEqual({ code: 'en_incomplete' });
+    expect(problemFromError('title_en_too_long')).toEqual({ code: 'title_en_too_long' });
+    expect(problemFromError('title_too_long')).toEqual({ code: 'title_too_long' });
+  });
+  it('fills English the same way', () => {
+    expect(fillText('{time} · {tournament} · vs {opponent}', { time: '10:00', tournament: null, opponent: 'Παππάς' })).toBe('10:00 · vs Παππάς');
   });
 });
