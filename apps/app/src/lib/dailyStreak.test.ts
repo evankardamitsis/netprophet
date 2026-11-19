@@ -73,7 +73,7 @@ describe('the σερί sheet', () => {
     expect(v.week?.findIndex((c) => c.today)).toBe(3);
     expect(v.today).toBe('Σήμερα δεν έχεις παίξει ακόμα. Μία ψήφος ή το quiz και το κρατάς.');
     expect(v.freezes).toBe('Ασφάλειες: 1 από 2');
-    expect(v.frozenKey).toBe('Μπλε κύκλος: μέρα που την κάλυψε Ασφάλεια.');
+    expect(v.frozenKey).toBe('Κύκλος με ✓: μέρα που την κάλυψε Ασφάλεια.');
     // 12 → 14 is the next 7th day: a free Ασφάλεια (one slot is free)
     expect(v.next).toBe('Στις 14 μέρες: μία Ασφάλεια');
   });
@@ -99,7 +99,7 @@ describe('the σερί sheet', () => {
     expect(nextPrize(100, 2, new Set(), t)).toBeNull();
     // ownership unknown (the look not loaded): no Frame promised
     expect(nextPrize(6, 2, null, t)).toBeNull();
-    expect(nextPrize(6, 1, null, en)?.line).toBe('At 7 days: one Insurance');
+    expect(nextPrize(6, 1, null, en)?.line).toBe('At 7 days: a Streak Freeze');
   });
 
   it('the sample week keeps the five days before today, the third by an Ασφάλεια', () => {

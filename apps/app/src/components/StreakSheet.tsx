@@ -86,7 +86,10 @@ function Day({ cell, index }: { cell: WeekCell; index: number }) {
         pop,
       ]}
     >
-      <Text style={[styles.dayText, cell.state !== 'none' && styles.dayTextOn]}>{cell.letter}</Text>
+      {/* a covered day is a ring with ✓ (founder, 19 Nov: no blue, blue is the screen's one action) */}
+      <Text style={[styles.dayText, cell.state === 'played' && styles.dayTextOn, cell.state === 'frozen' && styles.dayTextFrozen]}>
+        {cell.state === 'frozen' ? '✓' : cell.letter}
+      </Text>
     </Animated.View>
   );
 }
@@ -102,10 +105,11 @@ const styles = StyleSheet.create({
   week: { flexDirection: 'row', gap: 8, justifyContent: 'center', marginVertical: 4 },
   day: { width: DAY, height: DAY, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(colors.paper, 0.12) },
   dayOn: { backgroundColor: colors.lime },
-  dayFrozen: { backgroundColor: colors.freezeDay },
+  dayFrozen: { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.lime },
   dayToday: { borderWidth: 2, borderColor: colors.paper },
   dayText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.mist },
   dayTextOn: { color: colors.ink },
+  dayTextFrozen: { color: colors.lime },
   line: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.mist, textAlign: 'center' },
   prize: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21, color: colors.paper, textAlign: 'center' },
   key: { fontFamily: fonts.bodySemi, fontSize: 12, lineHeight: 16, color: colors.muted, textAlign: 'center' },

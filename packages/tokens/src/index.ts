@@ -35,8 +35,6 @@ export const colors = {
   white: '#FFFFFF',
   /** the deeper lime among the celebration confetti */
   leaf: '#9BD05A',
-  /** a day of the daily σερί that an Ασφάλεια covered (the sheet under σερί, board 18 Nov): a soft blue, never an action */
-  freezeDay: '#9DB0FF',
   /** the logo's bouncing balls in their own colours (tennis is lime, football paper and ink) */
   padelBall: '#F2E14C',
   basketBall: '#E8742A',
