@@ -139,7 +139,7 @@ export interface FeedPostponedCard {
 export interface FeedSponsoredCard {
   kind: 'sponsored';
   id: string;
-  /** always «Χορηγούμενο» */
+  /** «Χορηγούμενο», «Sponsored» for an English profile */
   label: string;
   sponsor: string;
   title: string;
@@ -266,7 +266,7 @@ export interface LookItem {
   name_en: string;
   kind: LookKind;
   price_eur: number | null;
-  /** «Το κερδίζεις με 7 σωστές στη σειρά», for earned items */
+  /** «Το κερδίζεις με 7 σωστές στη σειρά», for earned items; in English for an English profile (Greek when it has none) */
   earn_rule: string | null;
   owned: boolean;
   source: string | null;
@@ -378,7 +378,7 @@ export interface MyResultCelebrationPayload {
   match_id: string;
   win: boolean;
   score: string | null;
-  /** «τον Π. Βλάχο» */
+  /** «τον Π. Βλάχο»; «Π. Βλάχος» for an English profile */
   opponent: string | null;
   year_wins: number;
   year_losses: number;
@@ -464,7 +464,7 @@ export interface Reactions {
   mine: string | null;
 }
 
-/** a line of «Πες μια καλή κουβέντα» in its three forms (the app picks by gender, plural for doubles) */
+/** a line of «Πες μια καλή κουβέντα» in its three forms (the app picks by gender, plural for doubles); English for an English profile */
 export interface KudoOption {
   key: string;
   forms: { m: string; f: string; plural: string };
@@ -1105,7 +1105,7 @@ export interface UpcomingTournament {
   logo?: string | null;
   venue: string | null;
   area_id: string | null;
-  /** the area's Greek name */
+  /** the area's name, in English for an English profile */
   area: string | null;
   surface: string | null;
   starts_on: string | null;
