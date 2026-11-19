@@ -34,6 +34,24 @@ describe('the questions on a held match', () => {
     expect(qs).toHaveLength(1);
     expect(reviewAnswers(qs, { ΣΑΝΙΔΑΣ: 'b' }, 'new')).toEqual([{ raw: 'ΣΑΝΙΔΑΣ', player_id: 'b' }]);
   });
+
+  it('a new player carries the name staff typed, empty fields keep the sheet spelling', () => {
+    const qs = reviewQuestions(
+      { side1: [{ raw: 'ΚΑΡΔΑΜΗΤΣΗΣ', first: '', surname: 'ΚΑΡΔΑΜΗΤΣΗΣ' }, { raw: 'ΚΑΡΔΑΜΗΤΣΗΣ', first: '', surname: 'ΚΑΡΔΑΜΗΤΣΗΣ' }], side2: [] } as never,
+      [
+        { raw: 'ΚΑΡΔΑΜΗΤΣΗΣ', slot: '1:0', candidates: [] },
+        { raw: 'ΚΑΡΔΑΜΗΤΣΗΣ', slot: '1:1', candidates: [] },
+      ] as never,
+    );
+    const keys = qs.map((q) => q.key);
+    expect(
+      reviewAnswers(qs, { [keys[0]!]: 'p1', [keys[1]!]: 'new' }, 'new', { [keys[1]!]: { first: ' Γιάννης ', surname: 'Καρδαμήτσης' } }),
+    ).toEqual([
+      { raw: 'ΚΑΡΔΑΜΗΤΣΗΣ', slot: '1:0', player_id: 'p1' },
+      { raw: 'ΚΑΡΔΑΜΗΤΣΗΣ', slot: '1:1', new: true, first: 'Γιάννης', surname: 'Καρδαμήτσης' },
+    ]);
+    expect(reviewAnswers(qs, { [keys[0]!]: 'new', [keys[1]!]: 'new' }, 'new', { [keys[0]!]: { first: '  ' } })[0]).toEqual({ raw: 'ΚΑΡΔΑΜΗΤΣΗΣ', slot: '1:0', new: true });
+  });
 });
 
 describe('held names that know their place (smart names, 18 Oct)', () => {

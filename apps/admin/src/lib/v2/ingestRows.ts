@@ -193,12 +193,23 @@ export function pairOptions(cands: ReviewCandidate[], max = 3): { a: ReviewCandi
     .map(({ a, b, together }) => ({ a, b, together }));
 }
 
-export type ReviewAnswer = { raw: string; slot?: string; player_id: string } | { raw: string; slot?: string; new: true };
+export type ReviewAnswer =
+  | { raw: string; slot?: string; player_id: string }
+  /** a new player; `first` / `surname` are the name staff typed (founder, 19 Nov), empty means the sheet's spelling */
+  | { raw: string; slot?: string; new: true; first?: string; surname?: string };
 
 /** one decision per question; `choice` holds a player id or `newKey` */
-export function reviewAnswers<U extends { raw: string; slot?: string }>(qs: ReviewQuestion<U>[], choice: Record<string, string>, newKey: string): ReviewAnswer[] {
+export function reviewAnswers<U extends { raw: string; slot?: string }>(
+  qs: ReviewQuestion<U>[],
+  choice: Record<string, string>,
+  newKey: string,
+  names: Record<string, { first?: string; surname?: string }> = {},
+): ReviewAnswer[] {
   return qs.map((q) => {
     const at = q.slot ? { slot: q.slot } : {};
-    return choice[q.key] === newKey ? { raw: q.u.raw, ...at, new: true as const } : { raw: q.u.raw, ...at, player_id: choice[q.key]! };
+    if (choice[q.key] !== newKey) return { raw: q.u.raw, ...at, player_id: choice[q.key]! };
+    const first = names[q.key]?.first?.trim();
+    const surname = names[q.key]?.surname?.trim();
+    return { raw: q.u.raw, ...at, new: true as const, ...(first ? { first } : {}), ...(surname ? { surname } : {}) };
   });
 }

@@ -252,6 +252,8 @@ function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Pr
   const [choice, setChoice] = useState<Record<string, string>>(() =>
     Object.fromEntries(questions.map((q) => [q.key, q.u.candidates?.[0]?.id ?? NEW])),
   );
+  // the name of a new player, when staff know it (founder, 19 Nov): empty keeps the sheet's spelling
+  const [names, setNames] = useState<Record<string, { first?: string; surname?: string }>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -265,7 +267,7 @@ function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Pr
 
   const save = () =>
     send({
-      decisions: reviewAnswers(questions, choice, NEW),
+      decisions: reviewAnswers(questions, choice, NEW, names),
     });
 
   return (
@@ -288,6 +290,24 @@ function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Pr
                 ))}
                 <option value={NEW}>New player</option>
               </select>
+              {choice[key] === NEW ? (
+                <>
+                  <input
+                    style={{ ...ui.input, height: 36, fontSize: 14, width: 160 }}
+                    aria-label="First name"
+                    placeholder="First name"
+                    value={names[key]?.first ?? (u.first ?? '')}
+                    onChange={(e) => setNames({ ...names, [key]: { ...names[key], first: e.target.value } })}
+                  />
+                  <input
+                    style={{ ...ui.input, height: 36, fontSize: 14, width: 200 }}
+                    aria-label="Surname"
+                    placeholder="Surname"
+                    value={names[key]?.surname ?? (u.surname ?? u.raw)}
+                    onChange={(e) => setNames({ ...names, [key]: { ...names[key], surname: e.target.value } })}
+                  />
+                </>
+              ) : null}
             </div>
           ))
         : null}
