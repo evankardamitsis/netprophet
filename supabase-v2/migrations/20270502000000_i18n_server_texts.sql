@@ -1652,3 +1652,6 @@ begin
   return jsonb_build_object('id', v_id);
 end;
 $$;
+
+-- the English word for Ασφάλεια is «Streak Freeze» (founder, 19 Nov 2026), also in the unlock that names it
+update core.unlock_defs set title_en = 'First Streak Freeze' where key = 'first_freeze';
