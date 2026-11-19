@@ -45,11 +45,12 @@ export const emptyForm = (mode: Mode): LogForm => ({ mode, date: null, tournamen
 
 const WEEKDAYS = ['Κυρ', 'Δευ', 'Τρί', 'Τετ', 'Πέμ', 'Παρ', 'Σάβ'];
 
-/** «Παρ 2/10» for an Athens day key */
-export function shortDay(key: string): string {
+/** «Παρ 2/10» for an Athens day key; English takes its short weekdays from the copy («Fri 2/10») */
+export function shortDay(key: string, t?: Copy): string {
   const [y, m, d] = key.split('-').map(Number);
   const dow = new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay();
-  return `${WEEKDAYS[dow]} ${d}/${m}`;
+  const names = t && t.locale !== 'el' ? t.tournaments.weekdaysShort : WEEKDAYS;
+  return `${names[dow]} ${d}/${m}`;
 }
 
 /** today and yesterday (played) or today and tomorrow (soon) */
@@ -63,12 +64,12 @@ export function quickDays(mode: Mode, now: Date, t: Copy): { key: string; label:
 }
 
 /** «Άλλη μέρα»: the next five days back (played) or ahead (soon) after the quick ones */
-export function otherDays(mode: Mode, now: Date): { key: string; label: string }[] {
+export function otherDays(mode: Mode, now: Date, t?: Copy): { key: string; label: string }[] {
   const today = dayKey(now.toISOString());
   const step = mode === 'played' ? -1 : 1;
   return [2, 3, 4, 5, 6].map((n) => {
     const key = addDays(today, n * step);
-    return { key, label: shortDay(key) };
+    return { key, label: shortDay(key, t) };
   });
 }
 
@@ -104,7 +105,7 @@ export function ready(form: LogForm): boolean {
 
 /** «Μονό · Φιλικό · Σήμερα» */
 export function topLine(form: LogForm, now: Date, t: Copy): string {
-  const day = form.date ? [...quickDays(form.mode, now, t), ...otherDays(form.mode, now)].find((d) => d.key === form.date)?.label ?? shortDay(form.date) : '';
+  const day = form.date ? [...quickDays(form.mode, now, t), ...otherDays(form.mode, now, t)].find((d) => d.key === form.date)?.label ?? shortDay(form.date, t) : '';
   const tour = !form.tournament ? '' : form.tournament.kind === 'friendly' ? t.addMatch.friendly : form.tournament.name;
   return [day, tour, form.format ? t.addMatch.kinds[form.format] : ''].filter(Boolean).join(' · ');
 }

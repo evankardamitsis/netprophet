@@ -70,6 +70,10 @@ describe('the scout shows more than the free card', () => {
     expect(v.history[3]!.partner).toBe('με Πέτρο Δρόσο');
     expect(v.history[3]!.partnerSegs?.map((x) => x.text).join('')).toBe('με Πέτρο Δρόσο');
     expect(v.history[3]!.partnerSegs?.some((x) => x.id)).toBe(true);
+    // English keeps the name as written
+    const en = toScoutView(mockScout('m', NOW).opponents[0]!, {}, getCopy('en'), NOW);
+    expect(en.history[3]!.partner).toBe('with Πέτρος Δρόσος');
+    expect(en.history[3]!.partnerSegs?.map((x) => x.text).join('')).toBe('with Πέτρος Δρόσος');
     expect(v.historyCap).toBe('Τα 4 πιο πρόσφατα από 28.');
   });
 

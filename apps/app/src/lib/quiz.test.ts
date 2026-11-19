@@ -72,6 +72,14 @@ describe('verdict', () => {
     expect(verdict(guess, el)).toMatch(/κέρδισε 6-4, 3-6, 7-5\.$/);
     expect(verdict(guess, el)).not.toMatch(/\{p/);
   });
+  it('English names the right player as written, with no Greek article', () => {
+    const en = getCopy('en');
+    const answered = who('w', { my_option: 2 });
+    expect(verdict(answered, el)).toMatch(/Η Ιωάννα Τσάκου\.$/);
+    const line = verdict(answered, en);
+    expect(line).toMatch(/Ιωάννα Τσάκου\.$/);
+    expect(line).not.toMatch(/(^|\s)(Η|Ο|η|ο) Ιωάννα/);
+  });
 
   it('judges «Ποιος είναι;» and names the right player', () => {
     expect(verdict(who('w', { my_option: 2 }), el)).toBe('Σωστά. Η Ιωάννα Τσάκου.');

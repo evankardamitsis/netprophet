@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { levelNumber, matchesLoosely } from '@netprophet/copy';
+import { levelNumber, matchesLoosely, type Locale } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type QuestRow, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type MonthMedal, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
@@ -19,7 +19,7 @@ import { MOCK_ME_PLAYER, mockResults } from '../mock/results';
 import { mockSeason, mockWinCard } from '../mock/season';
 import { mockMatchStats } from '../mock/matchStats';
 import { withMockAds } from '../mock/sponsored';
-import { useCopy } from '../i18n';
+import { currentLocale, onLocaleChange, useCopy, useLocale } from '../i18n';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
 import { useAuth } from './auth';
 import type { Area, Hand } from './onboarding';
@@ -95,13 +95,26 @@ export interface MeRefresh {
 }
 
 let areaCache: Record<string, string> | null = null;
+// area names are words: a language switch reads them again
+onLocaleChange(() => {
+  areaCache = null;
+});
+
+/** an area's name in the app's language; English falls back to Greek where a name is missing */
+function areaName(a: { name_el?: unknown; name_en?: unknown }, locale: Locale): string {
+  const en = typeof a.name_en === 'string' ? a.name_en.trim() : '';
+  return locale === 'en' && en ? en : (a.name_el as string);
+}
 
 async function loadAreas(): Promise<Record<string, string>> {
   if (areaCache || !supabase) return areaCache ?? {};
-  const { data, error } = await supabase.from('areas').select('id, name_el');
+  const locale = currentLocale();
+  const { data, error } = await supabase.from('areas').select('id, name_el, name_en');
   if (error) throw error;
-  areaCache = Object.fromEntries((data ?? []).map((a) => [a.id as string, a.name_el as string]));
-  return areaCache;
+  const names = Object.fromEntries((data ?? []).map((a) => [a.id as string, areaName(a, locale)]));
+  // a switch while this was reading leaves nothing behind in the old language
+  if (locale === currentLocale()) areaCache = names;
+  return names;
 }
 
 interface FeedState {
@@ -1700,6 +1713,7 @@ const MOCK_REGION_AREAS: Area[] = [
 /** Areas with their region, for the «Πού παίζεις;» step. */
 export function useRegionAreas(): Area[] {
   const api = useApi();
+  const locale = useLocale();
   const [areas, setAreas] = useState<Area[]>(api ? [] : MOCK_REGION_AREAS);
   useEffect(() => {
     if (!api || !supabase) {
@@ -1708,11 +1722,11 @@ export function useRegionAreas(): Area[] {
     }
     supabase
       .from('areas')
-      .select('id, region, name_el, sort')
+      .select('id, region, name_el, name_en, sort')
       .then(({ data }) =>
-        setAreas((data ?? []).map((a) => ({ id: a.id as string, region: a.region as Area['region'], name: a.name_el as string, sort: a.sort as number }))),
+        setAreas((data ?? []).map((a) => ({ id: a.id as string, region: a.region as Area['region'], name: areaName(a, locale), sort: a.sort as number }))),
       );
-  }, [api]);
+  }, [api, locale]);
   return areas;
 }
 
@@ -1756,7 +1770,7 @@ export function useOnboardingApi(sample = false) {
           return mockFindPlayers(surname.slice(0, 3)).map((p) => ({
             id: p.id,
             name: `${p.first_name} ${p.surname}`,
-            sub: [p.area_id ? areas[p.area_id] : null, PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null].filter(Boolean).join(' · '),
+            sub: [p.area_id ? areas[p.area_id] : null, PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier, t.locale)}` : null].filter(Boolean).join(' · '),
           }));
         }
         const rows = await api.findMatchingPlayers(first, surname);
@@ -1768,7 +1782,7 @@ export function useOnboardingApi(sample = false) {
           return {
             id: r.id,
             name: `${r.first_name} ${r.surname}`,
-            sub: [r.area_id ? areas[r.area_id] : null, PLAYER_LEVEL_SHOWN && c?.level_tier != null ? `${t.level.label} ${levelNumber(c.level_tier)}` : null].filter(Boolean).join(' · '),
+            sub: [r.area_id ? areas[r.area_id] : null, PLAYER_LEVEL_SHOWN && c?.level_tier != null ? `${t.level.label} ${levelNumber(c.level_tier, t.locale)}` : null].filter(Boolean).join(' · '),
           };
         });
       },

@@ -1,6 +1,6 @@
 import type { Copy } from '@netprophet/copy';
 import type { GetQuizResult, TournamentItem } from '@netprophet/db';
-import { accusativeWord, nameGender } from '@netprophet/copy';
+import { nameGender, wordAcc, type Locale } from '@netprophet/copy';
 import { splitToday, type CardMatch, type CardPerson, type CardResult, type ClubMark, type FeedCard } from './feed';
 import { summaryCounts } from './resultsSummary';
 import { NOW_WINDOW_MS } from './tournamentToday';
@@ -223,7 +223,7 @@ export interface YoursNow {
   now: boolean;
 }
 
-const accSide = (people: readonly CardPerson[]) => people.map((p) => accusativeWord(p.surname, nameGender(p.first))).join(' & ');
+const accSide = (people: readonly CardPerson[], locale: Locale) => people.map((p) => wordAcc(p.surname, nameGender(p.first), locale)).join(' & ');
 
 /**
  * Today's matches of the people you follow (known or friends; your own player too), from the feed: playing now first
@@ -243,7 +243,7 @@ export function yoursNow(cards: readonly FeedCard[], yours: ReadonlySet<string>,
     const other = sides[1 - k]!;
     const at = hasTime(c.startsAt) ? Date.parse(c.startsAt!) : NaN;
     const playing = Number.isFinite(at) && at <= nowMs && nowMs - at < NOW_WINDOW_MS;
-    const against = fmt(t.tournaments.focus.against, { name: accSide(other.people) });
+    const against = fmt(t.tournaments.focus.against, { name: accSide(other.people, t.locale) });
     out.push({
       matchId: c.id,
       tournamentId: c.tournamentId ?? null,

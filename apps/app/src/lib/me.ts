@@ -80,7 +80,7 @@ export function toMeView(
     surname,
     sub: [area, hand, sport].filter(Boolean).join(' · '),
     isNew,
-    level: level === null ? null : levelNumber(level),
+    level: level === null ? null : levelNumber(level, t.locale),
     direction: dir === 'up' ? { arrow: '↑', word: m.direction.up } : dir === 'down' ? { arrow: '↓', word: m.direction.down } : { arrow: '=', word: m.direction.same },
     game: {
       level: gl.level,

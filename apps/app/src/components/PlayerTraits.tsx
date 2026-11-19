@@ -98,7 +98,7 @@ export function PlayerTraits({
       ) : (
         <View style={styles.said}>
           {said.map((row, i) => (
-            <SaidRow key={row.id} label={traitLabel(row, gender)} n={row.count ?? 0} top={top} mine={row.mine} index={i} />
+            <SaidRow key={row.id} label={traitLabel(row, gender, t.locale)} n={row.count ?? 0} top={top} mine={row.mine} index={i} />
           ))}
         </View>
       )}
@@ -130,7 +130,7 @@ export function PlayerTraits({
               <Chip
                 key={row.id}
                 row={row}
-                label={traitLabel(row, gender)}
+                label={traitLabel(row, gender, t.locale)}
                 index={i}
                 resting={full && !row.mine}
                 onPress={() => void tap(row)}
@@ -138,7 +138,7 @@ export function PlayerTraits({
             ))}
           </View>
           {pending.map((row) => (
-            <Pending key={row.id} label={traitLabel(row, gender)} />
+            <Pending key={row.id} label={traitLabel(row, gender, t.locale)} />
           ))}
           <Add
             onSubmit={async (text) => {

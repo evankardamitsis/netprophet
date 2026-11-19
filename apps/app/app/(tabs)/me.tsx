@@ -6,10 +6,12 @@ import { TrophyShelf } from '../../src/components/TrophyShelf';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { QuestsSheet } from '../../src/components/QuestsSheet';
 import { PlayStyleRow } from '../../src/components/PlayStyleRow';
+import { Segmented } from '../../src/components/OnboardingControls';
 import { FitText } from '../../src/components/FitText';
 import { namePlate } from '../../src/components/CardFrame';
 import { FlipCard } from '../../src/components/FlipCard';
-import { useCopy } from '../../src/i18n';
+import { setLocale, useCopy, useLocaleState } from '../../src/i18n';
+import type { LocaleChoice } from '../../src/lib/locale';
 import { legalUrl } from '../../src/lib/legalLinks';
 import { safeOpen } from '../../src/lib/openUrl';
 import { guestAllowed, useAuth } from '../../src/lib/auth';
@@ -33,7 +35,7 @@ import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { useEntrance, usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult, ProState } from '@netprophet/db';
-import { alpha, colors, fonts } from '../../src/theme';
+import { alpha, colors, fonts, motion } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
 import { Baller } from '../../src/components/Baller';
 import { CardBackground } from '../../src/components/CardBackground';
@@ -855,6 +857,7 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
         <>
           <PlayStyleRow onSaved={onPlaySaved} />
           <SoundsRow />
+          <LanguageRow />
           <PushRows pro={pro} />
           {/* the first-visit tour once more: it starts on Σήμερα as soon as the feed is ready */}
           <Pressable
@@ -905,10 +908,10 @@ function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void 
           <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(`mailto:${CONTACT_EMAIL}`).catch(() => undefined)} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.me.contact}</Text>
           </Pressable>
-          <Pressable accessibilityRole="link" onPress={() => safeOpen(legalUrl('terms'), (u) => Linking.openURL(u))} style={styles.linkHit}>
+          <Pressable accessibilityRole="link" onPress={() => safeOpen(legalUrl('terms', t.locale), (u) => Linking.openURL(u))} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.me.terms}</Text>
           </Pressable>
-          <Pressable accessibilityRole="link" onPress={() => safeOpen(legalUrl('privacy'), (u) => Linking.openURL(u))} style={styles.linkHit}>
+          <Pressable accessibilityRole="link" onPress={() => safeOpen(legalUrl('privacy', t.locale), (u) => Linking.openURL(u))} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.me.privacy}</Text>
           </Pressable>
           <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
@@ -979,6 +982,44 @@ function SoundsRow() {
         <Text style={styles.muted}>{t.me.soundsLine}</Text>
       </View>
       <Switch value={on} onValueChange={setOn} trackColor={{ false: colors.navLine, true: colors.ink }} thumbColor={colors.white} accessibilityLabel={t.me.sounds} />
+    </View>
+  );
+}
+
+/**
+ * «Γλώσσα» (founder, 16 Nov 2026): Αυτόματα follows the phone (Greek phone, Greek; any other, English), or pick one.
+ * Saved on this phone. The pill slides first, then the app switches (every screen remounts in the new language).
+ */
+function LanguageRow() {
+  const t = useCopy();
+  const { choice } = useLocaleState();
+  const [picked, setPicked] = useState<LocaleChoice>(choice);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
+  const pick = (next: LocaleChoice) => {
+    setPicked(next);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setLocale(next), motion.exitDur);
+  };
+  const names = t.me.languages;
+  return (
+    <View style={styles.languageRow}>
+      <View style={styles.proText}>
+        <Text style={styles.proTitle}>{t.me.language}</Text>
+        <Text style={styles.muted}>{t.me.languageLine}</Text>
+      </View>
+      <Segmented
+        options={[
+          { id: 'auto' as const, label: names.auto },
+          { id: 'el' as const, label: names.el },
+          { id: 'en' as const, label: names.en },
+        ]}
+        value={picked}
+        onChange={pick}
+        bg={colors.paper}
+      />
     </View>
   );
 }
@@ -1246,6 +1287,7 @@ const styles = StyleSheet.create({
   friendsTitle: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   friendsCount: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   soundsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 6 },
+  languageRow: { gap: 10, paddingVertical: 6 },
   settingsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   settingsMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
   // open: the «+» turns to a cross, as on the result cards (the glyph set has no minus)

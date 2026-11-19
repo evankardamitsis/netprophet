@@ -68,7 +68,7 @@ export default function MatchLinkScreen() {
     if (view.player.hidden) go('bye', { text: l.bye.hidden, unhide: true });
     else if (view.player.claimed && view.state !== 'pending') go('bye', { text: l.bye.claimed });
     else if (view.state === 'confirmed') go('s3');
-    else if (view.state !== 'pending') go('bye', { text: fmt(l.bye.disputed, { to: toWhom(logger(view)) }) });
+    else if (view.state !== 'pending') go('bye', { text: fmt(l.bye.disputed, { to: toWhom(logger(view), t.locale) }) });
     // once per loaded link
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
@@ -86,12 +86,12 @@ export default function MatchLinkScreen() {
     setBusy(true);
     const r = await answer(a);
     setBusy(false);
-    const to = toWhom(logger(view));
+    const to = toWhom(logger(view), t.locale);
     if (r === 'failed') say(l.failed);
     else if (r === 'confirmed') go('s2');
     else if (r === 'corrected') {
       go('s2');
-      say(fmt(l.corrected, { who: who(logger(view)) }));
+      say(fmt(l.corrected, { who: who(logger(view), false, t.locale) }));
     } else go('bye', { text: fmt(a.answer === 'not_me' ? l.bye.notMe : l.bye.disputed, { to }) });
   };
 
@@ -175,7 +175,7 @@ function Ask({
   return (
     <Animated.View style={[styles.step, enter]}>
       <View style={styles.card}>
-        <Animated.Text style={[styles.cardTitle, title]}>{titleFor(view, t)}</Animated.Text>
+        <Animated.Text style={[styles.cardTitle, title]}>{titleFor(view, t, t.locale)}</Animated.Text>
         <Animated.Text style={[styles.cardLine, line1]}>{firsts(winner)}</Animated.Text>
         <Animated.Text style={[styles.cardScore, score]}>{view.score ?? ''}</Animated.Text>
         <Animated.Text style={[styles.cardLine, line2]}>{firsts(winner === 1 ? 2 : 1)}</Animated.Text>
@@ -221,12 +221,13 @@ function FixPicker({ view, onAnswer }: { view: MatchLinkView; onAnswer: (a: Conf
 
 /** s2: «Πες κι εσύ μια καλή κουβέντα» */
 function Kudos({ view, onPick, onSkip }: { view: MatchLinkView; onPick: (k: LinkKudo) => void; onSkip: () => void }) {
-  const l = useCopy().link;
+  const t = useCopy();
+  const l = t.link;
   const enter = useStgIn(400);
   return (
     <Animated.View style={[styles.step, enter]}>
       <Text style={styles.h1}>{l.kudos.title}</Text>
-      <Text style={styles.sub}>{fmt(l.kudos.ask, { to: toWhom(logger(view)) })}</Text>
+      <Text style={styles.sub}>{fmt(l.kudos.ask, { to: toWhom(logger(view), t.locale) })}</Text>
       <View style={styles.grid}>
         {KUDOS.map((k, i) => (
           <KudoButton key={k} label={l.kudos.options[k]} delay={i * 60} onPress={() => onPick(k)} />
@@ -290,7 +291,7 @@ function Join({ view, token, onLater }: { view: MatchLinkView; token: string; on
         <Animated.View style={[styles.pill, pill]}>
           <Text style={styles.pillText}>{j.pill}</Text>
         </Animated.View>
-        <Text style={styles.joinHead}>{fmt(j.head, { who: who(logger(view)) })}</Text>
+        <Text style={styles.joinHead}>{fmt(j.head, { who: who(logger(view), false, t.locale) })}</Text>
         <Text style={styles.joinSub}>{j.sub}</Text>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}

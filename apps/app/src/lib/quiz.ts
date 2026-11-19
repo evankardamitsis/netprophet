@@ -54,15 +54,19 @@ export function verdict(card: QuizCard, t: Copy): string {
   if (card.family === 'o' || (card.family === 'd' && (card.content.right === undefined || card.content.right === null))) return '';
   if (card.family === 'd') {
     const r = card.content.right!;
-    // a result card says what happened («Ο Νίκος κέρδισε 6-3, 6-4.»); others name the right player
-    const fact = card.content.reveal ?? `{p${r + 1}.o}.`;
-    return (card.my_option - 1 === r ? t.quiz.right : t.quiz.wrong) + capitalizeFirst(renderQuizText(fact, card.content.players));
+    // a result card says what happened («Ο Νίκος κέρδισε 6-3, 6-4.»), in the server's Greek; others name the right
+    // player, which the app writes itself, so English gets the name with no article
+    const reveal = card.content.reveal;
+    const fact = reveal
+      ? renderQuizText(reveal, card.content.players)
+      : renderQuizText(`{p${r + 1}.o}.`, card.content.players, t.locale);
+    return (card.my_option - 1 === r ? t.quiz.right : t.quiz.wrong) + capitalizeFirst(fact);
   }
   // the others' answers show (as % on the options) once five have answered; before that, say when they will
   if (card.family !== 'q') return card.split && card.split.length > 0 ? q.counted : q.countedSoon;
   const right = card.content.right;
   if (right === undefined || right === null) return '';
-  const fact = capitalizeFirst(renderQuizText(`{p${right + 1}.o}.`, card.content.players));
+  const fact = capitalizeFirst(renderQuizText(`{p${right + 1}.o}.`, card.content.players, t.locale));
   return (card.my_option - 1 === right ? q.right : q.wrong) + fact;
 }
 

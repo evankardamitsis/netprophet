@@ -23,5 +23,6 @@ describe('player card, Pro teaser', () => {
   it('names the player in the accusative', () => {
     expect(teaserTitle('Γιώργος', 'm', getCopy('el'))).toBe('Όλα για τον Γιώργο');
     expect(teaserTitle('Μαρία', null, getCopy('el'))).toBe('Όλα για την Μαρία');
+    expect(teaserTitle('Γιώργος', 'm', getCopy('en'))).toBe('All about Γιώργος');
   });
 });
