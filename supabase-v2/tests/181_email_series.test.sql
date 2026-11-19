@@ -198,6 +198,8 @@ select ok(core.email_game_ok(:'l2'::uuid, '2027-03-03 08:00Z'), 'the next day th
 
 -- ── the cap when sending (core.email_gate, asked by api.admin_emails_due) ──
 select tests.create_user('es-cap-send@example.com') as k \gset
+-- joined after the launch (20270429000000: players from before it get no game email)
+update core.profiles set created_at = '2027-02-27 12:00Z' where user_id = :'k'::uuid;
 insert into core.emails (user_id, kind, dedupe_key, status, sent_at, due_at) values
   (:'k'::uuid, 'welcome', 'es:k:1', 'sent', now() - interval '3 days', now() - interval '3 days'),
   (:'k'::uuid, 'day1_vote', 'es:k:2', 'sent', now() - interval '2 days', now() - interval '2 days');
@@ -210,6 +212,8 @@ select is((select string_agg(x ->> 'kind', ',' order by x ->> 'kind') from jsonb
           'after 2 game emails in 7 days the account email and a test still go');
 select is((select status || ':' || reason from core.emails where dedupe_key = 'es:k:3'), 'skipped:cap', 'the third game email is skipped for the cap');
 select tests.create_user('es-cap-old@example.com') as k2 \gset
+-- joined after the launch (20270429000000: players from before it get no game email)
+update core.profiles set created_at = '2027-02-27 12:00Z' where user_id = :'k2'::uuid;
 insert into core.emails (user_id, kind, dedupe_key, status, sent_at, due_at) values
   (:'k2'::uuid, 'welcome', 'es:k2:1', 'sent', now() - interval '9 days', now() - interval '9 days'),
   (:'k2'::uuid, 'day1_vote', 'es:k2:2', 'sent', now() - interval '2 days', now() - interval '2 days');
