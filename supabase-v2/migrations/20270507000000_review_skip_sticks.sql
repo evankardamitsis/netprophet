@@ -2,7 +2,7 @@
 -- a card only when no OPEN card has the row's fingerprint, so a dismissed card came back on the next read (three a
 -- day, every «Update now», every saved decision). Now a card is not opened again for a row staff skipped: same
 -- tournament, same kind, same fingerprint. A row the organiser changes has a new fingerprint (date, category, names)
--- and gets a new card.
+-- and gets a new card. Cards a read closed by itself (the row left the sheet) are not skips and can come back.
 create or replace function core.ingest_reviews_skip_dismissed()
 returns trigger
 language plpgsql set search_path = core, pg_temp
@@ -10,7 +10,9 @@ as $$
 begin
   if exists (select 1 from core.ingest_reviews r
               where r.tournament_id = new.tournament_id and r.kind = new.kind and r.fingerprint = new.fingerprint
-                and r.status = 'dismissed') then
+                and r.status = 'dismissed'
+                -- skipped by a person, not closed by a read (row gone from the sheet: that row may come back)
+                and r.resolved_by is not null and not (r.payload ? 'closed')) then
     return null;
   end if;
   return new;

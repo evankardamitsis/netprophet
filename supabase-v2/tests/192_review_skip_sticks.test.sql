@@ -1,6 +1,6 @@
 -- A skipped review card is not opened again for the same row (founder, 19 Nov 2026)
 begin;
-select plan(4);
+select plan(5);
 
 select tests.create_user('sk-adm@test.local', 'admin') as adm \gset
 select tests.login(:'adm'::uuid);
@@ -27,6 +27,14 @@ insert into core.ingest_reviews (tournament_id, kind, fingerprint, payload)
 values (:'t'::uuid, 'walkover', 'sk1', '{"row": {"fingerprint": "sk1"}}') on conflict do nothing;
 select is((select count(*)::int from core.ingest_reviews where tournament_id = :'t'::uuid and fingerprint = 'sk1' and kind = 'walkover'), 1,
           'another kind of question on the same row still comes');
+
+-- a card a read closed by itself (the row left the sheet) is not a skip: the row comes back, so does its card
+insert into core.ingest_reviews (tournament_id, kind, fingerprint, payload, status, resolved_at)
+values (:'t'::uuid, 'people', 'sk3', '{"row": {"fingerprint": "sk3"}, "closed": {"by": "sheet", "reason": "row_gone"}}', 'dismissed', now());
+insert into core.ingest_reviews (tournament_id, kind, fingerprint, payload)
+values (:'t'::uuid, 'people', 'sk3', '{"row": {"fingerprint": "sk3"}, "unclear": []}') on conflict do nothing;
+select is((select count(*)::int from core.ingest_reviews where tournament_id = :'t'::uuid and fingerprint = 'sk3' and status = 'open'), 1,
+          'a row back on the sheet gets its card again');
 
 select * from finish();
 rollback;
