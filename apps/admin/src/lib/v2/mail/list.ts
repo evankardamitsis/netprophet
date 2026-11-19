@@ -4,7 +4,8 @@
  *   site_weekly   Monday's week on court, to confirmed sign-ups without an account
  *   launch_v1     the launch email to the old NetProphet's accounts; not queued per row: scripts/launch-email.mjs
  *                 renders it and leaves it as a draft broadcast in Resend, where the founder presses Send.
- * The database queues the first two (migration 20270425000000_email_list) and hands over the subscriber's token and
+ * All three have an English version (launchEmail({ lang: 'en' })). The database queues the first two (migration
+ * 20270425000000_email_list) and hands over the subscriber's token and
  * language; the payload of site_weekly is core.list_week. A line without data is left out, never shown empty.
  */
 import { displayName, getCopy, tidyName, type Locale } from '@netprophet/copy';
@@ -279,6 +280,49 @@ export const LAUNCH_FEATURES: [string, string, string][] = [
   ['big-stats', 'Τα στατιστικά σου · Pro', 'Νίκες, σετ, επιφάνειες, μονά και διπλά.'],
 ];
 
+/** the same six features in English, the same screens */
+export const LAUNCH_FEATURES_EN: [string, string, string][] = [
+  ['big-01-vote', 'Vote on who wins', 'One tap on the name you believe in.'],
+  ['big-02-result', 'Find out if you called it', 'Results with the score, the same day.'],
+  ['big-04-ladder', 'Climb the Ladder', 'Every month and over the whole season. Will you call more of them right than your crowd?'],
+  ['big-09-baller', 'Dress up your Baller', 'Your player, a little ball with a lot of character.'],
+  ['big-07-player', 'Know your opponents inside out', 'Their form, their latest matches and their record, before you meet them across the net.'],
+  ['big-stats', 'Your stats · Pro', 'Wins, sets, surfaces, singles and doubles.'],
+];
+
+const LAUNCH = {
+  el: {
+    intro:
+      'Γεια σου! Δεν πιστεύω να νόμιζες ότι σταματήσαμε. Ίσα ίσα, το φτιάξαμε όλο από την αρχή και τώρα είναι έτοιμο να το κατεβάσεις. Να τι σε περιμένει:',
+    features: LAUNCH_FEATURES,
+    pro: 'Παίζεις τουρνουά; Με το Pro μαθαίνεις πρώτος την κλήρωση και βλέπεις τα αναλυτικά στατιστικά του αντιπάλου σου πριν το ματς.',
+    coins: 'Τα παλιά νομίσματα δεν υπάρχουν πια. Όλοι ξεκινάνε από το μηδέν, εσύ μαζί. Μπες με αυτό το email και ο λογαριασμός σου είναι εκεί.',
+    button: 'Κατέβασε το NetProphet',
+    free: 'Δωρεάν για iPhone και Android',
+    subject: 'Το NetProphet άλλαξε. Έλα να το ανακαλύψεις.',
+    preheader: 'Ψήφισε, μάθε αν έπεσες μέσα, ανέβα level. Δωρεάν.',
+    kicker: 'ΤΟ ΝΕΟ NETPROPHET',
+    title: 'Το NetProphet άλλαξε και περιμένει να το ανακαλύψεις',
+    sub: 'Ένα παιχνίδι για τα τουρνουά που παίζεις και βλέπεις.',
+    why: 'Το πήρες επειδή είχες λογαριασμό στο παλιό NetProphet.',
+  },
+  en: {
+    intro:
+      'Hi! You didn’t think we’d stopped, did you? Quite the opposite: we rebuilt the whole thing from scratch, and it’s ready for you to download. Here’s what’s waiting for you:',
+    features: LAUNCH_FEATURES_EN,
+    pro: 'Play tournaments? With Pro you hear about the draw first and see your opponent’s detailed stats before the match.',
+    coins: 'The old coins are gone. Everyone starts from zero, you too. Sign in with this email and your account is right there.',
+    button: 'Download NetProphet',
+    free: 'Free for iPhone and Android',
+    subject: 'NetProphet has changed. Come and see.',
+    preheader: 'Vote, find out if you called it, level up. Free.',
+    kicker: 'THE NEW NETPROPHET',
+    title: 'NetProphet has changed, and it’s waiting for you',
+    sub: 'A game for the tournaments you play and watch.',
+    why: 'You got this because you had an account on the old NetProphet.',
+  },
+};
+
 /**
  * The features (founder, 18 Nov 2026: «1 big image with title below»): each one a full-width app screen, the bold
  * title and a quieter line under it, one after the other.
@@ -300,34 +344,26 @@ function featureRows(items: [string, string, string][]): string {
   );
 }
 
-export function launchEmail(opts: { unsubscribeUrl?: string } = {}): Mail {
+/** the launch email; Greek unless asked for English (launch_v1 rows are rendered in the row's language) */
+export function launchEmail(opts: { unsubscribeUrl?: string; lang?: EmailLang } = {}): Mail {
   const unsub = opts.unsubscribeUrl ?? RESEND_UNSUBSCRIBE;
-  const intro =
-    'Γεια σου! Δεν πιστεύω να νόμιζες ότι σταματήσαμε. Ίσα ίσα, το φτιάξαμε όλο από την αρχή και τώρα είναι έτοιμο να το κατεβάσεις. Να τι σε περιμένει:';
-  const pro = 'Παίζεις τουρνουά; Με το Pro μαθαίνεις πρώτος την κλήρωση και βλέπεις τα αναλυτικά στατιστικά του αντιπάλου σου πριν το ματς.';
-  const coins = 'Τα παλιά νομίσματα δεν υπάρχουν πια. Όλοι ξεκινάνε από το μηδέν, εσύ μαζί. Μπες με αυτό το email και ο λογαριασμός σου είναι εκεί.';
-  const button = 'Κατέβασε το NetProphet';
-  const free = 'Δωρεάν για iPhone και Android';
+  const lang: EmailLang = opts.lang === 'en' ? 'en' : 'el';
+  const c = LAUNCH[lang];
   return compose({
-    lang: 'el',
-    subject: 'Το NetProphet άλλαξε. Έλα να το ανακαλύψεις.',
-    preheader: 'Ψήφισε, μάθε αν έπεσες μέσα, ανέβα level. Δωρεάν.',
-    hero: {
-      kicker: 'ΤΟ ΝΕΟ NETPROPHET',
-      title: 'Το NetProphet άλλαξε και περιμένει να το ανακαλύψεις',
-      sub: 'Ένα παιχνίδι για τα τουρνουά που παίζεις και βλέπεις.',
-      art: 'launch',
-    },
+    lang,
+    subject: c.subject,
+    preheader: c.preheader,
+    hero: { kicker: c.kicker, title: c.title, sub: c.sub, art: 'launch' },
     body: [
-      block.paragraph(esc(intro)),
-      featureRows(LAUNCH_FEATURES),
-      block.tip(esc(pro).replace('Pro', '<strong>Pro</strong>')),
-      block.paragraph(esc(coins)),
-      block.button(OPEN_URL, button),
-      small(free),
+      block.paragraph(esc(c.intro)),
+      featureRows(c.features),
+      block.tip(esc(c.pro).replace('Pro', '<strong>Pro</strong>')),
+      block.paragraph(esc(c.coins)),
+      block.button(OPEN_URL, c.button),
+      small(c.free),
     ],
-    text: [intro, '', ...LAUNCH_FEATURES.map(([, t, l]) => `${t}: ${l}`), '', pro, '', coins, '', `${button}: ${OPEN_URL}`, free],
-    why: 'Το πήρες επειδή είχες λογαριασμό στο παλιό NetProphet.',
+    text: [c.intro, '', ...c.features.map(([, t, l]) => `${t}: ${l}`), '', c.pro, '', c.coins, '', `${c.button}: ${OPEN_URL}`, c.free],
+    why: c.why,
     unsubscribeUrl: unsub,
   });
 }
@@ -336,5 +372,5 @@ export function launchEmail(opts: { unsubscribeUrl?: string } = {}): Mail {
 export const LIST_RENDER: Record<string, (e: DueEmail) => Mail> = {
   site_confirm: siteConfirmEmail,
   site_weekly: siteWeeklyEmail,
-  launch_v1: () => launchEmail(),
+  launch_v1: (e) => launchEmail({ lang: langOf(e) }),
 };

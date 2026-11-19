@@ -4,7 +4,7 @@
  * The templates live per slice (lifecycle.ts, pro.ts, ...) and are registered in ./index.ts.
  */
 import { accusativeWord, nameGender } from '@netprophet/copy';
-import { SITE_URL, esc, renderEmail, type Hero } from '../emailLayout';
+import { SITE_URL, esc, renderEmail, type EmailLang, type Hero } from '../emailLayout';
 
 export interface DueEmail {
   id: string;
@@ -27,12 +27,31 @@ export interface Mail {
 }
 
 export const OPEN_URL = `${SITE_URL}/open`;
-export const unsubscribeUrl = (token: string) => `${SITE_URL}/email/unsubscribe?t=${encodeURIComponent(token)}`;
+/** the one-click unsubscribe page; l=en keeps it in English (apps/site app/email/unsubscribe) */
+export const unsubscribeUrl = (token: string, lang: EmailLang = 'el') =>
+  `${SITE_URL}/email/unsubscribe?t=${encodeURIComponent(token)}${lang === 'en' ? '&l=en' : ''}`;
 
-/** «Νίκο»: the first name as used in a greeting (the same form the medal email uses) */
-export function hello(first: string | null): string | null {
+/** the row's language: English only when it says so, Greek otherwise (an old row, a test) */
+export const langOf = (e: DueEmail): EmailLang => (e.lang === 'en' ? 'en' : 'el');
+export const isEn = (e: DueEmail) => langOf(e) === 'en';
+
+/** one piece of copy in both languages: the Greek, or the English when the row is in English */
+export function t<T>(e: DueEmail, el: T, en: T): T {
+  return isEn(e) ? en : el;
+}
+
+const NUM: Record<EmailLang, Intl.NumberFormat> = { el: new Intl.NumberFormat('el-GR'), en: new Intl.NumberFormat('en-GB') };
+/** «1.234» in Greek, «1,234» in English */
+export const fmtNum = (n: number, lang: EmailLang = 'el') => NUM[lang].format(n);
+
+/**
+ * The first name as used in a greeting: «Νίκο» in Greek (the same form the medal email uses), as written in English
+ * («Νίκος»: names stay in their own script, undeclined).
+ */
+export function hello(first: string | null, lang: EmailLang = 'el'): string | null {
   const f = first?.trim();
-  return f ? accusativeWord(f, nameGender(f)) : null;
+  if (!f) return null;
+  return lang === 'en' ? f : accusativeWord(f, nameGender(f));
 }
 
 export const strip = (html: string) => html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
@@ -49,9 +68,9 @@ export interface Parts {
 }
 
 export function build(e: DueEmail, p: Parts): Mail {
-  const unsub = e.group !== 'account' && e.unsubscribe_token ? unsubscribeUrl(e.unsubscribe_token) : undefined;
+  const unsub = e.group !== 'account' && e.unsubscribe_token ? unsubscribeUrl(e.unsubscribe_token, langOf(e)) : undefined;
   const { html, text } = renderEmail({
-    lang: 'el',
+    lang: langOf(e),
     subject: p.subject,
     preheader: esc(p.preheader),
     hero: p.hero,
