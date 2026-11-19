@@ -4,6 +4,7 @@ import { isLogoKind, logoPath, logoProblem, sniffLogo, type LogoKind } from '@/l
 import type { RecordsResult } from '@/lib/v2/records';
 import { writeRecordsSheet } from '@/lib/v2/recordsSheet';
 import { drawsForTournament, rowsForTournament, sourceKind } from '@/lib/v2/sheets';
+import { failedSheetsMessage } from '@/lib/v2/drawSheets';
 import type { ReviewAnswer } from '@/lib/v2/ingestRows';
 import type { DrawCounts, IngestCounts, ReviewItem, SourceTournament } from './types';
 
@@ -43,6 +44,8 @@ export interface SourcePatch {
   source_kind?: string;
   source_url?: string;
   draw_url?: string;
+  /** every draw sheet, the first one first (the database keeps the first as draw_url) */
+  draw_urls?: string[];
   ongoing?: boolean;
   /** the tournament is over: the app shows only its draws */
   finished?: boolean;
@@ -67,7 +70,8 @@ export async function createTournament(input: {
   name: string;
   surface: string;
   source_url: string;
-  draw_url: string;
+  /** every draw sheet link, the first one first; blanks are dropped */
+  draw_urls: string[];
   starts_on?: string;
   ends_on?: string;
   entry_deadline?: string;
@@ -79,7 +83,7 @@ export async function createTournament(input: {
         name: input.name.trim(),
         surface: input.surface,
         source_url: input.source_url.trim(),
-        draw_url: input.draw_url.trim(),
+        draw_urls: input.draw_urls.map((u) => u.trim()).filter(Boolean),
         source_kind: sourceKind(input.source_url),
         ongoing: true,
         starts_on: input.starts_on ?? '',
@@ -116,6 +120,7 @@ export async function saveSource(id: string, patch: SourcePatch): Promise<Action
         // a sheet link or an organiser's site page (athenstennis.gr)
         ...(patch.source_url ? { source_kind: sourceKind(patch.source_url) } : {}),
         ...(patch.entry_link !== undefined ? { entry_link: patch.entry_link.trim() } : {}),
+        ...(patch.draw_urls !== undefined ? { draw_urls: patch.draw_urls.map((u) => u.trim()).filter(Boolean) } : {}),
       },
     });
     return { ok: true, message: 'Saved' };
@@ -141,15 +146,20 @@ export async function runNow(id: string, dry: boolean): Promise<ActionResult<Ing
   }
 }
 
-/** read the draw sheet now: dry shows what it would store, else it stores every category's bracket */
-export async function readDraws(id: string, dry: boolean): Promise<ActionResult<DrawCounts>> {
+/**
+ * read every draw sheet now: dry shows what it would store, else it stores every category's bracket. A sheet that
+ * cannot be read keeps its stored draws and is named in `failed`; the others are stored.
+ */
+export async function readDraws(id: string, dry: boolean): Promise<ActionResult<DrawCounts & { failed?: string }>> {
   try {
     const rpc = await staffRpc();
     const t = ((await call(rpc, 'admin_tournaments', {})) as SourceTournament[]).find((x) => x.id === id);
     if (!t) return { ok: false, message: 'tournament not found' };
-    const draws = await drawsForTournament(t);
+    const { draws, failed, links } = await drawsForTournament(t);
+    const problem = failedSheetsMessage(failed, links.length);
+    if (failed.length === links.length) return { ok: false, message: problem };
     const data = (await call(rpc, 'admin_ingest_draws', { p_tournament_id: id, p_draws: draws, p_dry: dry })) as DrawCounts;
-    return { ok: true, message: dry ? 'Draws read, nothing saved' : 'Draws saved', data };
+    return { ok: true, message: dry ? 'Draws read, nothing saved' : 'Draws saved', data: problem ? { ...data, failed: problem } : data };
   } catch (e) {
     return fail(e);
   }

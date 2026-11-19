@@ -68,6 +68,8 @@ export interface SourceTournament {
   source_kind: 'sheet' | 'csv' | 'site' | null;
   source_url: string | null;
   draw_url: string | null;
+  /** every draw sheet, draw_url first (missing before 20270505000000) */
+  draw_urls?: string[];
   draws: number;
   ongoing: boolean;
   /** marked finished: the app shows only its draws (missing before 20270313000000) */

@@ -12,6 +12,7 @@ import {
   type Draw,
 } from '@netprophet/ingest';
 import { runRows } from './ingestRows';
+import { drawLinks, readDrawSheets, type FailedSheet, type SheetDraw } from './drawSheets';
 
 /**
  * Reads an organiser's Google Sheet with the Sheets API v4. Two ways in, server only:
@@ -143,7 +144,7 @@ export function season(t: { season_start_year: number | null }, now: Date = new 
  * leaves the rows as the schedule says).
  */
 export async function rowsForTournament(
-  t: { source_url: string | null; draw_url?: string | null; season_start_year: number | null },
+  t: { source_url: string | null; draw_url?: string | null; draw_urls?: string[] | null; season_start_year: number | null },
   draws?: Draw[] | null,
 ) {
   if (!t.source_url) throw new Error('this tournament has no source URL');
@@ -151,15 +152,28 @@ export async function rowsForTournament(
   if (isTournamentSoftware(t.source_url)) return runRows(await fetchTournamentSoftware(t.source_url));
   const tabs = await fetchSheetTabs(t.source_url);
   let known = draws ?? null;
-  if (!known && t.draw_url) known = await drawsForTournament({ draw_url: t.draw_url, season_start_year: t.season_start_year }).catch(() => null);
+  if (!known && drawLinks(t).length > 0) {
+    // every draw sheet that reads; none read leaves the rows as the schedule says
+    const read = await drawsForTournament(t).catch(() => null);
+    known = read && read.draws.length > 0 ? read.draws : null;
+  }
   const matches = parseSheet(tabs, season(t));
   return runRows(known ? roundsFromDraws(levelFromDraws(matches, known), known) : matches);
 }
 
-/** fetch and parse one tournament's draw sheet (one bracket per category tab) */
-export async function drawsForTournament(t: { draw_url: string | null; season_start_year: number | null }) {
-  if (!t.draw_url) throw new Error('this tournament has no draw sheet');
-  return parseDraws(await fetchSheetTabs(t.draw_url), season(t));
+/**
+ * fetch and parse every draw sheet of a tournament (one bracket per category tab), the first link first. A sheet that
+ * cannot be read is reported in `failed` and never drops the others.
+ */
+export async function drawsForTournament(t: {
+  draw_url?: string | null;
+  draw_urls?: string[] | null;
+  season_start_year: number | null;
+}): Promise<{ draws: SheetDraw[]; failed: FailedSheet[]; links: string[] }> {
+  const links = drawLinks(t);
+  if (links.length === 0) throw new Error('this tournament has no draw sheet');
+  const read = await readDrawSheets(links, async (url) => parseDraws(await fetchSheetTabs(url), season(t)));
+  return { ...read, links };
 }
 
 /** athenstennis.gr's schedule page (the league's next days and the season's results), founder 14 Oct */
