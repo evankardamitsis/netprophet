@@ -8,7 +8,7 @@ import { WIN_EFFECTS } from '../src/components/WinEffects';
 import { DEFAULT_AVATARS } from '../src/lib/avatar';
 import { colors, fonts } from '../src/theme';
 
-const FRAMES = ['frame_gold', 'frame_seven', 'frame_ten', 'frame_week', 'frame_month_top', 'frame_level', 'frame_friends', 'frame_retro', 'frame_grass', 'frame_founding'];
+const FRAMES = ['frame_gold', 'frame_seven', 'frame_ten', 'frame_month', 'frame_hundred', 'frame_week', 'frame_month_top', 'frame_level', 'frame_friends', 'frame_retro', 'frame_grass', 'frame_founding'];
 
 /** Development builds only: every background with Baller on it and every frame, for the founder's review in one look. */
 export default function LooksScreen() {

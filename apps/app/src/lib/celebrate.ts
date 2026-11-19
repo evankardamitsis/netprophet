@@ -15,6 +15,7 @@ import { questCelebrationView } from './quests';
 import { leagueCelebrationView } from './ladder';
 import { hasMoment } from './unlockLadder';
 import { fmt } from './votes';
+import { dayCelebrationWords, dayMilestoneFrame, isDayCelebration } from './dailyStreak';
 
 /**
  * What a σερί milestone celebration says (prototype msL): «ΣΕΡΙ», the number in the pill, the title, and a reward
@@ -31,6 +32,8 @@ export interface CelebrationView {
   tier: number | null;
   title: string;
   reward: string;
+  /** a daily σερί milestone with a Frame («Επτά», «Δέκα», «Μήνας», «Εκατό»): Baller wears it in the moment */
+  frame?: string | null;
 }
 
 /**
@@ -43,6 +46,9 @@ export function nextGroup(list: Celebration[]): Celebration[] {
   const level = list.find(isLevel);
   if (level) return [level];
   const streaks = list.filter((c) => isStreak(c) || isRecord(c));
+  // days in a row and correct calls in a row (queued before the switch) never share one moment: the days go first
+  const days = streaks.filter(isDayCelebration);
+  if (days.length > 0) return days;
   if (streaks.length > 0) return streaks;
   const badge = list.find((c) => c.payload.type === 'badge');
   if (badge) return [badge];
@@ -135,7 +141,7 @@ export function groupView(group: Celebration[], t: Copy, gender?: Gender): Celeb
  */
 export function streakGroupView(list: StreakCelebration[], t: Copy): CelebrationView {
   const top = list.reduce((a, b) => (b.payload.streak > a.payload.streak ? b : a));
-  if (list.length === 1) return celebrationView(top, t);
+  if (list.length === 1 || isDayCelebration(top)) return celebrationView(top, t);
   const r = t.celebrate.rewards;
   const gifts: string[] = [];
   let frame: string | null = null;
@@ -162,6 +168,11 @@ export function streakGroupView(list: StreakCelebration[], t: Copy): Celebration
 
 export function celebrationView(c: StreakCelebration, t: Copy): CelebrationView {
   const n = c.payload.streak;
+  if (isDayCelebration(c)) {
+    // the daily σερί (board 18 Nov): «Επτά μέρες στη σειρά!», «Πήρες το Frame «Επτά».», Baller in the Frame
+    const w = dayCelebrationWords(c, t);
+    return { label: greekCaps(t.celebrate.label), streak: n, tier: null, title: w.title, reward: w.reward, frame: dayMilestoneFrame(c) };
+  }
   const r = c.payload.reward ?? { freeze: false, frame: null };
   const frame = r.frame ? t.celebrate.frames[r.frame] ?? r.frame : null;
   const gear = r.gear ? t.celebrate.gear[r.gear] ?? r.gear : null;

@@ -8,6 +8,28 @@ export const el = {
   },
   streak: {
     label: 'σερί',
+    /** the daily σερί (founder's board, 18 Nov 2026): «12 μέρες στη σειρά» */
+    days: { one: '1 μέρα στη σειρά', many: '{n} μέρες στη σειρά' },
+    /** a tap on σερί in the top bar, with the daily σερί on */
+    sheet: {
+      /** this week, Monday first; a day an Ασφάλεια covered shows ✓ instead of its letter */
+      week: ['Δ', 'Τ', 'Τ', 'Π', 'Π', 'Σ', 'Κ'],
+      todo: 'Σήμερα δεν έχεις παίξει ακόμα. Μία ψήφος ή το quiz και το κρατάς.',
+      done: 'Σήμερα το κράτησες. Τα λέμε αύριο.',
+      /** σερί 0 */
+      start: 'Μία ψήφος ή το quiz σήμερα και ξεκινάς σερί.',
+      freezes: 'Ασφάλειες: {n} από {max}',
+      frozenKey: 'Μπλε κύκλος: μέρα που την κάλυψε Ασφάλεια.',
+      /** the next prize: «Στις 7 μέρες: Frame «Επτά» και μία Ασφάλεια» */
+      next: 'Στις {n} μέρες: {prize}',
+      prizeFrame: 'Frame «{name}»',
+      prizeFreeze: 'μία Ασφάλεια',
+      prizeJoin: ' και ',
+      more: 'Όλα τα νούμερά σου ›',
+      close: 'Κλείσιμο',
+    },
+    /** the small moment after the first play of the day (not full screen): «+1», «13 μέρες στη σειρά», the line */
+    plusOne: { line: 'Τα λέμε αύριο.' },
   },
   level: {
     label: 'level',
@@ -360,6 +382,10 @@ export const el = {
     beatPair: 'κέρδισαν τους {losers}',
     points: '+{points} · σερί {streak}',
     kept: 'κράτησες το σερί',
+    /** with the daily σερί on, a result tells the correct calls in a row, not the σερί: «3 σωστές στη σειρά · +15» */
+    calls: '{n} σωστές στη σειρά · +{points}',
+    /** one correct call, not yet a run */
+    pointsOnly: '+{points}',
     /** the one line a played result folds into when you did not call it: «Δρουλιάς κέρδισε» */
     won: '{winner} κέρδισε',
     wonPair: '{winner} κέρδισαν',
@@ -376,6 +402,9 @@ export const el = {
       /** the toast once they are taken: «+155 πόντοι · σερί 7»; with no point in them, «Τα είδες όλα · σερί 0» */
       taken: '+{points} πόντοι · σερί {streak}',
       takenNone: 'Τα είδες όλα · σερί {streak}',
+      /** the same with the daily σερί on (results no longer move it) */
+      takenDaily: '+{points} πόντοι',
+      takenNoneDaily: 'Τα είδες όλα',
     },
   },
   results: {
@@ -627,6 +656,13 @@ export const el = {
     freeze: { ready: 'Ασφάλεια σερί {i} από {max}, έτοιμη', empty: 'Ασφάλεια σερί {i} από {max}, άδεια' },
     /** «Δωρεάν Ασφάλεια σε 4 ψήφους» */
     nextFreeze: { one: 'Δωρεάν Ασφάλεια στην επόμενη ψήφο', many: 'Δωρεάν Ασφάλεια σε {n} ψήφους' },
+    /** the daily σερί: a free Ασφάλεια comes with days played (day 3, then every 7th) */
+    nextFreezeDays: { one: 'Δωρεάν Ασφάλεια με μία μέρα ακόμα', many: 'Δωρεάν Ασφάλεια σε {n} μέρες ακόμα' },
+    /** the daily σερί: the correct calls in a row live on in the stats («Η καλύτερη σειρά σου: 7 σωστές») */
+    bestCalls: { label: 'Η καλύτερη σειρά σου:', one: '1 σωστή', many: '{n} σωστές' },
+    /** the 20:00 reminder (notification_prefs.streak_reminder), with the daily σερί on */
+    streakReminder: 'Υπενθύμιση σερί',
+    streakReminderLine: 'Στις 20:00, αν δεν έχεις παίξει μέχρι τότε.',
     freezesFull: 'Έχεις όσες Ασφάλειες χωράνε',
     score: 'Το σκορ σου',
     stats: {
@@ -882,7 +918,7 @@ export const el = {
       deciding: 'στο τρίτο σετ',
       tiebreaks: 'στα tie-break',
       tournaments: 'τουρνουά',
-      bestStreak: 'καλύτερο σερί',
+      bestStreak: 'σωστές στη σειρά',
       ladder: 'Ladder',
     },
     /** {month} is «τον Σεπτέμβριο» */
@@ -898,7 +934,7 @@ export const el = {
     ladderValue: '{n}ος από {size}',
     locked: {
       title: 'Όλη η σεζόν σου, με Pro',
-      line: 'Σετ, η καλύτερη νίκη, νίκες στη σειρά, tie-break, σερί, Ladder και η σύγκριση με τον προηγούμενο μήνα.',
+      line: 'Σετ, η καλύτερη νίκη, νίκες στη σειρά, tie-break, σωστές στη σειρά, Ladder και η σύγκριση με τον προηγούμενο μήνα.',
       cta: 'Δες το Pro ›',
     },
     noPlayer: 'Βρες τον εαυτό σου στους παίκτες και θα μετράμε και τα ματς σου.',
@@ -1308,6 +1344,15 @@ export const el = {
   celebrate: {
     label: 'Σερί',
     titles: { 3: 'Τρία στη σειρά!', 5: 'Πέντε στη σειρά!', 7: 'Επτά στη σειρά!', 10: 'Το δέκα το καλό' } as Record<number, string>,
+    /** the daily σερί's milestones (days in a row) */
+    dayTitles: {
+      3: 'Τρεις μέρες στη σειρά!',
+      7: 'Επτά μέρες στη σειρά!',
+      10: 'Δέκα μέρες. Το δέκα το καλό!',
+      30: 'Ένας μήνας στη σειρά!',
+      50: 'Πενήντα μέρες!',
+      100: 'Εκατό μέρες στη σειρά!',
+    } as Record<number, string>,
     rewards: {
       freeze: 'Πάρε και μια Ασφάλεια για τις δύσκολες μέρες',
       frame: 'Frame «{name}»',
@@ -1317,8 +1362,11 @@ export const el = {
       short: { freeze: 'Ασφάλεια', frame: 'Frame «{name}»', gear: '{name}' },
       join: ' + ',
       none: 'Συνέχισε έτσι',
+      /** a daily σερί milestone that gave a Frame: «Πήρες το Frame «Επτά».» */
+      frameGot: 'Πήρες το Frame «{name}».',
+      frameAndFreezeGot: 'Πήρες το Frame «{name}» και μία Ασφάλεια.',
     },
-    frames: { frame_seven: 'Επτά', frame_ten: 'Δέκα' } as Record<string, string>,
+    frames: { frame_seven: 'Επτά', frame_ten: 'Δέκα', frame_month: 'Μήνας', frame_hundred: 'Εκατό' } as Record<string, string>,
     gear: { gear_headband: 'Κορδέλα' } as Record<string, string>,
     /** «σερί» in the pill */
     unit: 'σερί',
@@ -1805,6 +1853,11 @@ export const el = {
       results: { title: 'Τι έγινε', line: 'Εδώ βλέπεις τα αποτελέσματα και πώς πάει το σερί σου κάθε μέρα.' },
       ladder: { title: 'Η Κατάταξη', line: 'Θα βγεις πρώτος στην παρέα; Δες πού βρίσκεσαι.' },
       me: { title: 'Εγώ', line: 'Η κάρτα παίκτη σου, ο Baller σου και το Pro, όλα εδώ.' },
+    },
+    /** the same steps with the daily σερί on: the σερί is days in a row, results no longer move it */
+    daily: {
+      streak: { title: 'Το σερί σου', line: 'Παίξε κάθε μέρα: μία ψήφος ή το quiz. Όσες μέρες στη σειρά, τόσο μεγαλώνει το σερί σου. Δίπλα, οι πόντοι σου.' },
+      results: { title: 'Τι έγινε', line: 'Εδώ βλέπεις τα αποτελέσματα και πόσες σωστές έχεις στη σειρά.' },
     },
     next: 'Επόμενο ›',
     skip: 'Παράλειψη',

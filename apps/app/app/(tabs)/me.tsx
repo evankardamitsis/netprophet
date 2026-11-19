@@ -19,7 +19,8 @@ import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
-import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useMyGender, usePushPrefs, useMedals, type PushPrefKey } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useIsStaff, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useMyGender, usePushPrefs, useMedals, useStreakGame, type PushPrefKey } from '../../src/lib/data';
+import { isDailyStreak } from '../../src/lib/dailyStreak';
 import { useStoreDiagnostics } from '../../src/lib/purchase';
 import { diagLines } from '../../src/lib/storeTypes';
 import { fmt } from '../../src/lib/votes';
@@ -724,6 +725,13 @@ function StreakBox({ v }: { v: MeView }) {
         </View>
       </View>
       <Text style={styles.muted}>{v.freezes.line}</Text>
+      {/* the daily σερί: the correct calls in a row live on here (board 18 Nov) */}
+      {v.bestCalls ? (
+        <Text style={styles.muted}>
+          {`${v.bestCalls.label} `}
+          <Text style={styles.bestCalls}>{v.bestCalls.value}</Text>
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -1032,7 +1040,10 @@ function LanguageRow() {
 function PushRows({ pro }: { pro: boolean }) {
   const t = useCopy();
   const prefs = usePushPrefs();
+  // the 20:00 σερί reminder exists only with the daily σερί on (core.streak_push_sweep)
+  const daily = isDailyStreak(useStreakGame());
   const rows: { key: PushPrefKey; title: string; line: string }[] = [
+    ...(daily ? [{ key: 'streak_reminder' as const, title: t.me.streakReminder, line: t.me.streakReminderLine }] : []),
     ...(pro
       ? [
           { key: 'tournaments' as const, title: t.me.tournamentsPush, line: t.me.tournamentsPushLine },
@@ -1226,6 +1237,7 @@ const styles = StyleSheet.create({
   freeze: { width: 34, height: 34, borderRadius: 999, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   freezeReady: { backgroundColor: colors.lime, borderColor: colors.ink },
   freezeEmpty: { borderColor: colors.fog, borderStyle: 'dashed' },
+  bestCalls: { fontFamily: fonts.bodyBold, color: colors.ink },
   freezeMark: { fontFamily: fonts.bodyBold, fontSize: 18, lineHeight: 20, color: colors.ink },
   label: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
   slots: { flexDirection: 'row', gap: 8 },

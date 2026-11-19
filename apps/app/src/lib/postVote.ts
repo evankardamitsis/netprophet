@@ -16,12 +16,15 @@ export interface GameSnapshot {
   unlocks: readonly string[] | null;
   /** get_me's total points */
   points: number | null;
+  /** get_me's `played_today` (daily σερί only; missing or null while it is off) */
+  playedToday?: boolean | null;
 }
 
 /**
  * Whether the votes between `before` and `after` could have queued a celebration. A vote queues one only through a
- * quest it finished, a badge tier it reached, an unlock step it opened, or points (a level); σερί milestones come
- * from results, never from a vote. Anything unknown counts as «maybe», so nothing is missed.
+ * quest it finished, a badge tier it reached, an unlock step it opened, points (a level), or, with the daily σερί
+ * on, the first play of the day (a day milestone or «Νέο ρεκόρ»; correct-calls milestones come from results). Anything
+ * unknown counts as «maybe», so nothing is missed.
  */
 export function mayHaveCelebrated(before: GameSnapshot, after: GameSnapshot): boolean {
   if (!before.quests || !after.quests || !before.badges || !after.badges || !before.unlocks || !after.unlocks) return true;
@@ -31,6 +34,7 @@ export function mayHaveCelebrated(before: GameSnapshot, after: GameSnapshot): bo
   if (after.badges.badges.some((b) => b.tier > (tierBefore.get(b.key) ?? 0))) return true;
   const open = new Set(before.unlocks);
   if (after.unlocks.some((id) => !open.has(id))) return true;
+  if (before.playedToday === false && after.playedToday === true) return true;
   if (before.points === null || after.points === null) return true;
   return after.points > before.points;
 }

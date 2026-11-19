@@ -45,21 +45,27 @@ export function restLine(rest: readonly Row[], t: Copy): string {
  * and the card on screen too when its own moment has not landed yet; σερί is where the last result (the queue is
  * oldest first) leaves it.
  */
-export function takeAll<R extends Row & { streak: number }>(
+export function takeAll<R extends Row & { streak: number; daily?: boolean }>(
   card: R,
   rest: readonly R[],
   cardApplied: boolean,
-): { points: number; streak: number; allRight: boolean } {
+): { points: number; streak: number | null; allRight: boolean } {
   const rows = cardApplied ? rest : [card, ...rest];
   const { n, points, right } = summaryCounts(rows);
   const last = rest.length > 0 ? rest[rest.length - 1]! : card;
+  // with the daily σερί on, results never move it: no «+1» flies and the toast leaves the σερί out (streak null)
+  if (last.daily) return { points, streak: null, allRight: false };
   // «+1» flies to σερί only when every one of them kept it going
   return { points, streak: last.streak, allRight: n > 0 && right === n };
 }
 
-/** the toast after the tap: «+155 πόντοι · σερί 7», or «Τα είδες όλα · σερί 0» when nothing in them scored */
-export function takenToast(taken: { points: number; streak: number }, t: Copy): string {
+/**
+ * the toast after the tap: «+155 πόντοι · σερί 7», or «Τα είδες όλα · σερί 0» when nothing in them scored; with the
+ * daily σερί (streak null) «+155 πόντοι» and «Τα είδες όλα»
+ */
+export function takenToast(taken: { points: number; streak: number | null }, t: Copy): string {
   const s = t.result.summary;
+  if (taken.streak === null) return taken.points > 0 ? fmt(s.takenDaily, { points: taken.points }) : s.takenNoneDaily;
   return taken.points > 0 ? fmt(s.taken, { points: taken.points, streak: taken.streak }) : fmt(s.takenNone, { streak: taken.streak });
 }
 

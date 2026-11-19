@@ -7,6 +7,7 @@ import { dayShort, dayTimeShort, hasTime } from './tournaments';
 import { playerAvatar, type AvatarLook } from './avatar';
 import { fmt, voteSplit, type Side } from './votes';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
+import { callsChip } from './dailyStreak';
 
 /** One player on a card. */
 export interface CardPerson {
@@ -120,13 +121,18 @@ export interface CardResult {
   streak: number;
   /** a freeze saved the σερί on a wrong call */
   frozen: boolean;
+  /**
+   * the daily σερί was on when it resolved: the card tells the correct calls in a row, the σερί (days) is not its
+   * business, so the header neither plays a change nor flies «+1» from it
+   */
+  daily: boolean;
   winnerSurname: string;
   winnerFirst: string;
   /** «κέρδισε τον Νίκο Ροδίτη» */
   line: string;
   /** «6-3, 7-5», winner first */
   sets: string;
-  /** what the pill says: «+10 · σερί 4», «κράτησες το σερί», or nothing */
+  /** what the pill says: «+10 · σερί 4», «κράτησες το σερί», with the daily σερί «3 σωστές στη σειρά · +15», or nothing */
   pill: string | null;
 }
 
@@ -141,9 +147,12 @@ export function fromResultCard(card: FeedResultCard, t: Copy): CardResult {
   const p = card.payload;
   const ev = p.streak_event;
   const ok = p.outcome === 'correct';
-  const frozen = ev?.kind === 'frozen' || (!ev && p.freeze_used);
+  // with the daily σερί on, a result never moves the σερί: `calls` says so (a wrong call's «frozen, kept» spent nothing)
+  const daily = ev?.calls !== undefined;
+  const frozen = !daily && (ev?.kind === 'frozen' || (!ev && p.freeze_used));
+  const chip = callsChip(ok, p.points, ev?.calls, t);
   const streakBefore =
-    ev?.kind === 'advanced' ? Math.max(0, p.streak - 1) : ev?.kind === 'broken' ? ev.lostStreak ?? p.streak : p.streak;
+    daily ? p.streak : ev?.kind === 'advanced' ? Math.max(0, p.streak - 1) : ev?.kind === 'broken' ? ev.lostStreak ?? p.streak : p.streak;
   const winners = p.sides?.find((s) => s.side === p.winner_side)?.players ?? [];
   const losers = p.sides?.find((s) => s.side !== p.winner_side)?.players ?? [];
   let line = '';
@@ -167,12 +176,13 @@ export function fromResultCard(card: FeedResultCard, t: Copy): CardResult {
     streakBefore,
     streak: p.streak,
     frozen,
+    daily,
     winnerSurname: winners.map((w) => w.surname).join(' & '),
     winnerFirst: winners.map((w) => w.first_name).join(' & '),
     line,
     // a player-logged result has no games: the card shows the sets («2-1»)
     sets: p.sets?.length ? p.sets.map((x) => `${x.w}-${x.l}`).join(', ') : p.score ?? '',
-    pill: ok ? fmt(t.result.points, { points: p.points, streak: p.streak }) : frozen ? t.result.kept : null,
+    pill: chip !== undefined ? chip : ok ? fmt(t.result.points, { points: p.points, streak: p.streak }) : frozen ? t.result.kept : null,
   };
 }
 

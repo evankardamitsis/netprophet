@@ -1,4 +1,5 @@
-import type { MePage, MeResult, PlayerProfile } from '@netprophet/db';
+import { addDays, dayKey, weekKey } from '@netprophet/core';
+import type { MePage, MeResult, PlayerProfile, StreakWeek } from '@netprophet/db';
 import { mockPlayer } from './players';
 
 /**
@@ -49,6 +50,12 @@ export function mockMe(now: Date = new Date(), fresh = false): { me: MeResult; p
       votes_cast: fresh ? 4 : 34,
       votes_correct: fresh ? 3 : 21,
       votes_to_next_free_freeze: 11,
+      // the daily σερί plays on in the sample (app 1.0.1): σερί 5 days, today not played yet
+      daily_streak: true,
+      days_to_next_free_freeze: 2,
+      played_today: false,
+      calls_streak: fresh ? 1 : 2,
+      calls_best: fresh ? 1 : 7,
       freezes: { free: fresh ? 0 : 1, paid: 0, max: 2 },
       level: { level: 3, into: 40, span: 300, next: 260 },
     },
@@ -72,4 +79,14 @@ export function mockMe(now: Date = new Date(), fresh = false): { me: MeResult; p
     },
   };
   return { me, page, player: fresh ? null : player };
+}
+
+/** the sample's week (σερί 5, today not played): the five days before today kept, the third of them by an Ασφάλεια */
+export function mockStreakWeek(now: Date = new Date()): StreakWeek {
+  const today = dayKey(now.toISOString());
+  const monday = weekKey(now.toISOString());
+  const days = [5, 4, 3, 2, 1]
+    .map((back) => ({ day: addDays(today, -back), kind: back === 3 ? ('frozen' as const) : ('played' as const) }))
+    .filter((x) => x.day >= monday);
+  return { on: true, today, monday, days };
 }

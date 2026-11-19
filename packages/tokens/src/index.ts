@@ -35,6 +35,8 @@ export const colors = {
   white: '#FFFFFF',
   /** the deeper lime among the celebration confetti */
   leaf: '#9BD05A',
+  /** a day of the daily σερί that an Ασφάλεια covered (the sheet under σερί, board 18 Nov): a soft blue, never an action */
+  freezeDay: '#9DB0FF',
   /** the logo's bouncing balls in their own colours (tennis is lime, football paper and ink) */
   padelBall: '#F2E14C',
   basketBall: '#E8742A',
@@ -226,6 +228,8 @@ export const motion = {
   revealDur: 700,
   stagger: 70,
   celebration: 3500,
+  /** the small «+1» after the first play of the day (daily σερί, board 18 Nov: about a second, not full screen) */
+  dayPlusOne: 1100,
   /** short reveal (text and chips) */
   revealDurShort: 560,
   /** a card or block leaving the screen (fade, slide, shrink): quicker than a reveal, so the next one is not kept waiting */

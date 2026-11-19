@@ -16,12 +16,14 @@ export interface PendingResult {
   /** σερί before this card and after it */
   streakBefore: number;
   streak: number;
+  /** resolved with the daily σερί on: it never changes the σερί, so the header keeps get_me's */
+  daily?: boolean;
 }
 
 /** σερί at the head of the queue (oldest first): before the card until it plays, then what it left */
 export function streakAtHead(pending: readonly PendingResult[], applied: ReadonlySet<string>): number | null {
   const head = pending[0];
-  if (!head) return null;
+  if (!head || head.daily) return null;
   return applied.has(head.id) ? head.streak : head.streakBefore;
 }
 

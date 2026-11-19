@@ -4,8 +4,11 @@ import type { GetLookResult, LookCategory, LookItem, LookKind } from '@netprophe
 const ROWS: [LookCategory, string, string, string, LookKind, number | null, string | null][] = [
   ['frame', 'frame_level', 'Level', 'Level', 'earned', null, 'Το κερδίζεις με ένα badge σε χρυσή βαθμίδα'],
   ['frame', 'frame_month_top', 'Κορυφή μήνα', 'Top of the month', 'earned', null, 'Το κερδίζεις στην πρώτη τριάδα της Κατάταξης'],
-  ['frame', 'frame_seven', 'Επτά', 'Seven', 'earned', null, 'Το κερδίζεις με 7 σωστές στη σειρά'],
-  ['frame', 'frame_ten', 'Δέκα', 'Ten', 'earned', null, 'Το κερδίζεις με 10 σωστές στη σειρά'],
+  // the sample plays with the daily σερί on (mock/me.ts), so these read as the server words them then
+  ['frame', 'frame_seven', 'Επτά', 'Seven', 'earned', null, 'Το κερδίζεις με 7 μέρες στη σειρά'],
+  ['frame', 'frame_ten', 'Δέκα', 'Ten', 'earned', null, 'Το κερδίζεις με 10 μέρες στη σειρά'],
+  ['frame', 'frame_month', 'Μήνας', 'Month', 'earned', null, 'Το κερδίζεις με 30 μέρες στη σειρά'],
+  ['frame', 'frame_hundred', 'Εκατό', 'Hundred', 'earned', null, 'Το κερδίζεις με 100 μέρες στη σειρά'],
   ['frame', 'frame_week', 'Της εβδομάδας', 'Of the week', 'earned', null, 'Το κερδίζεις με την εβδομαδιαία αποστολή'],
   ['frame', 'frame_founding', 'Πρώτη γενιά', 'Founding', 'earned', null, 'Για όσους μπήκαν Ιδρυτικά μέλη στο Pro ως τις 31/3'],
   ['frame', 'frame_gold', 'Χρυσό', 'Gold', 'buy', 1.99, null],

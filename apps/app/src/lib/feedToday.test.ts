@@ -38,6 +38,7 @@ const result = (over: Partial<CardResult> = {}): CardResult => ({
   streakBefore: 1,
   streak: 2,
   frozen: false,
+  daily: false,
   winnerSurname: 'Δρουλιάς',
   winnerFirst: 'Γιώργος',
   line: '',

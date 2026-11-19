@@ -35,7 +35,7 @@ interface Props {
   /** a card played and left: mark it seen */
   onDone: (card: CardResult) => void;
   /** «Πάρε τους πόντους» tapped: the toast, at once */
-  onTake: (taken: { points: number; streak: number }) => void;
+  onTake: (taken: { points: number; streak: number | null }) => void;
   /** the block left after «Πάρε τους πόντους»: mark the card and every result behind it seen (one call) */
   onTaken: (card: CardResult, rest: CardResult[]) => void;
   /** the deck was opened from the home's results card: the first card enters full, and so does every one after it */

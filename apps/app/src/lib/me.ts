@@ -5,6 +5,7 @@ import type { MePage, MeResult, PlayerProfile } from '@netprophet/db';
 import { initials } from './feed';
 import { toProfile } from './players';
 import { fmt } from './votes';
+import { bestCalls, freezeLine, isDailyStreak } from './dailyStreak';
 
 const fullName = (p: { first_name: string; surname: string }) => `${p.first_name} ${p.surname}`.trim();
 
@@ -27,6 +28,10 @@ export interface MeView {
   direction: { arrow: '↑' | '=' | '↓'; word: string };
   streak: number;
   best: string;
+  /** the σερί counts days in a row (the daily σερί switch is on) */
+  daily: boolean;
+  /** daily σερί only: «Η καλύτερη σειρά σου:» and «7 σωστές», the correct calls at best */
+  bestCalls: { label: string; value: string } | null;
   monthPoints: number;
   freezes: { slots: { ready: boolean; label: string }[]; line: string };
   progress: { matches: number; votes: number; matchesLabel: string; votesLabel: string; cta: string };
@@ -66,7 +71,6 @@ export function toMeView(
 
   const { free, paid, max } = me.game.freezes;
   const held = Math.min(free + paid, max);
-  const toFree = me.game.votes_to_next_free_freeze;
 
   const matches = Math.min(page.matches, LEVEL_MATCHES);
   const votes = Math.min(me.game.votes_cast, LEVEL_VOTES);
@@ -90,13 +94,15 @@ export function toMeView(
     },
     streak: me.game.streak,
     best: fmt(m.best, { n: me.game.streak_best }),
+    daily: isDailyStreak(me.game),
+    bestCalls: bestCalls(me.game, t),
     monthPoints: me.game.month_points,
     freezes: {
       slots: Array.from({ length: max }, (_, i) => ({
         ready: i < held,
         label: fmt(i < held ? m.freeze.ready : m.freeze.empty, { i: i + 1, max }),
       })),
-      line: held >= max ? m.freezesFull : plural(toFree, m.nextFreeze),
+      line: freezeLine(me.game, t),
     },
     progress: {
       matches,

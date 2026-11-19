@@ -28,6 +28,8 @@ import {
   type TourStepId,
 } from "../lib/tourSteps";
 import { fmt } from "../lib/votes";
+import { useStreakGame } from "../lib/data";
+import { isDailyStreak } from "../lib/dailyStreak";
 import {
   alpha,
   bezier,
@@ -330,7 +332,9 @@ function Card({
 }) {
   const t = useCopy();
   const tour = useTour();
-  const copy = t.tour.steps[step];
+  // with the daily σερί on, σερί is days in a row and results no longer move it (board 18 Nov)
+  const daily = isDailyStreak(useStreakGame());
+  const copy = (daily && (step === "streak" || step === "results") ? t.tour.daily[step] : null) ?? t.tour.steps[step];
   // the card's own step, so the count and the button never run ahead of the cut-out
   const index = Math.max(0, tour.steps.indexOf(step));
   const total = tour.steps.length;

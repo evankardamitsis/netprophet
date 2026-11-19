@@ -85,7 +85,7 @@ export function ResultCard({ card, more, delay, onDone, onApplied, stop = false,
     const timers: ReturnType<typeof setTimeout>[] = [];
     timers.push(setTimeout(() => baller.current?.play(card.ok ? 'jump' : 'sigh'), delay + (card.ok ? FLY_AT : APPLY_WRONG_AT)));
     if (card.ok) {
-      timers.push(setTimeout(() => !stopped.current && hud.fly(self, card.points, true), delay + FLY_AT));
+      timers.push(setTimeout(() => !stopped.current && hud.fly(self, card.points, !card.daily), delay + FLY_AT));
       timers.push(setTimeout(() => apply(), delay + APPLY_OK_AT));
     } else {
       timers.push(setTimeout(() => apply(), delay + APPLY_WRONG_AT));

@@ -17,6 +17,7 @@ import { api, isLive } from "../src/lib/supabase";
 import { colors } from "../src/theme";
 import { initSounds } from "../src/lib/sound";
 import { Loading } from "../src/components/Loading";
+import { DayPlusOne } from "../src/components/DayPlusOne";
 import { LocaleProvider, syncProfileLocale } from "../src/lib/LocaleProvider";
 import { useLocale } from "../src/i18n";
 
@@ -169,6 +170,8 @@ function Routes() {
         {/* the opponent link works for anyone, signed in or not */}
         <Stack.Screen name="m/[token]" />
       </Stack>
+      {/* the daily σερί's «+1» after the first play of the day, over every screen (the quiz too) */}
+      {signedIn ? <DayPlusOne /> : null}
     </>
   );
 }

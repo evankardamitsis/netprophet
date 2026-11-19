@@ -21,6 +21,10 @@ export function namePlate(frame: string | null): NamePlate | null {
       return { box: { ...pad, backgroundColor: colors.paper, borderRadius: 10, borderWidth: 3, borderColor: colors.lime }, color: colors.ink };
     case 'frame_seven':
       return { box: { ...pad, backgroundColor: colors.ink, borderRadius: 10, borderWidth: 2, borderColor: f.glow }, color: colors.lime };
+    case 'frame_month':
+      return { box: { ...pad, backgroundColor: f.monthRingDeep, borderRadius: 10, borderWidth: 3, borderColor: f.monthRing }, color: colors.paper };
+    case 'frame_hundred':
+      return { box: { ...pad, backgroundColor: f.hundredRing, borderRadius: 10, borderWidth: 3, borderColor: f.hundredRingDeep }, color: colors.ink };
     case 'frame_month_top':
       return { box: { ...pad, backgroundColor: colors.ink, borderRadius: 4, borderBottomWidth: 5, borderColor: colors.lime }, color: colors.paper };
     case 'frame_friends':
