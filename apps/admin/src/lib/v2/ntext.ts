@@ -1,6 +1,7 @@
 /**
  * The notification texts' rules, the same as core.ntext_fill and api.admin_update_notification_text in
- * supabase-v2/migrations/20270208000000_notification_texts.sql, so the admin preview and checks match what is sent.
+ * supabase-v2/migrations/20270208000000_notification_texts.sql (English: 20270501000000_i18n_pushes.sql), so the admin
+ * preview and checks match what is sent.
  *
  * Fill: {name} gets the value. The text is cut into pieces at « · »; a piece whose value is missing (null or
  * undefined) is left out with its « · ». An empty value keeps the piece.
@@ -29,7 +30,18 @@ export function fillText(text: string, vars: Vars): string {
 }
 
 export type TextProblem =
-  | { code: 'title_required' | 'body_required' | 'title_too_long' | 'body_too_long' | 'em_dash' | 'stray_brace' }
+  | {
+      code:
+        | 'title_required'
+        | 'body_required'
+        | 'title_too_long'
+        | 'body_too_long'
+        | 'em_dash'
+        | 'stray_brace'
+        | 'en_incomplete'
+        | 'title_en_too_long'
+        | 'body_en_too_long';
+    }
   | { code: 'unknown_placeholder'; name: string };
 
 /** what the database would refuse, checked before saving (the database checks again) */
@@ -47,11 +59,36 @@ export function checkText(title: string, body: string, allowed: string[]): TextP
   return null;
 }
 
+/**
+ * The English text: both empty is fine (the push then goes out in Greek), one alone is not; otherwise the same checks
+ * as the Greek, with their own codes for the lengths.
+ */
+export function checkEnglish(title: string, body: string, allowed: string[]): TextProblem | null {
+  const t = title.trim();
+  const b = body.trim();
+  if (!t && !b) return null;
+  if (!t || !b) return { code: 'en_incomplete' };
+  const p = checkText(t, b, allowed);
+  if (p?.code === 'title_too_long') return { code: 'title_en_too_long' };
+  if (p?.code === 'body_too_long') return { code: 'body_en_too_long' };
+  return p;
+}
+
 /** a database error message («unknown_placeholder: count») as a problem, when it is one of ours */
 export function problemFromError(message: string): TextProblem | null {
   const m = /^unknown_placeholder: ([a-z_]+)/.exec(message);
   if (m) return { code: 'unknown_placeholder', name: m[1] };
-  const codes = ['title_required', 'body_required', 'title_too_long', 'body_too_long', 'em_dash', 'stray_brace'] as const;
+  const codes = [
+    'title_en_too_long',
+    'body_en_too_long',
+    'en_incomplete',
+    'title_required',
+    'body_required',
+    'title_too_long',
+    'body_too_long',
+    'em_dash',
+    'stray_brace',
+  ] as const;
   const code = codes.find((c) => message.startsWith(c));
   return code ? { code } : null;
 }
