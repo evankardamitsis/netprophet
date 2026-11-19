@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { V2_URL } from '@/lib/v2/env';
 import { bearerMatches } from '@/lib/cronAuth';
 import { writeRecordsSheet } from '@/lib/v2/recordsSheet';
-import type { Draw } from '@netprophet/ingest';
 import { drawsForTournament, rowsForTournament } from '@/lib/v2/sheets';
+import { drawLinks, failedSheetsMessage, type FailedSheet, type SheetDraw } from '@/lib/v2/drawSheets';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +16,8 @@ interface Due {
   source_kind: string | null;
   source_url: string | null;
   draw_url: string | null;
+  /** every draw sheet, draw_url first (from 20270505000000) */
+  draw_urls?: string[] | null;
   season_start_year: number | null;
   last_run_at: string | null;
 }
@@ -49,19 +51,20 @@ export async function GET(request: NextRequest) {
 
   const results: { id: string; name: string; kind: 'schedule' | 'draws'; ok: boolean; result?: unknown; error?: string }[] = [];
   for (const t of (due.data ?? []) as Due[]) {
-    // the draw sheet is read once: it is stored below and it corrects the category of doubles rows labelled as singles
-    let draws: Draw[] | null = null;
-    let drawError: string | null = null;
-    if (t.draw_url) {
+    // the draw sheets are read once: stored below, and they correct the category of doubles rows labelled as singles
+    const links = drawLinks(t);
+    let draws: SheetDraw[] | null = null;
+    let failed: FailedSheet[] = [];
+    if (links.length > 0) {
       try {
-        draws = await drawsForTournament(t);
+        ({ draws, failed } = await drawsForTournament(t));
       } catch (e) {
-        drawError = e instanceof Error ? e.message : 'draw read failed';
+        failed = [{ url: links[0]!, error: e instanceof Error ? e.message : 'draw read failed' }];
       }
     }
     if (t.source_url) {
       try {
-        const rows = await rowsForTournament(t, t.draw_url ? (draws ?? []) : null);
+        const rows = await rowsForTournament(t, links.length > 0 ? (draws ?? []) : null);
         const run = await rpc('ingest_cron_run', { p_tournament_id: t.id, p_rows: rows });
         if (run.error) throw new Error(run.error.message);
         results.push({ id: t.id, name: t.name, kind: 'schedule', ok: true, result: run.data });
@@ -71,14 +74,19 @@ export async function GET(request: NextRequest) {
         results.push({ id: t.id, name: t.name, kind: 'schedule', ok: false, error: logged.error ? `${message} (and logging it failed: ${logged.error.message})` : message });
       }
     }
-    if (t.draw_url) {
-      try {
-        if (drawError !== null || draws === null) throw new Error(drawError ?? 'draw read failed');
-        const run = await rpc('ingest_cron_draws', { p_tournament_id: t.id, p_draws: draws });
-        if (run.error) throw new Error(run.error.message);
-        results.push({ id: t.id, name: t.name, kind: 'draws', ok: true, result: run.data });
-      } catch (e) {
-        const message = e instanceof Error ? e.message : 'draw read failed';
+    if (links.length > 0) {
+      // the sheets that read are stored (the others keep their stored draws), then a failed sheet is logged by name
+      if (failed.length < links.length) {
+        try {
+          const run = await rpc('ingest_cron_draws', { p_tournament_id: t.id, p_draws: draws ?? [] });
+          if (run.error) throw new Error(run.error.message);
+          results.push({ id: t.id, name: t.name, kind: 'draws', ok: true, result: run.data });
+        } catch (e) {
+          failed = [...failed, { url: 'storing the draws', error: e instanceof Error ? e.message : 'draw store failed' }];
+        }
+      }
+      if (failed.length > 0) {
+        const message = failedSheetsMessage(failed, links.length);
         const logged = await rpc('ingest_cron_draws', { p_tournament_id: t.id, p_draws: [], p_error: message });
         results.push({ id: t.id, name: t.name, kind: 'draws', ok: false, error: logged.error ? `${message} (and logging it failed: ${logged.error.message})` : message });
       }

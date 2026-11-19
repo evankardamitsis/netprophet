@@ -10,6 +10,7 @@ import { candidateContext, pairOptions, rankCandidates, reviewAnswers, reviewQue
 import type { RecordsResult } from '@/lib/v2/records';
 import { DEFAULT_UNTIMED_LOCK, validLockTime } from '@/lib/v2/lockTime';
 import { LogoEditor, LogoMark } from './LogoEditor';
+import { DrawLinks, filledLinks } from './DrawLinks';
 
 /**
  * Tournaments (founder, 13-14 Oct): add a tournament once (name, surface, links) and it updates itself 3 times a day;
@@ -292,7 +293,7 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
   const [name, setName] = useState('');
   const [surface, setSurface] = useState('');
   const [url, setUrl] = useState('');
-  const [drawUrl, setDrawUrl] = useState('');
+  const [drawUrls, setDrawUrls] = useState<string[]>(['']);
   const [startsOn, setStartsOn] = useState('');
   const [endsOn, setEndsOn] = useState('');
   const [entryDeadline, setEntryDeadline] = useState('');
@@ -306,7 +307,7 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
     setName('');
     setSurface('');
     setUrl('');
-    setDrawUrl('');
+    setDrawUrls(['']);
     setEntryDeadline('');
     setEntryLink('');
   };
@@ -314,7 +315,7 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
   const check = () =>
     start(async () => {
       setPhase({ kind: 'checking' });
-      const created = await createTournament({ name, surface, source_url: url, draw_url: drawUrl, starts_on: startsOn, ends_on: endsOn, entry_deadline: entryDeadline, entry_link: entryLink });
+      const created = await createTournament({ name, surface, source_url: url, draw_urls: filledLinks(drawUrls), starts_on: startsOn, ends_on: endsOn, entry_deadline: entryDeadline, entry_link: entryLink });
       if (!created.ok || !created.data) {
         setPhase({ kind: 'failed', text: `We couldn’t save the tournament: ${created.message}` });
         return;
@@ -328,10 +329,10 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
         return;
       }
       let draws: number | null = null;
-      if (drawUrl.trim()) {
+      if (filledLinks(drawUrls).length > 0) {
         const d = await readDraws(id, true);
-        if (!d.ok) {
-          setPhase({ kind: 'failed', text: `${readError(d.message)} The tournament is saved. Fix the draws link with Edit on its card.` });
+        if (!d.ok || d.data?.failed) {
+          setPhase({ kind: 'failed', text: `${readError(d.data?.failed ?? d.message)} The tournament is saved. Fix the draws link with Edit on its card.` });
           resetForm();
           return;
         }
@@ -355,10 +356,10 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
         await onChanged();
         return;
       }
-      if (drawUrl.trim()) {
+      if (filledLinks(drawUrls).length > 0) {
         const d = await readDraws(id, false);
-        if (!d.ok) {
-          setPhase({ kind: 'failed', text: readError(d.message) });
+        if (!d.ok || d.data?.failed) {
+          setPhase({ kind: 'failed', text: readError(d.data?.failed ?? d.message) });
           resetForm();
           await onChanged();
           return;
@@ -391,10 +392,7 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
           Schedule and results link
           <input className="v2-input" value={url} disabled={locked} placeholder="Google Sheet, or athenstennis.gr/el/schedule" onChange={(e) => setUrl(e.target.value)} />
         </label>
-        <label className="v2-field">
-          Draws sheet link (optional)
-          <input className="v2-input" value={drawUrl} disabled={locked} placeholder="https://docs.google.com/spreadsheets/d/..." onChange={(e) => setDrawUrl(e.target.value)} />
-        </label>
+        <DrawLinks links={drawUrls} onChange={setDrawUrls} disabled={locked} />
         <label className="v2-field">
           Starts (optional)
           <input className="v2-input" type="date" value={startsOn} disabled={locked} onChange={(e) => setStartsOn(e.target.value)} />
@@ -442,7 +440,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
   const [name, setName] = useState(t.name);
   const [surface, setSurface] = useState(t.surface ?? '');
   const [url, setUrl] = useState(t.source_url ?? '');
-  const [drawUrl, setDrawUrl] = useState(t.draw_url ?? '');
+  const [drawUrls, setDrawUrls] = useState<string[]>(t.draw_urls?.length ? t.draw_urls : t.draw_url ? [t.draw_url] : ['']);
   const [startsOn, setStartsOn] = useState(t.starts_on ?? '');
   const [endsOn, setEndsOn] = useState(t.ends_on ?? '');
   const [entryDeadline, setEntryDeadline] = useState(t.entry_deadline ?? '');
@@ -479,6 +477,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
       }
       let draws: number | null = null;
       let drawResults = 0;
+      let drawProblem = '';
       if (t.draw_url) {
         setNote({ tone: 'working', title: 'Schedule read. Now the draws…', detail: 'Decisions the sheet no longer supports are already closed.' });
         const d = await readDraws(t.id, false);
@@ -489,6 +488,8 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
         }
         draws = d.data?.draws ?? 0;
         drawResults = d.data?.draw_results ?? 0;
+        // one draw sheet that did not read keeps its stored draws; the others are refreshed
+        drawProblem = d.data?.failed ?? '';
       }
       const c = res.data ?? {};
       const created = c.created ?? 0;
@@ -498,10 +499,11 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
         .filter(Boolean)
         .join(', ');
       setNote({
-        tone: 'done',
+        tone: drawProblem ? 'problem' : 'done',
         title: extra ? `Updated: ${extra}` : 'Updated, nothing new since last time',
         detail:
           [
+            drawProblem ? `${readError(drawProblem)} Its draws stay as they were.` : '',
             draws !== null ? `${draws} draws refreshed.` : '',
             drawResults ? `${plural(drawResults, 'result')} from the draws.` : '',
             autoNamed(c) ? `${plural(autoNamed(c), 'name')} decided from match history.` : '',
@@ -519,7 +521,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
 
   const save = () =>
     run('save', async () => {
-      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_url: drawUrl, starts_on: startsOn, ends_on: endsOn, entry_deadline: entryDeadline, entry_link: entryLink, untimed_lock_time: untimedLock });
+      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_urls: filledLinks(drawUrls), starts_on: startsOn, ends_on: endsOn, entry_deadline: entryDeadline, entry_link: entryLink, untimed_lock_time: untimedLock });
       setNote(r.ok ? null : { tone: 'problem', title: 'Could not save', detail: r.message });
       if (r.ok) {
         notify('Saved');
@@ -636,10 +638,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             Schedule and results link
             <input className="v2-input" value={url} onChange={(e) => setUrl(e.target.value)} />
           </label>
-          <label className="v2-field">
-            Draws sheet link (optional)
-            <input className="v2-input" value={drawUrl} onChange={(e) => setDrawUrl(e.target.value)} />
-          </label>
+          <DrawLinks links={drawUrls} onChange={setDrawUrls} disabled={!idle} />
           <label className="v2-field">
             Starts
             <input className="v2-input" type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
@@ -661,7 +660,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             <input className="v2-input" type="time" step={60} value={untimedLock} onChange={(e) => setUntimedLock(e.target.value)} />
           </label>
           <div className="v2-row">
-            <Secondary small busy={busy === 'save'} disabled={!idle || name.trim() === '' || !validLockTime(untimedLock) || (startsOn !== '' && endsOn !== '' && endsOn < startsOn) || (t.ongoing && url.trim() === '' && drawUrl.trim() === '')} onClick={save}>
+            <Secondary small busy={busy === 'save'} disabled={!idle || name.trim() === '' || !validLockTime(untimedLock) || (startsOn !== '' && endsOn !== '' && endsOn < startsOn) || (t.ongoing && url.trim() === '' && filledLinks(drawUrls).length === 0)} onClick={save}>
               {busy === 'save' ? 'Saving…' : 'Save'}
             </Secondary>
             <Ghost onClick={() => setEditing(false)} disabled={!idle}>

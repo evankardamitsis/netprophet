@@ -134,9 +134,12 @@ function TournamentCard({
 
   const draws = (dry: boolean) =>
     start(async () => {
-      setNote({ text: 'Reading the draw sheet…', error: false });
+      setNote({ text: 'Reading the draw sheets…', error: false });
       const r = await readDraws(t.id, dry);
-      setNote({ text: `${r.message}${r.data ? ` · ${r.data.draws ?? 0} draws, ${r.data.linked ?? 0} of ${r.data.people ?? 0} names linked` : ''}`, error: !r.ok });
+      setNote({
+        text: `${r.message}${r.data ? ` · ${r.data.draws ?? 0} draws, ${r.data.linked ?? 0} of ${r.data.people ?? 0} names linked` : ''}${r.data?.failed ? ` · ${r.data.failed}` : ''}`,
+        error: !r.ok || Boolean(r.data?.failed),
+      });
       if (r.ok && !dry) await onChanged();
     });
 
@@ -171,6 +174,7 @@ function TournamentCard({
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ ...ui.muted, width: 110 }}>Draw sheet</span>
         <input style={{ ...ui.input, flex: '1 1 320px', width: 'auto' }} placeholder="https://docs.google.com/spreadsheets/d/... (one bracket per tab)" value={drawUrl} onChange={(e) => setDrawUrl(e.target.value)} />
+        {(t.draw_urls?.length ?? 0) > 1 ? <span style={ui.muted}>+ {(t.draw_urls?.length ?? 1) - 1} more (edit them on Tournaments)</span> : null}
         <button style={ui.secondary} disabled={busy || !t.draw_url} onClick={() => draws(true)}>
           Δοκιμή draws
         </button>
