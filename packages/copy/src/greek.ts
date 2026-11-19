@@ -161,14 +161,29 @@ const WEEKDAY_ACC = ['την Κυριακή', 'τη Δευτέρα', 'την Τ�
  * τ, π, κ and vowels). `day` is 0 for Sunday, as Date.getUTCDay; a `YYYY-MM-DD` string is read as that date.
  */
 export function weekdayAccusative(day: number | string): string | null {
-    let dow: number;
-    if (typeof day === 'number') dow = day;
-    else {
-        const d = /^\d{4}-\d{2}-\d{2}$/.test(day) ? new Date(`${day}T12:00:00Z`) : null;
-        if (!d || Number.isNaN(d.getTime())) return null;
-        dow = d.getUTCDay();
-    }
-    return WEEKDAY_ACC[dow] ?? null;
+    const dow = dayOfWeek(day);
+    return dow === null ? null : (WEEKDAY_ACC[dow] ?? null);
+}
+
+/** 0 for Sunday (as Date.getUTCDay) from a number or a `YYYY-MM-DD` string; null for anything else */
+function dayOfWeek(day: number | string): number | null {
+    if (typeof day === 'number') return Number.isInteger(day) && day >= 0 && day <= 6 ? day : null;
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(day) ? new Date(`${day}T12:00:00Z`) : null;
+    return d && !Number.isNaN(d.getTime()) ? d.getUTCDay() : null;
+}
+
+const WEEKDAY_NAMES: Record<'el' | 'en', string[]> = {
+    el: ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'],
+    en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+};
+
+/**
+ * The plain name of a day, per locale: «Πέμπτη» in Greek, «Thursday» in English (English needs no article, so this
+ * is also the English for weekdayAccusative). `day` is 0 for Sunday or a `YYYY-MM-DD` date.
+ */
+export function weekdayName(day: number | string, locale: 'el' | 'en' = 'el'): string | null {
+    const dow = dayOfWeek(day);
+    return dow === null ? null : (WEEKDAY_NAMES[locale][dow] ?? null);
 }
 
 /**

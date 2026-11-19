@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, nameObj, nameAcc, wordAcc, decimal, euroCents, tidyName, nameShapeOk, nameKey, sameNamedPerson, weekdayAccusative } from './greek';
+    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, nameObj, nameAcc, wordAcc, decimal, euroCents, tidyName, nameShapeOk, nameKey, sameNamedPerson, weekdayAccusative, weekdayName } from './greek';
 import nameVectors from '../../core/test-vectors/name-keys.json';
 
 describe('weekdayAccusative', () => {
@@ -10,6 +10,17 @@ describe('weekdayAccusative', () => {
         expect(week).toEqual(['τη Δευτέρα', 'την Τρίτη', 'την Τετάρτη', 'την Πέμπτη', 'την Παρασκευή', 'το Σάββατο', 'την Κυριακή']);
         expect(weekdayAccusative(0)).toBe('την Κυριακή');
         expect(weekdayAccusative('not a day')).toBeNull();
+    });
+});
+
+describe('weekdayName', () => {
+    it('names the day in Greek and in English', () => {
+        const days = ['2027-03-01', '2027-03-04', '2027-03-07'];
+        expect(days.map((d) => weekdayName(d))).toEqual(['Δευτέρα', 'Πέμπτη', 'Κυριακή']);
+        expect(days.map((d) => weekdayName(d, 'en'))).toEqual(['Monday', 'Thursday', 'Sunday']);
+        expect(weekdayName(6, 'en')).toBe('Saturday');
+        expect(weekdayName(7, 'en')).toBeNull();
+        expect(weekdayName('soon', 'el')).toBeNull();
     });
 });
 
