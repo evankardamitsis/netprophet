@@ -56,7 +56,8 @@ export default function QuizScreen() {
       momentsAct();
       // quests count answers; the sixth one pays +30, so the header's points are read again
       void quests.refresh();
-      if (res.awarded > 0) void unlocks.refresh();
+      // finishing the day's quiz counts as the day played for the daily σερί: get_me is read again for its «+1»
+      if (res.awarded > 0 || (quiz && res.answered >= quiz.cards.length)) void unlocks.refresh({ since: Date.now() });
     });
   };
 

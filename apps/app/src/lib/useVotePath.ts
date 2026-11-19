@@ -75,7 +75,7 @@ export function useVotePath({ vote, pushNote, toast, onSettled }: Opts): (matchI
     const since = Date.now();
     void Promise.all([quests.refresh(), badges.refresh(), unlocksNow.current.refresh({ since })]).then(([after, badgesAfter]) => {
       const me = currentMe();
-      const now: GameSnapshot = { quests: after, badges: badgesAfter, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null };
+      const now: GameSnapshot = { quests: after, badges: badgesAfter, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null, playedToday: me?.game.played_today ?? null };
       if (mayHaveCelebrated(before, now)) rereadCelebrations();
       // quests and badges that are not open yet say nothing
       const { has } = unlocksNow.current;
@@ -94,7 +94,7 @@ export function useVotePath({ vote, pushNote, toast, onSettled }: Opts): (matchI
   return useCallback(
     async (matchId: string, side: Side) => {
       const me = currentMe();
-      const before: GameSnapshot = { quests: questsNow.current, badges: badgesNow.current, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null };
+      const before: GameSnapshot = { quests: questsNow.current, badges: badgesNow.current, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null, playedToday: me?.game.played_today ?? null };
       const pct = await vote(matchId, side);
       afterVotes.current?.add(() => before);
       // the first vote of the visit opens the door for one moment; after a calm beat Baller or «Για σένα» may come.

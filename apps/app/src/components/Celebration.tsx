@@ -73,7 +73,7 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
         </Svg>
         <Burst x={width / 2} y={height * 0.46} />
         <View style={styles.middle}>
-          {me.look ? <Baller ref={baller} look={me.look} size={BALLER} kit={me.kit} gear={me.gear} frame={me.frame} effect={me.effect} enter="drop" /> : null}
+          {me.look ? <Baller ref={baller} look={me.look} size={BALLER} kit={me.kit} gear={me.gear} frame={v.frame ?? me.frame} effect={me.effect} enter="drop" /> : null}
           <Animated.Text style={[styles.label, label]}>{v.label}</Animated.Text>
           {v.streak !== null ? (
             <Animated.View style={[styles.pill, pill]}>

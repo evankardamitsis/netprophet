@@ -51,7 +51,7 @@ describe('motivation', () => {
 
   it('or that you lead, with everything voted', () => {
     const m = motivation({ ...base, me: { position: 1, points: 900, to_next: null, above: null }, open_votes: 0 }, t);
-    expect(m).toEqual({ head: 'Είσαι στην κορυφή.', sub: 'Κράτα το σερί σου για να μείνεις εκεί.', button: 'Πίσω στις ψήφους' });
+    expect(m).toEqual({ head: 'Είσαι στην κορυφή.', sub: 'Κράτα το σερί σου παίζοντας καθημερινά.', button: 'Πίσω στις ψήφους' });
   });
 });
 

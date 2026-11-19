@@ -33,7 +33,7 @@ describe('tags', () => {
     expect(tagOf(tile('frame', 'frame_seven'), t)).toEqual({ text: 'Το κέρδισες', tone: 'earned' });
     expect(tagOf(tile('frame', 'frame_gold'), t)).toEqual({ text: '1,99€', tone: 'price' });
     expect(tagOf(tile('background', 'bg_hard'), t)).toEqual({ text: '0,99€', tone: 'price' });
-    expect(tagOf(tile('frame', 'frame_ten'), t)).toEqual({ text: 'Το κερδίζεις με 10 σωστές στη σειρά', tone: 'locked' });
+    expect(tagOf(tile('frame', 'frame_ten'), t)).toEqual({ text: 'Το κερδίζεις με 10 μέρες στη σειρά', tone: 'locked' });
     expect(tagOf(tile('frame', null), t)).toBeNull();
   });
   it('an earned item is never for sale: what earns it until it is yours, then «Το κέρδισες»', () => {

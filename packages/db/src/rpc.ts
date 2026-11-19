@@ -76,8 +76,19 @@ export interface FeedResultCard {
     sets: SetScore[];
     /** both sides, as on match cards (added in M1; older cards may lack it) */
     sides?: { side: Side; players: FeedPlayer[] }[];
-    /** what happened to the σερί: advanced, frozen (a freeze saved it), broken (lostStreak), idle */
-    streak_event?: { kind: 'advanced' | 'frozen' | 'broken' | 'idle'; milestone?: number | null; lostStreak?: number; freezeUsed?: string };
+    /**
+     * what happened to the σερί: advanced, frozen (a freeze saved it), broken (lostStreak), idle. With the daily σερί
+     * on (20270427000000_daily_streak) a result never moves the σερί: `calls` is the correct calls in a row after this
+     * one (0 after a wrong call), and a wrong call with a σερί comes as frozen with `kept: true` and no freeze spent.
+     */
+    streak_event?: {
+      kind: 'advanced' | 'frozen' | 'broken' | 'idle';
+      milestone?: number | null;
+      lostStreak?: number;
+      freezeUsed?: string | null;
+      kept?: boolean;
+      calls?: number;
+    };
   };
 }
 
@@ -297,16 +308,26 @@ export interface GetMyLevelResult {
 export interface StreakCelebrationPayload {
   type: 'streak_milestone';
   streak: number;
-  match_id: string;
-  /** what this milestone actually gave */
-  reward?: { freeze: boolean; frame: string | null; gear?: string | null };
+  /** the result that reached it (correct calls); missing on a daily σερί milestone */
+  match_id?: string;
+  /** 'days' for the daily σερί (20270427000000_daily_streak); missing for correct calls in a row */
+  unit?: 'days';
+  /** the Athens day played, daily σερί only */
+  day?: string;
+  /**
+   * what this milestone actually gave. `frame` names only «Επτά» and «Δέκα» (what build 39 knows); `frame_key` is
+   * every Frame given, «Μήνας» and «Εκατό» too (daily σερί only), null when it was owned already.
+   */
+  reward?: { freeze: boolean; frame: string | null; frame_key?: string | null; gear?: string | null };
 }
 
 /** σερί went past the user's ΠΡ, once a run (core streakMoment «record»); a milestone on the same card wins */
 export interface RecordCelebrationPayload {
   type: 'streak_record';
   streak: number;
-  match_id: string;
+  match_id?: string;
+  unit?: 'days';
+  day?: string;
 }
 
 export interface QuestCelebrationPayload {
@@ -1021,6 +1042,18 @@ export interface MeResult {
     votes_cast: number;
     votes_correct: number;
     votes_to_next_free_freeze: number;
+    /**
+     * the daily σερί (20270427000000_daily_streak): true once the founder switches it on; then `streak` and
+     * `streak_best` are days in a row. Missing on servers before 18 Nov 2026 (read it as off).
+     */
+    daily_streak?: boolean;
+    /** daily σερί only: days to the next free Ασφάλεια (day 3, then every 7th); null while off */
+    days_to_next_free_freeze?: number | null;
+    /** daily σερί only: today (Athens) already counts */
+    played_today?: boolean;
+    /** the correct calls in a row now and at best (the +5 chain, badge «Στη σειρά»); equal to streak / streak_best while off */
+    calls_streak?: number;
+    calls_best?: number;
     freezes: { free: number; paid: number; max: number };
     /** the game level from total points (core gameLevel); missing on servers before 14 Oct 2026 */
     level?: GameLevelInfo;
@@ -1332,4 +1365,13 @@ export interface MyMatchStats {
   singles: MatchStatsPart;
   /** doubles and mixed */
   doubles: MatchStatsPart;
+}
+
+/** api.get_streak_week (20270504000000_daily_streak_week): your daily σερί days this Athens week, Monday to today */
+export interface StreakWeek {
+  on: boolean;
+  /** `YYYY-MM-DD`, Athens */
+  today: string;
+  monday: string;
+  days: { day: string; kind: 'played' | 'frozen' }[];
 }

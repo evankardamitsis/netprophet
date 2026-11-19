@@ -108,7 +108,7 @@ export function HudProvider({ children }: { children: ReactNode }) {
     // the card's points join the header; it counts up by exactly these
     setHeldPoints((prev) => land(prev, card.id));
     // σερί goes card by card (hudNumbers.ts): every wrong call plays its own fall, or a frost when a freeze saved it
-    if (!card.ok) {
+    if (!card.ok && !card.daily) {
       setStreakFx(card.frozen ? 'frost' : card.streakBefore > 0 ? 'fall' : null);
       setTimeout(() => setStreakFx(null), FX_MS);
     }

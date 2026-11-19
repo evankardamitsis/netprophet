@@ -169,6 +169,8 @@ const RING_WIDTH: Record<string, number> = {
   frame_week: 5,
   frame_ten: 6,
   frame_seven: 5,
+  frame_month: 6,
+  frame_hundred: 7,
   frame_month_top: 6,
   frame_friends: 6,
   frame_level: 5,
@@ -233,9 +235,10 @@ function FrameRing({ frame, id }: { frame: string; id: string }) {
       {ring(RING.r, width, b, { strokeDasharray: `${AROUND / (n * 2)} ${AROUND / (n * 2)}` })}
     </>
   );
+  // the number plate at the bottom; «100» takes a wider one (as the email art, apps/site/scripts/email-art.mjs)
   const plate = (text: string, fill: string, ink: string, edge: string) => (
     <G>
-      <Rect x={41} y={88} width={18} height={11} rx={5.5} fill={fill} stroke={edge} strokeWidth={1.4} />
+      <Rect x={text.length > 2 ? 38 : 41} y={88} width={text.length > 2 ? 24 : 18} height={11} rx={5.5} fill={fill} stroke={edge} strokeWidth={1.4} />
       <SvgText x={50} y={96.6} textAnchor="middle" fontSize={8.5} fontFamily={fonts.displayHeavy} fill={ink}>
         {text}
       </SvgText>
@@ -265,6 +268,25 @@ function FrameRing({ frame, id }: { frame: string; id: string }) {
           {ring(RING.r, 4, f.glow)}
           {ring(RING.r - 2.8, 1.4, colors.ink)}
           {plate('7', colors.ink, colors.lime, f.glow)}
+        </G>
+      );
+    // the daily σερί's Frames (app 1.0.1): «Μήνας» a teal ring with a «30» plate, «Εκατό» a silver one with «100»
+    case 'frame_month':
+      return (
+        <G>
+          {ring(RING.r, 6, f.monthRing)}
+          {ring(RING.r - 3.6, 1.6, f.monthRingDeep)}
+          {ring(RING.r + 3.4, 1.2, colors.lime)}
+          {plate('30', f.monthRingDeep, colors.paper, f.monthRing)}
+        </G>
+      );
+    case 'frame_hundred':
+      return (
+        <G>
+          {ring(RING.r, 7, f.hundredRing)}
+          {ring(RING.r - 4.2, 1.6, f.hundredRingDeep)}
+          {ring(RING.r + 4.2, 1.2, f.hundredRingDeep)}
+          {plate('100', f.hundredRing, colors.ink, f.hundredRingDeep)}
         </G>
       );
     case 'frame_month_top':

@@ -226,6 +226,8 @@ export const motion = {
   revealDur: 700,
   stagger: 70,
   celebration: 3500,
+  /** the small «+1» after the first play of the day (daily σερί, board 18 Nov: about a second, not full screen) */
+  dayPlusOne: 1100,
   /** short reveal (text and chips) */
   revealDurShort: 560,
   /** a card or block leaving the screen (fade, slide, shrink): quicker than a reveal, so the next one is not kept waiting */

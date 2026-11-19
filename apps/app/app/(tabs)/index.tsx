@@ -167,7 +167,7 @@ export default function HomeScreen() {
   // «Πάρε τους πόντους»: the toast says what came in, at once (the points fly from the row); once the block has left,
   // one mark_inbox_seen call for the card and every result behind it. Their points are already counted on the server,
   // so the header lands on get_me's numbers; the queue is empty after this, so the celebrations behind it can play.
-  const onTake = useCallback((taken: { points: number; streak: number }) => toast(takenToast(taken, t)), [toast, t]);
+  const onTake = useCallback((taken: { points: number; streak: number | null }) => toast(takenToast(taken, t)), [toast, t]);
   const onTaken = useCallback((card: CardResult, rest: CardResult[]) => dismissResult(skipIds(card, rest)), [dismissResult]);
   // every result card played: the «Βγήκαν αποτελέσματα» pushes leave the notification centre and the dot on
   // «Αποτελέσματα» goes dark (founder, 20 Oct: "if I see it, remove the notification"). A fresh read with no card

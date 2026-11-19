@@ -15,13 +15,17 @@ const SAMPLES: Record<string, CelebrationItem[]> = {
     { id: 's3', created_at: at, payload: { type: 'streak_milestone', streak: 3, match_id: 'm3', reward: { freeze: true, frame: null, gear: null } } },
   ],
   badge: [{ id: 'b', created_at: at, payload: { type: 'badge', badge: 'in_a_row', tier: 1, new: true } }],
+  // the daily σερί (app 1.0.1): 7 days with Frame «Επτά» and an Ασφάλεια, 30 with «Μήνας», 100 with «Εκατό»
+  days7: [{ id: 'd7', created_at: at, payload: { type: 'streak_milestone', streak: 7, unit: 'days', day: '2026-11-19', reward: { freeze: true, frame: 'frame_seven', frame_key: 'frame_seven', gear: null } } }],
+  days30: [{ id: 'd30', created_at: at, payload: { type: 'streak_milestone', streak: 30, unit: 'days', day: '2026-11-19', reward: { freeze: false, frame: null, frame_key: 'frame_month', gear: null } } }],
+  days100: [{ id: 'd100', created_at: at, payload: { type: 'streak_milestone', streak: 100, unit: 'days', day: '2026-11-19', reward: { freeze: false, frame: null, frame_key: 'frame_hundred', gear: null } } }],
   // σερί 12 past a ΠΡ of 11: «Νέο ρεκόρ!»
   record: [{ id: 'r', created_at: at, payload: { type: 'streak_record', streak: 12, match_id: 'm12' } }],
 };
 
 /**
  * Development builds only: the full-screen moments on sample data, for the founder's review.
- * `/celebrate?kind=pro` (the welcome after buying Pro, on the free week), `/celebrate?kind=level` (the level-up move), `streaks` (σερί 3 and 5 queued together), `badge`, `record`.
+ * `/celebrate?kind=pro` (the welcome after buying Pro, on the free week), `/celebrate?kind=level` (the level-up move), `streaks` (σερί 3 and 5 queued together), `badge`, `record`, and the daily σερί's `days7`, `days30`, `days100`.
  */
 export default function CelebratePreview() {
   const { kind } = useLocalSearchParams<{ kind?: string }>();

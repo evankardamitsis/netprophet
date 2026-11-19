@@ -7,9 +7,12 @@ const t = getCopy('el');
 const now = new Date('2026-10-12T09:00:00Z');
 const areas = { glyfada: 'Γλυφάδα' };
 
+/** the sample with the daily σερί switched off, as every server is until app 1.0.1 */
+const switchedOff = (m: ReturnType<typeof mockMe>) => ({ ...m, me: { ...m.me, game: { ...m.me.game, daily_streak: false } } });
+
 describe('toMeView', () => {
   it('a player with a level: hero, record split, votes in the air', () => {
-    const m = mockMe(now);
+    const m = switchedOff(mockMe(now));
     const v = toMeView(m.me, m.page, m.player, areas, t, now);
     expect(v.isNew).toBe(false);
     expect(v.level).toBe('4');
@@ -21,6 +24,16 @@ describe('toMeView', () => {
     expect(v.freezes.slots.map((s) => s.ready)).toEqual([true, false]);
     expect(v.freezes.line).toBe('Δωρεάν Ασφάλεια σε 11 ψήφους');
     expect(v.friends.initials).toEqual(['ΝΡ', 'ΚΛ', 'ΔΓ']);
+    expect(v.daily).toBe(false);
+    expect(v.bestCalls).toBeNull();
+  });
+
+  it('the daily σερί: the free Ασφάλεια comes in days, the best run of correct calls is told apart', () => {
+    const m = mockMe(now);
+    const v = toMeView(m.me, m.page, m.player, areas, t, now);
+    expect(v.daily).toBe(true);
+    expect(v.freezes.line).toBe('Δωρεάν Ασφάλεια σε 2 μέρες ακόμα');
+    expect(v.bestCalls).toEqual({ label: 'Η καλύτερη σειρά σου:', value: '7 σωστές' });
   });
 
   it('no player yet: the new variant with ματς and ψήφοι progress', () => {

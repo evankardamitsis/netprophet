@@ -10,7 +10,8 @@ import { router, useFocusEffect, usePathname } from 'expo-router';
 import { requestScrollTop } from '../lib/scrollTop';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
-import { useMyBaller, type MeSummary } from '../lib/data';
+import { useMyBaller, useStreakGame, type MeSummary } from '../lib/data';
+import { isDailyStreak } from '../lib/dailyStreak';
 import { useHudActions, useHudNumbers, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { useTourTarget } from '../lib/tour';
@@ -18,6 +19,7 @@ import { alpha, colors, ease, fonts, motion } from '../theme';
 import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
 import { Baller, type BallerHandle } from './Baller';
 import { HeaderProPill } from './ProEntries';
+import { StreakSheet } from './StreakSheet';
 
 /** the account disc and the sport ball at its corner */
 const AVATAR = 34;
@@ -43,17 +45,22 @@ export function Header({ me }: { me: MeSummary | null }) {
   // the first-visit tour lights σερί and πόντοι together; only the header of the screen in front answers for them
   const front = useFront();
   const statsRef = useTourTarget('stats', front);
+  // the daily σερί (switch on): a tap on σερί opens its sheet; before it, σερί opens «Τα νούμερά σου» as πόντοι do
+  const game = useStreakGame();
+  const daily = isDailyStreak(game);
+  const [sheet, setSheet] = useState(false);
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
       <BouncingLogo height={LOGO_H} />
       <View style={styles.right}>
         <View ref={statsRef} collapsable={false} style={styles.stats}>
-          <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={targets.streak} fx={hud.streakFx} pill />
+          <Stat value={streak} label={t.streak.label} onPress={daily ? () => setSheet(true) : goNumbers} target={targets.streak} fx={hud.streakFx} pill />
           <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
         </View>
         <HeaderProPill />
         <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} pro={me?.pro === true} />
       </View>
+      {daily && game ? <StreakSheet open={sheet} game={game} onClose={() => setSheet(false)} /> : null}
     </View>
   );
 }

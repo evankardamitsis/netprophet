@@ -30,6 +30,7 @@ import type {
   LadderScope,
   MePage,
   MeResult,
+  StreakWeek,
   MyTraits,
   PlayerCard,
   PlayerProfile,
@@ -134,6 +135,8 @@ export function rpc(client: NetprophetClient) {
     setBallerName: (name: string | null) => call<{ name: string | null }>(client, 'set_baller_name', { p_name: name }),
     getMyLevel: () => call<GetMyLevelResult>(client, 'get_my_level', {}),
     getMe: () => call<MeResult>(client, 'get_me', {}),
+    /** your daily σερί days this week (the sheet under σερί in the top bar); read only */
+    getStreakWeek: () => call<StreakWeek>(client, 'get_streak_week', {}),
     /** delete the signed-in account and everything that is theirs; cannot be undone */
     deleteMyAccount: () => call<{ deleted: boolean }>(client, 'delete_my_account', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),

@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber, matchesLoosely, type Locale } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type QuestRow, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type MonthMedal, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type QuestRow, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type MonthMedal, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod, type PlayerProTeaser, type StreakWeek } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
-import { mockMe } from '../mock/me';
+import { mockMe, mockStreakWeek } from '../mock/me';
 import { mockBadges } from '../mock/badges';
 import { mockLook } from '../mock/look';
 import { withWorn } from './look';
@@ -570,6 +570,40 @@ function meInitials(raw: MeResult, email: string | undefined): string {
   if (p.first_name || p.surname) return initials(p.first_name, p.surname);
   if (p.display_name) return initials(p.display_name);
   return initials(email);
+}
+
+/**
+ * The σερί numbers of get_me for the σερί sheet, Εγώ's settings and the «+1» (lib/dailyStreak): the shared get_me in
+ * live mode (null while loading), the sample player in mock mode. Reads only, never fetches.
+ */
+export function useStreakGame(): MeResult['game'] | null {
+  const api = useApi();
+  const raw = useSyncExternalStore(subscribeMe, currentMe, currentMe);
+  const mock = useMemo(() => (api ? null : mockMe().me.game), [api]);
+  return api ? raw?.game ?? null : mock;
+}
+
+/** this week's days of the daily σερί (api.get_streak_week), read when `open` turns true; a sample week in mock mode */
+export function useStreakWeek(open: boolean): StreakWeek | null {
+  const api = useApi();
+  const [week, setWeek] = useState<StreakWeek | null>(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    if (!api) {
+      setWeek(mockStreakWeek(new Date()));
+      return undefined;
+    }
+    let live = true;
+    // a server without the function (before 20270504000000) leaves the week row out
+    api.getStreakWeek().then(
+      (w) => live && setWeek(w),
+      () => live && setWeek(null),
+    );
+    return () => {
+      live = false;
+    };
+  }, [api, open]);
+  return week;
 }
 
 /** the signed-in player's gender from the shared get_me (null when unknown); reads only, never fetches */
@@ -1924,7 +1958,7 @@ export function usePlayStyle(): PlayStyleState {
 }
 
 /** the switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs ('medal_email' is the winners' email, 'game_email' all game emails) */
-export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed' | 'players' | 'quiz' | 'new_tournaments' | 'medal_email' | 'game_email';
+export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed' | 'players' | 'quiz' | 'new_tournaments' | 'medal_email' | 'game_email' | 'streak_reminder';
 
 export interface PushPrefsState {
   on: (key: PushPrefKey) => boolean;

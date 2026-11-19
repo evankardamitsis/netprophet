@@ -852,6 +852,10 @@ export type Database = {
         Args: { p_match_id: string };
         Returns: Json;
       };
+      get_streak_week: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       get_tournament: {
         Args: { p_id: string };
         Returns: Json;
