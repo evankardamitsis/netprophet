@@ -214,8 +214,8 @@ export const el = {
   },
   welcome: {
     title: 'Μάθε τα πάντα για το ερασιτεχνικό',
-    /** the last word rotates between sports */
-    sports: ['τένις.', 'padel.'],
+    /** the last word; more than one rotates (founder, 17 Nov 2026: tennis only at launch, padel later) */
+    sports: ['τένις.'],
     points: ['Ψήφισε τους νικητές', 'Δες αποτελέσματα', 'Μάθε τα πάντα για τους αντιπάλους σου'],
     tagline: 'Ποιος κερδίζει σήμερα; Πες το πρώτος.',
     cta: 'Πάμε',

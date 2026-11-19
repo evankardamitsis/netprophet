@@ -94,7 +94,11 @@ function Welcome({ onNext, onLater }: { onNext: () => void; onLater: (() => void
         <BouncingLogo height={HERO_LOGO_H} />
         <Rise delay={80} duration={550}>
           <Text style={[styles.heroTitle, styles.accentRoom]}>{t.welcome.title}</Text>
-          <Swap words={t.welcome.sports} />
+          {t.welcome.sports.length > 1 ? (
+            <Swap words={t.welcome.sports} />
+          ) : (
+            <Text style={[styles.heroTitle, styles.lime]}>{t.welcome.sports[0]}</Text>
+          )}
         </Rise>
         <View>
           {t.welcome.points.map((p, i) => (

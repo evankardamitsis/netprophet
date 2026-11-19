@@ -58,6 +58,8 @@ const IN_MS = 400;
 const ACCENT_PAD = 10;
 /** the preview's name, a sample roster player, so «Είσαι ήδη εδώ;» has someone to show */
 const PREVIEW_NAME = { first: 'Γιάννης', surname: 'Πράτσας' };
+/** whether step 1 asks «Τι παίζεις;» (founder, 17 Nov 2026: off until padel has its matches) */
+const ASK_SPORT = false;
 
 export default function OnboardingScreen() {
   const t = useCopy();
@@ -112,7 +114,8 @@ export default function OnboardingScreen() {
   // name
   const [first, setFirst] = useState('');
   const [surname, setSurname] = useState('');
-  const [sport, setSport] = useState<SportChoice | null>(null);
+  // tennis only at launch (founder, 17 Nov 2026): the sport question is hidden and everyone starts on tennis
+  const [sport, setSport] = useState<SportChoice | null>(ASK_SPORT ? null : 'tennis');
   // sign-up is for 15 and over (founder, 12 Oct 2026; the Greek age of digital consent)
   const [adult, setAdult] = useState(false);
   // «Συνέχεια» pressed before the step is ready: the first thing missing, said next to it
@@ -435,17 +438,21 @@ export default function OnboardingScreen() {
               <Field value={first} onChange={setFirst} placeholder={o.name.first} autoComplete="given-name" />
               <Field value={surname} onChange={setSurname} placeholder={o.name.surname} autoComplete="family-name" />
               <Missing text={shownMissing === 'name' ? o.name.missing.name : shownMissing === 'nameShape' ? o.name.missing.nameShape : null} />
-              <Text style={styles.label}>{o.name.sport}</Text>
-              <Segmented
-                options={[
-                  { id: 'tennis', label: o.name.sports.tennis },
-                  { id: 'padel', label: o.name.sports.padel },
-                  { id: 'both', label: o.name.sports.both },
-                ]}
-                value={sport}
-                onChange={setSport}
-              />
-              <Missing text={shownMissing === 'sport' ? o.name.missing.sport : null} />
+              {ASK_SPORT ? (
+                <>
+                  <Text style={styles.label}>{o.name.sport}</Text>
+                  <Segmented
+                    options={[
+                      { id: 'tennis', label: o.name.sports.tennis },
+                      { id: 'padel', label: o.name.sports.padel },
+                      { id: 'both', label: o.name.sports.both },
+                    ]}
+                    value={sport}
+                    onChange={setSport}
+                  />
+                  <Missing text={shownMissing === 'sport' ? o.name.missing.sport : null} />
+                </>
+              ) : null}
               <AgeCheck on={adult} onPress={() => setAdult((a) => !a)} />
               <Missing text={shownMissing === 'age' ? o.name.missing.age : null} />
               <Err text={error} />
