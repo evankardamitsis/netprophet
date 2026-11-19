@@ -16,9 +16,9 @@ const base: DueEmail = {
 
 /** payloads like the ones core.streak_email_sweep writes */
 const PAYLOADS: Record<string, Record<string, unknown>> = {
-  streak_lost: { n: 7, best: 12, day: '2027-01-21' },
+  streak_lost: { n: 7, best: 12, day: '2027-01-21', freezes: 0 },
   streak_milestone: { n: 30, frame: 'frame_month' },
-  streak_reminder_email: { n: 4, day: '2027-01-21' },
+  streak_reminder_email: { n: 6, day: '2027-01-21', freezes: 1, next_frame: 'frame_seven' },
 };
 const KINDS = Object.keys(PAYLOADS);
 const render = (kind: string, payload: Record<string, unknown>) => renderDue({ ...base, kind, payload })!;
@@ -101,5 +101,41 @@ describe('the Monday σερί line', () => {
     expect(m.text).toContain('6 μέρες στη σειρά · 6 από 7 την περασμένη εβδομάδα');
     expect(m.html).toContain('Η Ασφάλεια κάλυψε την Πέμπτη.');
     expect(render('monday', { date: '2027-03-08', votes: 5 }).text).not.toContain('στη σειρά');
+  });
+
+  describe('the prize (founder, 19 Nov: show what they win)', () => {
+    it('milestone: «ACHIEVEMENT», the Frame won on a lime panel and the Baller wearing it', () => {
+      const m = render('streak_milestone', { n: 30, frame: 'frame_month' });
+      expect(m.html).toContain('ACHIEVEMENT');
+      expect(m.html).not.toContain('ΟΡΟΣΗΜΟ');
+      expect(m.html).toContain('Κέρδισες: Frame «Μήνας»');
+      expect(m.html).toContain('/email/art/streak_frame_month.png');
+      expect(m.html).toContain('30 μέρες σερί και ένα νέο Frame.');
+      expect(render('streak_milestone', { n: 100, frame: 'frame_hundred' }).html).toContain('/email/art/streak_frame_hundred.png');
+    });
+
+    it('reminder: the Frame and the Ασφάλεια tonight would give', () => {
+      const m = render('streak_reminder_email', PAYLOADS.streak_reminder_email!);
+      expect(m.html).toContain('Frame «Επτά»');
+      expect(m.html).toContain('Μία Ασφάλεια');
+      expect(m.html).toContain('ΣΗΜΕΡΑ ΚΕΡΔΙΖΕΙΣ');
+      expect(m.html).toContain('/email/art/streak_frame_seven.png');
+      expect(m.text).toContain('Σήμερα κερδίζεις: Frame «Επτά».');
+    });
+
+    it('reminder: no Ασφάλεια promised with both slots full or unknown, no Frame already owned', () => {
+      const full = render('streak_reminder_email', { n: 6, freezes: 2 });
+      expect(full.html).not.toContain('Μία Ασφάλεια');
+      expect(full.html).not.toContain('/email/art/');
+      expect(render('streak_reminder_email', { n: 6 }).html).not.toContain('Μία Ασφάλεια');
+      expect(render('streak_reminder_email', { n: 4, freezes: 0 }).html).not.toContain('ΣΗΜΕΡΑ ΚΕΡΔΙΖΕΙΣ');
+    });
+
+    it('lost: the Ασφάλεια at day 3 of a new σερί', () => {
+      const m = render('streak_lost', PAYLOADS.streak_lost!);
+      expect(m.html).toContain('Μία Ασφάλεια δώρο');
+      expect(m.html).toContain('/email/art/streak_freeze.png');
+      expect(render('streak_lost', { n: 7, freezes: 2 }).html).not.toContain('Μία Ασφάλεια δώρο');
+    });
   });
 });

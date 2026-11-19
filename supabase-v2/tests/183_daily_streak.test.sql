@@ -265,7 +265,7 @@ select core.day_streak_nightly('2027-01-21 00:07+02');
 select core.streak_email_sweep('2027-01-21 09:05+02');
 select is((select count(*)::int from core.emails where kind = 'streak_lost'), 0, 'the lost email waits for 10:00');
 select core.streak_email_sweep('2027-01-21 10:05+02');
-select is((select payload - 'day' from core.emails where kind = 'streak_lost' and user_id = :'e7'::uuid), '{"n": 7, "best": 7}'::jsonb,
+select is((select payload - 'day' from core.emails where kind = 'streak_lost' and user_id = :'e7'::uuid), '{"n": 7, "best": 7, "freezes": 0}'::jsonb,
           'a lost σερί of 7: the email the next day at 10:00');
 select is((select count(*)::int from core.emails where kind = 'streak_lost' and user_id = :'e6'::uuid), 0, 'a lost σερί of 6: no email');
 -- the reminder email: p3 has a device now, so a new one without

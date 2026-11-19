@@ -23,7 +23,27 @@ const HAIR = {
 };
 const MEDAL = { gold: ['#E4C25A', '#8C6A12'], silver: ['#C9D1C4', '#6E7A72'], bronze: ['#B87333', '#6E3F17'] };
 let uid = 0;
-function ball({ skin = '#EDC19C', hair = 'short', hc = '#5A3A24', kit = 'green', mouth = 'smile', look = 0, raised = false, medal = null, size = 90 }) {
+// the σερί Frames as rings round the ball, as the app's Avatar draws them (FrameRing + Ring3D); colours from
+// packages/tokens cosmetics.frame (monthRing, hundredRing: the 1.0.1 Frames)
+const LIME = '#D9F03F', PAPER = '#F3F5EE', GLOW = '#F2D36B';
+const RINGS = {
+  frame_seven: { w: 5, draw: (c) => c(11, LIME, 'stroke-opacity=".18"') + c(4, GLOW) + c(1.4, INK, '', -2.8), plate: ['7', INK, LIME, GLOW] },
+  frame_ten: { w: 6, draw: (c) => c(4.5, PAPER) + c(2.2, LIME, '', -3.6), plate: ['10', PAPER, INK, LIME] },
+  frame_month: { w: 6, draw: (c) => c(6, '#5FB3A1') + c(1.6, '#2E6F62', '', -3.6) + c(1.2, LIME, '', 3.4), plate: ['30', '#2E6F62', PAPER, '#5FB3A1'] },
+  frame_hundred: { w: 7, draw: (c) => c(7, '#E6E8EC') + c(1.6, '#8E96A3', '', -4.2) + c(1.2, '#8E96A3', '', 4.2), plate: ['100', '#E6E8EC', INK, '#8E96A3'] },
+};
+function ring(frame, id) {
+  const f = RINGS[frame];
+  const c = (w, stroke, extra = '', dr = 0) => `<circle cx="50" cy="56" r="${40 + dr}" fill="none" stroke="${stroke}" stroke-width="${w}" ${extra}/>`;
+  const [t, fill, ink, edge] = f.plate;
+  const pw = t.length > 2 ? 24 : 18;
+  return `<defs><linearGradient id="rl${id}" x1=".15" y1=".1" x2=".85" y2=".9"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".45" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="${INK}" stop-opacity=".45"/></linearGradient></defs>`
+    + `<g opacity=".32" transform="translate(1.2 2)">${c(f.w + 2.5, INK)}</g>${f.draw(c)}${c(f.w, `url(#rl${id})`)}${c(f.w * 0.32, '#fff', 'stroke-opacity=".85" stroke-linecap="round" stroke-dasharray="17.6 251.3" stroke-dashoffset="-150.8"', f.w * 0.15)}`
+    + `<rect x="${50 - pw / 2}" y="88" width="${pw}" height="11" rx="5.5" fill="${fill}" stroke="${edge}" stroke-width="1.4"/><text x="50" y="96.6" text-anchor="middle" font-size="8.5" font-weight="800" font-family="Helvetica,Arial,sans-serif" fill="${ink}">${t}</text>`;
+}
+// an Ασφάλεια: a lime shield with +1 (lime: earned)
+const shield = (size) => `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><ellipse cx="50" cy="93" rx="22" ry="3.5" fill="#000" opacity=".3"/><path d="M50 10 L82 22 C82 52 70 74 50 86 C30 74 18 52 18 22 Z" fill="${LIME}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M50 18 L74 27 C74 50 65 67 50 77 Z" fill="#fff" opacity=".25"/><text x="50" y="58" text-anchor="middle" font-size="26" font-weight="800" font-family="Helvetica,Arial,sans-serif" fill="${INK}">+1</text></svg>`;
+function ball({ skin = '#EDC19C', hair = 'short', hc = '#5A3A24', kit = 'green', mouth = 'smile', look = 0, raised = false, medal = null, frame = null, size = 90 }) {
   const id = 'b' + uid++;
   const [shirt, racket] = KIT[kit];
   const h = HAIR[hair];
@@ -41,7 +61,7 @@ function ball({ skin = '#EDC19C', hair = 'short', hc = '#5A3A24', kit = 'green',
 ${h.b ? `<g fill="${hc}">${h.b}</g>` : ''}<circle cx="50" cy="56" r="34" fill="${skin}"/>
 <g clip-path="url(#c${id})"><rect x="0" y="74" width="100" height="30" fill="${shirt}"/><path d="M40 74 L50 81 L60 74" fill="none" stroke="#F3F5EE" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
 <circle cx="50" cy="56" r="34" fill="url(#s${id})"/><circle cx="50" cy="56" r="33.4" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.2"/>
-${front}${eye(39)}${eye(61)}<ellipse cx="29" cy="67" rx="5" ry="3.4" fill="#E98A7A" opacity=".4"/><ellipse cx="71" cy="67" rx="5" ry="3.4" fill="#E98A7A" opacity=".4"/>${mouths[mouth]}${med}</svg>`;
+${front}${eye(39)}${eye(61)}<ellipse cx="29" cy="67" rx="5" ry="3.4" fill="#E98A7A" opacity=".4"/><ellipse cx="71" cy="67" rx="5" ry="3.4" fill="#E98A7A" opacity=".4"/>${mouths[mouth]}${med}${frame ? ring(frame, id) : ''}</svg>`;
 }
 const P = {
   nikos: (o = {}) => ball({ skin: '#EDC19C', hair: 'short', hc: '#5A3A24', kit: 'night', ...o }),
@@ -63,6 +83,12 @@ const SCENES = {
   think: P.nikos({ size: 140, look: 1 }),
   wave: P.maria({ size: 160, raised: true, mouth: 'open' }),
   bye: P.nikos({ size: 130, look: -1 }),
+  // the σερί prizes (founder, 19 Nov: show what they win): the Baller in each Frame, and an Ασφάλεια
+  streak_frame_seven: P.nikos({ size: 170, frame: 'frame_seven', mouth: 'open' }),
+  streak_frame_ten: P.nikos({ size: 170, frame: 'frame_ten', mouth: 'open' }),
+  streak_frame_month: P.maria({ size: 170, frame: 'frame_month', mouth: 'open' }),
+  streak_frame_hundred: P.eleni({ size: 170, frame: 'frame_hundred', mouth: 'open' }),
+  streak_freeze: P.nikos({ size: 150, look: 1 }) + shield(120),
 };
 
 mkdirSync(OUT, { recursive: true });
