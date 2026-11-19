@@ -1,7 +1,7 @@
 -- The σερί emails show the prize (founder, 19 Nov 2026: "if you win anything show it on the email"). The lost and
 -- 20:00 emails now carry what a day of play would give: the unused Ασφάλειες (a free one comes only while fewer than
 -- the max of 2 are held, core.grant_freeze) and, for the 20:00 one, the Frame the next day would give if it is not
--- owned yet. Only core.streak_email_sweep changes (as in 20270427000000_daily_streak.sql, the payloads marked).
+-- owned yet. Only core.streak_email_sweep changes (as in 20270427000000_daily_streak.sql, the payloads changed).
 
 -- unused Ασφάλειες
 create or replace function core.streak_freezes_left(p_user uuid)
