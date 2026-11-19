@@ -1923,8 +1923,8 @@ export function usePlayStyle(): PlayStyleState {
   return { hand, tour, saving, failed, save };
 }
 
-/** the switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs ('medal_email' is the winners' email) */
-export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed' | 'players' | 'quiz' | 'new_tournaments' | 'medal_email';
+/** the switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs ('medal_email' is the winners' email, 'game_email' all game emails) */
+export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed' | 'players' | 'quiz' | 'new_tournaments' | 'medal_email' | 'game_email';
 
 export interface PushPrefsState {
   on: (key: PushPrefKey) => boolean;
