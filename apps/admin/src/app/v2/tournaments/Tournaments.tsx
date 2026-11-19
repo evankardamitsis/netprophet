@@ -806,6 +806,8 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
   const twins = twinQuestions(questions);
   // nothing chosen at first: Save waits until every name on the card has an answer (founder, 13 Oct)
   const [choice, setChoice] = useState<Record<string, string>>({});
+  // the name of a new player, when staff know it (founder, 19 Nov): empty keeps the sheet's spelling
+  const [names, setNames] = useState<Record<string, { first?: string; surname?: string }>>({});
   const allChosen = questions.every((q) => !!choice[q.key]);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -846,7 +848,7 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
     });
 
   const savePeople = () =>
-    send({ decisions: reviewAnswers(questions, choice, NEW) });
+    send({ decisions: reviewAnswers(questions, choice, NEW, names) });
 
   return (
     <div className={`v2-card attention v2-enter${pending ? ' busy' : ''}`} aria-busy={pending || undefined}>
@@ -987,6 +989,31 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
                   <input type="radio" name={`${item.id}-${key}`} checked={choice[key] === NEW} onChange={() => setChoice({ ...choice, [key]: NEW })} />
                   No, a new player
                 </label>
+                {choice[key] === NEW ? (
+                  <div className="v2-row" style={{ gap: 8, paddingLeft: 36 }}>
+                    <input
+                      className="v2-input"
+                      style={{ maxWidth: 200 }}
+                      aria-label="First name"
+                      placeholder="First name"
+                      value={names[key]?.first ?? (u.first ?? '')}
+                      disabled={pending}
+                      onChange={(e) => setNames({ ...names, [key]: { ...names[key], first: e.target.value } })}
+                    />
+                    <input
+                      className="v2-input"
+                      style={{ maxWidth: 240 }}
+                      aria-label="Surname"
+                      placeholder="Surname"
+                      value={names[key]?.surname ?? (u.surname ?? u.raw)}
+                      disabled={pending}
+                      onChange={(e) => setNames({ ...names, [key]: { ...names[key], surname: e.target.value } })}
+                    />
+                    <span className="v2-muted" style={{ fontSize: 13 }}>
+                      Type the name if you know it.
+                    </span>
+                  </div>
+                ) : null}
               </fieldset>
             );
           })}
