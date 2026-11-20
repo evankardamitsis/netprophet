@@ -39,3 +39,12 @@ describe('app.json for over-the-air updates', () => {
     expect(app.plugins).toContain('./plugins/withSceneLifecycle');
   });
 });
+
+// Google Play flagged build 11 (20 Nov 2026): DEX obfuscation 2%, under its 25% bar, fix by Feb 2027. R8 shrinks and
+// obfuscates the Android release build; any Android build with it is tested on a phone before production.
+describe('app.json for the Android release build', () => {
+  it('turns on R8 (minify and shrink resources)', () => {
+    const entry = app.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-build-properties');
+    expect(entry?.[1]?.android).toMatchObject({ enableMinifyInReleaseBuilds: true, enableShrinkResourcesInReleaseBuilds: true });
+  });
+});
