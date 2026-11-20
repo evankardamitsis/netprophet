@@ -14,14 +14,19 @@ export const el = {
     sheet: {
       /** this week, Monday first; a day an Ασφάλεια covered shows ✓ instead of its letter */
       week: ['Δ', 'Τ', 'Τ', 'Π', 'Π', 'Σ', 'Κ'],
-      todo: 'Σήμερα δεν έχεις παίξει ακόμα. Μία ψήφος ή το quiz και το κρατάς.',
-      done: 'Σήμερα το κράτησες. Τα λέμε αύριο.',
+      todo: 'Παίξε σήμερα και το κρατάς.',
+      done: 'Σήμερα το κράτησες ✓',
       /** σερί 0 */
-      start: 'Μία ψήφος ή το quiz σήμερα και ξεκινάς σερί.',
-      freezes: 'Ασφάλειες: {n} από {max}',
-      frozenKey: 'Κύκλος με ✓: μέρα που την κάλυψε Ασφάλεια.',
-      /** the next prize: «Στις 7 μέρες: Frame «Επτά» και μία Ασφάλεια» */
-      next: 'Στις {n} μέρες: {prize}',
+      start: 'Παίξε σήμερα και ξεκινάς.',
+      /** under the big number */
+      unit: { one: 'μέρα στη σειρά', many: 'μέρες στη σειρά' },
+      /** the tile «1/2» over this */
+      freezes: 'Ασφάλειες',
+      /** a covered day, for the screen reader (the ring with ✓ says it on screen) */
+      frozenKey: 'Μέρα που την κάλυψε Ασφάλεια',
+      /** the next prize tile: «Μέρα 7» over «παίρνεις Frame «Επτά» και μία Ασφάλεια» */
+      nextDay: 'Μέρα {n}',
+      nextGets: 'παίρνεις {prize}',
       prizeFrame: 'Frame «{name}»',
       prizeFreeze: 'μία Ασφάλεια',
       prizeJoin: ' και ',

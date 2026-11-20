@@ -65,41 +65,44 @@ describe('the σερί sheet', () => {
     ],
   };
 
-  it('the board: «12 μέρες στη σειρά», the week with the covered day as ✓, today to do, «Ασφάλειες: 1 από 2»', () => {
+  it('the board: the big 12 over «μέρες στη σειρά», the week with the covered day as ✓, today to do, two tiles', () => {
     const v = streakSheetView(game(), week, new Set(['frame_seven', 'frame_ten']), t);
-    expect(v.title).toBe('12 μέρες στη σειρά');
+    expect(v.count).toBe(12);
+    expect(v.unit).toBe('μέρες στη σειρά');
     expect(v.week?.map((c) => c.letter).join(' ')).toBe('Δ Τ ✓ Π Π Σ Κ');
     expect(v.week?.map((c) => c.state)).toEqual(['played', 'played', 'frozen', 'none', 'none', 'none', 'none']);
     expect(v.week?.findIndex((c) => c.today)).toBe(3);
-    expect(v.today).toBe('Σήμερα δεν έχεις παίξει ακόμα. Μία ψήφος ή το quiz και το κρατάς.');
-    expect(v.freezes).toBe('Ασφάλειες: 1 από 2');
-    expect(v.frozenKey).toBe('Κύκλος με ✓: μέρα που την κάλυψε Ασφάλεια.');
+    expect(v.today).toBe('Παίξε σήμερα και το κρατάς.');
+    expect(v.todayDone).toBe(false);
+    expect(v.freezes).toEqual({ value: '1/2', label: 'Ασφάλειες' });
     // 12 → 14 is the next 7th day: a free Ασφάλεια (one slot is free)
-    expect(v.next).toBe('Στις 14 μέρες: μία Ασφάλεια');
+    expect(v.next).toEqual({ value: 'Μέρα 14', label: 'παίρνεις μία Ασφάλεια' });
   });
 
-  it('played today, σερί 0, no covered day, no week from the server', () => {
-    expect(streakSheetView(game({ played_today: true }), week, null, t).today).toBe('Σήμερα το κράτησες. Τα λέμε αύριο.');
-    expect(streakSheetView(game({ streak: 0 }), null, null, t).today).toBe('Μία ψήφος ή το quiz σήμερα και ξεκινάς σερί.');
-    expect(streakSheetView(game({ streak: 1 }), null, null, t).title).toBe('1 μέρα στη σειρά');
-    const plain = streakSheetView(game(), { ...week, days: week.days.slice(0, 2) }, null, t);
-    expect(plain.frozenKey).toBeNull();
+  it('played today, σερί 0 and 1, no week from the server', () => {
+    const done = streakSheetView(game({ played_today: true }), week, null, t);
+    expect(done.today).toBe('Σήμερα το κράτησες ✓');
+    expect(done.todayDone).toBe(true);
+    expect(streakSheetView(game({ streak: 0 }), null, null, t).today).toBe('Παίξε σήμερα και ξεκινάς.');
+    expect(streakSheetView(game({ streak: 1 }), null, null, t).unit).toBe('μέρα στη σειρά');
     expect(streakSheetView(game(), null, null, t).week).toBeNull();
     expect(weekCells({ ...week, on: false }, t)).toBeNull();
   });
 
   it('the next prize: the Frame not owned yet and the free Ασφάλεια, from the core rule', () => {
-    expect(nextPrize(6, 1, new Set(), t)?.line).toBe('Στις 7 μέρες: Frame «Επτά» και μία Ασφάλεια');
-    expect(nextPrize(6, 2, new Set(), t)?.line).toBe('Στις 7 μέρες: Frame «Επτά»');
+    expect(nextPrize(6, 1, new Set(), t)?.prize).toBe('Frame «Επτά» και μία Ασφάλεια');
+    expect(nextPrize(6, 2, new Set(), t)?.prize).toBe('Frame «Επτά»');
     // owned «Επτά» and both slots full: on to «Δέκα»
-    expect(nextPrize(6, 2, new Set(['frame_seven']), t)?.line).toBe('Στις 10 μέρες: Frame «Δέκα»');
-    expect(nextPrize(1, 0, new Set(), t)?.line).toBe('Στις 3 μέρες: μία Ασφάλεια');
-    expect(nextPrize(20, 2, new Set(), t)?.line).toBe('Στις 30 μέρες: Frame «Μήνας»');
-    expect(nextPrize(99, 2, new Set(), t)?.line).toBe('Στις 100 μέρες: Frame «Εκατό»');
+    expect(nextPrize(6, 2, new Set(['frame_seven']), t)?.prize).toBe('Frame «Δέκα»');
+    expect(nextPrize(1, 0, new Set(), t)?.prize).toBe('μία Ασφάλεια');
+    expect(nextPrize(20, 2, new Set(), t)?.prize).toBe('Frame «Μήνας»');
+    expect(nextPrize(99, 2, new Set(), t)?.prize).toBe('Frame «Εκατό»');
+    expect(nextPrize(6, 2, new Set(['frame_seven']), t)?.day).toBe(10);
+    expect(nextPrize(99, 2, new Set(), t)?.day).toBe(100);
     expect(nextPrize(100, 2, new Set(), t)).toBeNull();
     // ownership unknown (the look not loaded): no Frame promised
     expect(nextPrize(6, 2, null, t)).toBeNull();
-    expect(nextPrize(6, 1, null, en)?.line).toBe('At 7 days: a Streak Freeze');
+    expect(nextPrize(6, 1, null, en)).toEqual({ day: 7, prize: 'a Streak Freeze' });
   });
 
   it('the sample week keeps the five days before today, the third by an Ασφάλεια', () => {
