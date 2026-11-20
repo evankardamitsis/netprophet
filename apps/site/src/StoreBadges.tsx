@@ -2,10 +2,14 @@ import type { Lang } from './content';
 
 /**
  * The official App Store and Google Play badges (downloaded 16 Oct 2026 from Apple's and Google's badge tools, used
- * unmodified as both require). No links until the apps are live; then `href`s go to the store pages. Google's PNGs
- * carry their own clear space, so they are drawn taller to line up with Apple's.
+ * unmodified as both require). A store links only once the app is live there (App Store live 19 Nov 2026; Google Play
+ * still in review: set `google` to the details URL, gr.monadlabs.netprophet, when it is). Google's PNGs carry their own
+ * clear space, so they are drawn taller to line up with Apple's.
  */
-const STORE_LINKS: { apple: string | null; google: string | null } = { apple: null, google: null };
+const STORE_LINKS: { apple: string | null; google: string | null } = {
+  apple: 'https://apps.apple.com/app/id6824998331',
+  google: null,
+};
 
 export function StoreBadges({ lang, soon }: { lang: Lang; soon: string }) {
   const badge = (store: 'apple' | 'google') => {
@@ -32,7 +36,11 @@ export function StoreBadges({ lang, soon }: { lang: Lang; soon: string }) {
         {badge('apple')}
         {badge('google')}
       </div>
-      {!STORE_LINKS.apple || !STORE_LINKS.google ? <span className="soon">{soon}</span> : null}
+      {!STORE_LINKS.apple && !STORE_LINKS.google ? (
+        <span className="soon">{soon}</span>
+      ) : !STORE_LINKS.google ? (
+        <span className="soon">{lang === 'el' ? 'Σύντομα και στο Google Play' : 'Coming soon to Google Play'}</span>
+      ) : null}
     </div>
   );
 }
