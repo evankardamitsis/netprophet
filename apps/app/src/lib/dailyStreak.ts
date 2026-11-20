@@ -51,13 +51,14 @@ export function weekCells(week: StreakWeek | null, t: Copy): WeekCell[] | null {
 /**
  * The next thing a day of play gives: the nearest day in a row with a Frame not owned yet (core DAY_MILESTONE_FRAMES)
  * or a free Ασφάλεια (day 3 and every 7th, core earnsDayFreeze, only while a slot is free). Null when nothing is near.
+ * `prize` is what it gives («Frame «Επτά» και μία Ασφάλεια»), shown under «Μέρα 7» on the sheet.
  */
 export function nextPrize(
   streak: number,
   held: number,
   owned: ReadonlySet<string> | null,
   t: Copy,
-): { day: number; line: string } | null {
+): { day: number; prize: string } | null {
   const s = t.streak.sheet;
   const top = DAY_MILESTONES[DAY_MILESTONES.length - 1]!;
   for (let day = streak + 1; day <= Math.max(top, streak + 7); day += 1) {
@@ -69,37 +70,42 @@ export function nextPrize(
       ...(frameNew ? [fmt(s.prizeFrame, { name: t.celebrate.frames[frame!] ?? frame! })] : []),
       ...(freeze ? [s.prizeFreeze] : []),
     ];
-    return { day, line: fmt(s.next, { n: day, prize: prizes.join(s.prizeJoin) }) };
+    return { day, prize: prizes.join(s.prizeJoin) };
   }
   return null;
 }
 
+/** a tile on the sheet: a big value over a short label («1/2» over «Ασφάλειες») */
+export type SheetTile = { value: string; label: string };
+
 export interface StreakSheetView {
-  /** «12 μέρες στη σειρά» */
-  title: string;
+  /** the big number, the days in a row */
+  count: number;
+  /** under it: «μέρες στη σειρά», «μέρα στη σειρά» */
+  unit: string;
   week: WeekCell[] | null;
-  /** today played or not, or how to start */
+  /** today, in one short line: kept, to do, or how to start */
   today: string;
-  /** «Ασφάλειες: 1 από 2» */
-  freezes: string;
-  /** the blue circle's meaning, only when a day this week was covered */
-  frozenKey: string | null;
-  /** «Στις 14 μέρες: μία Ασφάλεια» */
-  next: string | null;
+  /** whether today is played (the line is lime then) */
+  todayDone: boolean;
+  /** «1/2» over «Ασφάλειες» */
+  freezes: SheetTile;
+  /** «Μέρα 14» over «παίρνεις μία Ασφάλεια»; null when nothing is near */
+  next: SheetTile | null;
 }
 
 export function streakSheetView(game: Game, week: StreakWeek | null, owned: ReadonlySet<string> | null, t: Copy): StreakSheetView {
   const s = t.streak.sheet;
   const held = freezesHeld(game);
-  const cells = weekCells(week, t);
   const prize = nextPrize(game.streak, held, owned, t);
   return {
-    title: daysInRow(game.streak, t),
-    week: cells,
+    count: game.streak,
+    unit: game.streak === 1 ? s.unit.one : s.unit.many,
+    week: weekCells(week, t),
     today: game.played_today ? s.done : game.streak > 0 ? s.todo : s.start,
-    freezes: fmt(s.freezes, { n: held, max: game.freezes.max }),
-    frozenKey: cells?.some((c) => c.state === 'frozen') ? s.frozenKey : null,
-    next: prize?.line ?? null,
+    todayDone: game.played_today === true,
+    freezes: { value: `${held}/${game.freezes.max}`, label: s.freezes },
+    next: prize ? { value: fmt(s.nextDay, { n: prize.day }), label: fmt(s.nextGets, { prize: prize.prize }) } : null,
   };
 }
 

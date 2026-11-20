@@ -14,8 +14,8 @@ const OUT_MS = motion.exitDur;
 
 /**
  * A tap on σερί in the top bar with the daily σερί on (founder's board, 18 Nov 2026): «12 μέρες στη σειρά», this week
- * Monday to Sunday (lime: played, the soft blue ✓: covered by an Ασφάλεια), whether today counts yet, the Ασφάλειες
- * held and the next prize. «Όλα τα νούμερά σου ›» goes on to the full page. Every number is the server's.
+ * Monday to Sunday (lime: played, a lime ring with ✓: covered by an Ασφάλεια), whether today counts yet, the Ασφάλειες
+ * held and the next prize. Redone 20 Nov (founder: cluttered): the big number, the week, one line, two tiles. «Όλα τα νούμερά σου ›» goes on to the full page. Every number is the server's.
  */
 export function StreakSheet({ open, game, onClose }: { open: boolean; game: MeResult['game']; onClose: () => void }) {
   const t = useCopy();
@@ -48,20 +48,23 @@ export function StreakSheet({ open, game, onClose }: { open: boolean; game: MeRe
         <Pressable accessibilityLabel={s.close} style={styles.fill} onPress={() => close()} />
         <Animated.View style={[styles.sheet, { paddingBottom: 26 + insets.bottom }, sheet]}>
           <View style={styles.handle} />
-          <Text style={styles.title} accessibilityRole="header">
-            {v.title}
-          </Text>
+          {/* one idea, big (founder, 20 Nov: larger titles, less text): the number, the week, today, two tiles */}
+          <View style={styles.head} accessible accessibilityRole="header" accessibilityLabel={`${v.count} ${v.unit}`}>
+            <Text style={styles.count}>{v.count}</Text>
+            <Text style={styles.unit}>{v.unit}</Text>
+          </View>
           {v.week && open ? (
             <View style={styles.week}>
               {v.week.map((c, i) => (
-                <Day key={i} cell={c} index={i} />
+                <Day key={i} cell={c} index={i} coveredLabel={s.frozenKey} />
               ))}
             </View>
           ) : null}
-          <Text style={styles.line}>{v.today}</Text>
-          <Text style={styles.line}>{v.freezes}</Text>
-          {v.next ? <Text style={styles.prize}>{v.next}</Text> : null}
-          {v.frozenKey ? <Text style={styles.key}>{v.frozenKey}</Text> : null}
+          <Text style={[styles.today, v.todayDone && styles.todayDone]}>{v.today}</Text>
+          <View style={styles.tiles}>
+            <Tile value={v.freezes.value} label={v.freezes.label} />
+            {v.next ? <Tile value={v.next.value} label={v.next.label} /> : null}
+          </View>
           <Pressable accessibilityRole="link" onPress={() => close(() => router.push('/me?page=stats'))} style={styles.moreHit}>
             <Text style={styles.more}>{s.more}</Text>
           </Pressable>
@@ -75,10 +78,11 @@ export function StreakSheet({ open, game, onClose }: { open: boolean; game: MeRe
 }
 
 /** one day of the week: pops in one after the other (stagger), today ringed */
-function Day({ cell, index }: { cell: WeekCell; index: number }) {
+function Day({ cell, index, coveredLabel }: { cell: WeekCell; index: number; coveredLabel: string }) {
   const pop = usePopIn(motion.revealDurShort, 200 + index * motion.stagger);
   return (
     <Animated.View
+      accessibilityLabel={cell.state === 'frozen' ? coveredLabel : undefined}
       style={[
         styles.day,
         cell.state === 'played' ? styles.dayOn : cell.state === 'frozen' ? styles.dayFrozen : null,
@@ -94,25 +98,44 @@ function Day({ cell, index }: { cell: WeekCell; index: number }) {
   );
 }
 
-const DAY = 34;
+/** a big value over a short label: «1/2» over «Ασφάλειες», «Μέρα 7» over the prize */
+function Tile({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.tile} accessible accessibilityLabel={`${label}: ${value}`}>
+      <Text style={styles.tileValue} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+      <Text style={styles.tileLabel} numberOfLines={2}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+const DAY = 40;
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   back: { flex: 1, backgroundColor: alpha(colors.ink, 0.55), justifyContent: 'flex-end' },
   sheet: { paddingTop: 24, paddingHorizontal: 22, borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.ink, gap: 12, width: '100%', maxWidth: 520, alignSelf: 'center', alignItems: 'center' },
   handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 999, backgroundColor: colors.slate, marginTop: -12 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 42, color: colors.paper, textAlign: 'center' },
-  week: { flexDirection: 'row', gap: 8, justifyContent: 'center', marginVertical: 4 },
+  head: { alignItems: 'center' },
+  count: { fontFamily: fonts.displayHeavy, fontSize: 112, lineHeight: 118, color: colors.lime, textAlign: 'center' },
+  unit: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 36, color: colors.paper, textAlign: 'center', marginTop: -10 },
+  week: { flexDirection: 'row', gap: 6, justifyContent: 'center', marginVertical: 6 },
   day: { width: DAY, height: DAY, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: alpha(colors.paper, 0.12) },
   dayOn: { backgroundColor: colors.lime },
   dayFrozen: { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.lime },
   dayToday: { borderWidth: 2, borderColor: colors.paper },
-  dayText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.mist },
+  dayText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.mist },
   dayTextOn: { color: colors.ink },
   dayTextFrozen: { color: colors.lime },
-  line: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.mist, textAlign: 'center' },
-  prize: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21, color: colors.paper, textAlign: 'center' },
-  key: { fontFamily: fonts.bodySemi, fontSize: 12, lineHeight: 16, color: colors.muted, textAlign: 'center' },
+  today: { fontFamily: fonts.bodyBold, fontSize: 19, lineHeight: 25, color: colors.paper, textAlign: 'center' },
+  todayDone: { color: colors.lime },
+  tiles: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 4 },
+  tile: { flex: 1, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 12, backgroundColor: alpha(colors.paper, 0.08), alignItems: 'center', gap: 2 },
+  tileValue: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 40, color: colors.paper, textAlign: 'center' },
+  tileLabel: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 18, color: colors.mist, textAlign: 'center' },
   moreHit: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
   more: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
   close: { alignSelf: 'stretch', minHeight: 56, borderRadius: 18, borderWidth: 2, borderColor: colors.paper, alignItems: 'center', justifyContent: 'center' },
