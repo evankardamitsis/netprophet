@@ -129,4 +129,14 @@ describe('the website list emails', () => {
     expect(m.text).toContain('{{{RESEND_UNSUBSCRIBE_URL}}}');
     expect(m.html).toContain('/email/art/launch.png');
   });
+
+  it('launch_v1 as a queued row (20 Nov): the player’s own unsubscribe link, never Resend’s placeholder', () => {
+    const m = renderDue({ ...base, kind: 'launch_v1', group: 'game', unsubscribe_token: 'tok-123' })!;
+    expect(m.subject).toBe('Το NetProphet άλλαξε. Έλα να το ανακαλύψεις.');
+    expect(m.unsubscribeUrl).toContain('tok-123');
+    expect(m.html).toContain('tok-123');
+    expect(m.html).not.toContain('RESEND_UNSUBSCRIBE_URL');
+    expect(m.text).not.toContain('RESEND_UNSUBSCRIBE_URL');
+    expect(m.html).toContain('https://www.netprophetapp.com/open');
+  });
 });

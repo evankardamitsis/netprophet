@@ -2,8 +2,10 @@
  * The emails for people who are not players yet (founder's email board, approved 17 Nov 2026):
  *   site_confirm  the consent request after the sign-up box on netprophetapp.com (double opt-in)
  *   site_weekly   Monday's week on court, to confirmed sign-ups without an account
- *   launch_v1     the launch email to the old NetProphet's accounts; not queued per row: scripts/launch-email.mjs
- *                 renders it and leaves it as a draft broadcast in Resend, where the founder presses Send.
+ *   launch_v1     the launch email to the old NetProphet's accounts, one row per account: the hourly
+ *                 core.email_launch_sweep queues it from core.email_settings.launch_at (20270508000000_email_launch_auto,
+ *                 founder 20 Nov 2026); the row carries the player's own unsubscribe link. scripts/launch-email.mjs
+ *                 still renders it to files for a look.
  * All three have an English version (launchEmail({ lang: 'en' })). The database queues the first two (migration
  * 20270425000000_email_list) and hands over the subscriber's token and
  * language; the payload of site_weekly is core.list_week. A line without data is left out, never shown empty.
@@ -12,7 +14,7 @@ import { displayName, getCopy, tidyName, type Locale } from '@netprophet/copy';
 import { formatWinnerSets, type WinnerFirstSet } from '@netprophet/core';
 import { colors } from '@netprophet/tokens';
 import { SITE_URL, block, esc, renderEmail, type EmailLang, type Hero } from '../emailLayout';
-import { OPEN_URL, type DueEmail, type Mail } from './core';
+import { OPEN_URL, unsubscribeUrl, type DueEmail, type Mail } from './core';
 
 const FONT = 'Helvetica,Arial,sans-serif';
 
@@ -372,5 +374,7 @@ export function launchEmail(opts: { unsubscribeUrl?: string; lang?: EmailLang } 
 export const LIST_RENDER: Record<string, (e: DueEmail) => Mail> = {
   site_confirm: siteConfirmEmail,
   site_weekly: siteWeeklyEmail,
-  launch_v1: (e) => launchEmail({ lang: langOf(e) }),
+  // a queued row is a player: their own unsubscribe link (the «no game emails» switch), never Resend's broadcast one
+  launch_v1: (e) =>
+    launchEmail({ lang: langOf(e), unsubscribeUrl: e.unsubscribe_token ? unsubscribeUrl(e.unsubscribe_token, langOf(e)) : undefined }),
 };
