@@ -211,7 +211,7 @@ export const el: Content = {
       { q: 'Είμαι παίκτης. Πώς βρίσκω τον εαυτό μου;', a: 'Στην εγγραφή γράφεις το όνομά σου και επιλέγεις ότι παίζεις σε τουρνουά. Από εκεί και πέρα βλέπεις τα ματς σου πάντα πρώτα.' },
       { q: 'Παίζω κάπου χρήματα;', a: 'Όχι. Ψηφίζεις για πόντους, σερί και θέση στην Κατάταξη. Χρήματα δεν παίζονται πουθενά.' },
       { q: 'Ποια αθλήματα έχει;', a: 'Τένις τώρα. Padel, μπάσκετ και ποδόσφαιρο έρχονται σύντομα.' },
-      { q: 'Πότε βγαίνει;', a: 'Σύντομα στο App Store και στο Google Play. Γράψε μας στο hello@monadlabs.gr αν θέλεις να το δοκιμάσεις πρώτος.' },
+      { q: 'Πού το βρίσκω;', a: 'Στο App Store και στο Google Play, δωρεάν. Για ό,τι θες, γράψε μας στο hello@monadlabs.gr.' },
     ],
   },
   close: {
@@ -471,7 +471,7 @@ export const en: Content = {
       { q: 'I am a player. How do I find myself?', a: 'When you sign up you type your name and say you play in tournaments. From then on you always see your matches first.' },
       { q: 'Is money involved anywhere?', a: 'No. You vote for points, your streak and a place in the Ladder. No money changes hands anywhere.' },
       { q: 'Which sports?', a: 'Tennis now. Padel, basketball and football are coming soon.' },
-      { q: 'When is it out?', a: 'Soon on the App Store and Google Play. Write to hello@monadlabs.gr if you want to try it first.' },
+      { q: 'Where do I get it?', a: 'On the App Store and Google Play, for free. For anything else, write to hello@monadlabs.gr.' },
     ],
   },
   close: {
