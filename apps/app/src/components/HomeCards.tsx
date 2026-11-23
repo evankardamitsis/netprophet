@@ -6,6 +6,7 @@ import { greekCaps } from '@netprophet/copy';
 import type { ProOfferMoment } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import type { HomeTournament, QuizCardView, ResultsLine, StripItem, YoursNow } from '../lib/home';
+import type { DayEnd, DayEndRow, MoreVotes, QuizChip } from '../lib/homeGuidance';
 import { tagLabel } from '../lib/home';
 import type { MyMatchView } from '../lib/myMatch';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
@@ -43,14 +44,47 @@ function Tap({ onPress, label, children, scale = 0.98 }: { onPress: () => void; 
 
 /* ================= the page header ================= */
 
-/** «Σήμερα» big on the left, today's date small and muted on the right, on one baseline (mockup A). Scrolls with the page. */
-export function HomeHeader({ date }: { date: string }) {
+/**
+ * «Σήμερα» big on the left with today's date small and muted beside it, on one baseline (mockup A); the quiz chip at the
+ * end of the line once the quiz is open (home guidance board 4B). Scrolls with the page.
+ */
+export function HomeHeader({ date, quiz, onQuiz }: { date: string; quiz?: QuizChip | null; onQuiz?: () => void }) {
   const t = useCopy();
   return (
     <View style={styles.header}>
-      <Text accessibilityRole="header" style={styles.headerTitle}>{t.home.title}</Text>
-      <Text style={styles.headerDate}>{date}</Text>
+      <View style={styles.headerLeft}>
+        <Text accessibilityRole="header" style={styles.headerTitle}>{t.home.title}</Text>
+        <Text numberOfLines={1} style={styles.headerDate}>{date}</Text>
+      </View>
+      {quiz && onQuiz ? <QuizChipButton chip={quiz} onPress={onQuiz} /> : null}
     </View>
+  );
+}
+
+/** «Quiz 2/6 ›» on ink while there is more to play; «Quiz ✓» and the lime «+30» once played, for the rest of the day */
+function QuizChipButton({ chip, onPress }: { chip: QuizChip; onPress: () => void }) {
+  const t = useCopy();
+  const press = usePress(0.95);
+  const pop = usePopIn(motion.revealDurShort, motion.stagger * 2);
+  const plusPop = usePopIn(motion.revealDurShort, motion.stagger * 4);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${t.home.quiz.title}. ${chip.label}${chip.plus ? ` ${chip.plus}` : ''}`}
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      hitSlop={6}
+    >
+      <Animated.View style={[styles.qchip, press.style, pop]}>
+        <Text style={styles.qchipText}>{chip.label}</Text>
+        {chip.plus ? (
+          <Animated.View style={[styles.qchipPlus, plusPop]}>
+            <Text style={styles.qchipPlusText}>{chip.plus}</Text>
+          </Animated.View>
+        ) : null}
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -85,6 +119,18 @@ export function ResultsCard({ view, onOpen }: { view: ResultsLine; onOpen: () =>
 }
 
 /* ================= «Οι δικοί σου» ================= */
+
+/** nobody followed yet: one line that opens Παίκτες, until the first follow (board 5.5) */
+export function YoursEmpty({ onPress }: { onPress: () => void }) {
+  const t = useCopy();
+  return (
+    <Tap onPress={onPress} label={t.home.yours.empty}>
+      <View style={styles.yoursRow}>
+        <Text style={[styles.rowTitle, styles.flex]}>{t.home.yours.empty}</Text>
+      </View>
+    </Tap>
+  );
+}
 
 export function YoursBlock({ children }: { children: ReactNode }) {
   const t = useCopy();
@@ -262,7 +308,7 @@ const STRIP_PAD = 16;
  * pair or the next match, and the «Παίζεις» / «Ακολουθείς» / «Κοντά σου» tag. It snaps card by card and bleeds to the
  * screen's edges; the last card, «Όλα ›», opens the full list. `firstRef` is the tour's place for the first card.
  */
-export function TournamentStrip({ items, firstRef, onAll }: { items: StripItem[]; firstRef?: Ref<View>; onAll: () => void }) {
+export function TournamentStrip({ items, firstRef, onAll, allCount }: { items: StripItem[]; firstRef?: Ref<View>; onAll: () => void; allCount?: number }) {
   return (
     <ScrollView
       horizontal
@@ -275,7 +321,7 @@ export function TournamentStrip({ items, firstRef, onAll }: { items: StripItem[]
     >
       {items.map((it, i) =>
         it.kind === 'all' ? (
-          <StripAll key="all" onPress={onAll} />
+          <StripAll key="all" onPress={onAll} count={allCount} />
         ) : (
           <View key={it.item.id} ref={i === 0 ? firstRef : undefined} collapsable={false}>
             <StripCard item={it.item} />
@@ -320,14 +366,16 @@ function StripCard({ item }: { item: HomeTournament }) {
   );
 }
 
-/** the strip's last card: «Όλα ›» */
-function StripAll({ onPress }: { onPress: () => void }) {
+/** the strip's last card: «Όλα (7) ›», how many tournaments are on or coming (board 5.3); «Όλα ›» while unknown */
+function StripAll({ onPress, count }: { onPress: () => void; count?: number }) {
   const t = useCopy();
   const press = usePress(0.97);
+  const counted = count !== undefined && count > 0;
+  const label = counted ? fmt(t.home.tournaments.allCount, { n: count }) : t.home.tournaments.allCard;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={t.home.tournaments.all} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.stripAllHit}>
+    <Pressable accessibilityRole="button" accessibilityLabel={counted ? `${t.home.tournaments.all} (${count})` : t.home.tournaments.all} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.stripAllHit}>
       <Animated.View style={[styles.sall, press.style]}>
-        <Text style={styles.sallText}>{t.home.tournaments.allCard}</Text>
+        <Text style={styles.sallText}>{label}</Text>
       </Animated.View>
     </Pressable>
   );
@@ -335,14 +383,17 @@ function StripAll({ onPress }: { onPress: () => void }) {
 
 /**
  * The small heading over one tournament's vote rows: its name in the display font and «N ματς» muted on the right; a tap
- * opens the tournament (no `onPress` for «Φιλικά»).
+ * opens the tournament, and a › after the name says so (no `onPress` and no › for «Φιλικά»).
  */
 export function VoteGroupHeading({ title, count, onPress }: { title: string; count: string; onPress?: () => void }) {
   const body = (
     <View style={styles.vgHead}>
-      <Text numberOfLines={1} style={styles.vgTitle}>
-        {title}
-      </Text>
+      <View style={styles.vgName}>
+        <Text numberOfLines={1} style={styles.vgTitle}>
+          {title}
+        </Text>
+        {onPress ? <Text style={styles.vgChev}>›</Text> : null}
+      </View>
       <Text style={styles.small}>{count}</Text>
     </View>
   );
@@ -355,7 +406,66 @@ export function VoteGroupHeading({ title, count, onPress }: { title: string; cou
   );
 }
 
-/** a quiet ink text line that opens a page («Όλα τα τουρνουά ›», «Περισσότερα ›») */
+/**
+ * Under the first three votes (board 3A): a sand row, «Δες όλα τα ματς (12) ›» and «9 ακόμα για ψήφο» under it; it opens
+ * «Όλα τα ματς σήμερα».
+ */
+export function MoreVotesRow({ more, onPress }: { more: MoreVotes; onPress: () => void }) {
+  const t = useCopy();
+  const label = fmt(t.home.vote.all, { n: more.total });
+  const left = more.left > 0 ? fmt(t.home.vote.left, { n: more.left }) : null;
+  return (
+    <Tap onPress={onPress} label={[label, left].filter(Boolean).join('. ')}>
+      <View style={styles.more}>
+        <Text style={styles.moreTitle}>{label}</Text>
+        {left ? <Text style={styles.small}>{left}</Text> : null}
+      </View>
+    </Tap>
+  );
+}
+
+/**
+ * The end of the day (board 2A): every match of today voted or closed. An ink card, «Τελείωσες για σήμερα ✓» and what
+ * comes next as rows (tomorrow, the quiz, all tournaments); under it «Δες τις ψήφους σου ›» and that a vote can still
+ * change, while one can. All closed: «Τα ματς της ημέρας έκλεισαν. Τα λέμε αύριο.» and the rows.
+ */
+export function DayEndCard({ end, rows, onRow, onVotes }: { end: DayEnd; rows: DayEndRow[]; onRow: (row: DayEndRow) => void; onVotes: () => void }) {
+  const t = useCopy();
+  const d = t.home.done;
+  const pop = usePopIn(motion.revealDur, motion.stagger);
+  return (
+    <View style={styles.endWrap}>
+      <Animated.View style={[styles.end, pop]}>
+        <View style={styles.endHead}>
+          <Text accessibilityRole="header" style={styles.endTitle}>
+            {end.variant === 'done' ? d.title : d.closed}
+          </Text>
+          {end.variant === 'done' ? <Text style={styles.endLine}>{end.voted === 1 ? d.lineOne : fmt(d.line, { n: end.voted })}</Text> : null}
+        </View>
+        {rows.map((row, i) => (
+          <Reveal key={row.key} i={i + 2}>
+            <Tap onPress={() => onRow(row)} label={row.label}>
+              <View style={styles.endRow}>
+                <Text style={styles.endRowText}>{row.label}</Text>
+                <Text style={styles.endChev}>›</Text>
+              </View>
+            </Tap>
+          </Reveal>
+        ))}
+      </Animated.View>
+      {end.variant === 'done' && end.canChange ? (
+        <Reveal i={rows.length + 2}>
+          <View>
+            <QuietLink label={d.votes} onPress={onVotes} />
+            <Text style={styles.endNote}>{d.change}</Text>
+          </View>
+        </Reveal>
+      ) : null}
+    </View>
+  );
+}
+
+/** a quiet ink text line that opens a page («Όλα τα τουρνουά ›», «Ψάξε παίκτη ›») */
 export function QuietLink({ label, onPress }: { label: string; onPress: () => void }) {
   const press = usePress(0.97);
   return (
@@ -386,9 +496,14 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   chev: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.inkSoft },
   // results
-  header: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 },
-  headerTitle: { ...text.title, flexShrink: 1 },
-  headerDate: { ...text.meta, flexShrink: 0 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  headerLeft: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flex: 1, minWidth: 0 },
+  headerTitle: { ...text.title, flexShrink: 0 },
+  headerDate: { ...text.meta, flexShrink: 1 },
+  qchip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 34, paddingHorizontal: 12, borderRadius: 999, backgroundColor: colors.ink },
+  qchipText: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.paper },
+  qchipPlus: { paddingVertical: 1, paddingHorizontal: 6, borderRadius: 999, backgroundColor: colors.lime },
+  qchipPlusText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
   results: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: colors.ink },
   resultsText: { flex: 1, gap: 2 },
   resultsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.paper },
@@ -436,7 +551,21 @@ const styles = StyleSheet.create({
   sall: { flex: 1, minWidth: 88, paddingHorizontal: 18, borderRadius: 18, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
   sallText: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.ink },
   vgHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, paddingHorizontal: 4, paddingTop: 4 },
+  vgName: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexShrink: 1, minWidth: 0 },
   vgTitle: { ...text.heading, fontSize: 18, lineHeight: 22, flexShrink: 1 },
+  vgChev: { fontFamily: fonts.bodyBold, fontSize: 18, lineHeight: 22, color: colors.inkSoft },
+  // the count row under the votes, and the end of the day
+  more: { padding: 14, borderRadius: 16, backgroundColor: colors.sand, gap: 2 },
+  moreTitle: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.ink },
+  endWrap: { gap: 4 },
+  end: { padding: 16, paddingBottom: 6, borderRadius: 18, backgroundColor: colors.ink },
+  endHead: { gap: 4, paddingBottom: 10 },
+  endTitle: { ...text.heading, fontSize: 24, lineHeight: 28, color: colors.paper },
+  endLine: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
+  endRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.slate },
+  endRowText: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
+  endChev: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.mist },
+  endNote: { ...text.meta, paddingHorizontal: 4 },
   tNameText: { ...text.heading, fontSize: 22, lineHeight: 24, flexShrink: 1 },
   tag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: colors.sand },
   tagInk: { backgroundColor: colors.lime },

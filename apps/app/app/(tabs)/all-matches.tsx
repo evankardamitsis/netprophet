@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { BallerNote } from '../../src/components/BallerNote';
-import { Reveal, VoteGroupHeading } from '../../src/components/HomeCards';
+import { QuietLink, Reveal, VoteGroupHeading } from '../../src/components/HomeCards';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { VoteRow } from '../../src/components/VoteRow';
@@ -19,7 +19,9 @@ import { colors, fonts, text } from '../../src/theme';
  * «Όλα τα ματς σήμερα» (founder, 25 Oct): «Περισσότερα ›» on the home opens this page, so the home keeps its length. The
  * same grouped list as the home's votes, all of it, with the same rows and the same vote path (useVotePath); when
  * nothing is left to vote today it is «Τα επόμενα ματς αύριο», as on the home. It lives inside the tabs, so the header and
- * the tab bar stay and Τουρνουά stays lit (TabBar LIT_BY).
+ * the tab bar stay and Τουρνουά stays lit (TabBar LIT_BY). `?day=today` (the end card's «Δες τις ψήφους σου ›») keeps
+ * today's list with your votes; `?day=tomorrow` («Αύριο ›») opens tomorrow's. It ends with «Όλα τα τουρνουά ›», so it
+ * never dead-ends (home guidance board 3A).
  */
 export default function AllMatchesScreen() {
   const t = useCopy();
@@ -30,8 +32,10 @@ export default function AllMatchesScreen() {
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
   const onCardLongPress = useCallback((id: string) => setSafety({ kind: 'match', id }), []);
   const back = () => (router.canGoBack() ? router.back() : router.navigate('/'));
+  const params = useLocalSearchParams<{ day?: string }>();
+  const day = params.day === 'today' || params.day === 'tomorrow' ? params.day : undefined;
 
-  const votes = voteList(cards, tournamentRanks(tournaments.data?.items ?? [], currentMe()?.profile.area_ids ?? []));
+  const votes = voteList(cards, tournamentRanks(tournaments.data?.items ?? [], currentMe()?.profile.area_ids ?? []), day);
   const none = votes.mode === 'none' && !loading;
   useSplitPoller(pollIds(votes.groups.flatMap((g) => g.rows.filter((r) => !r.closed).map((r) => r.id))));
 
@@ -63,6 +67,7 @@ export default function AllMatchesScreen() {
           </View>
         ))}
         {none ? error ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
+        {loading && cards.length === 0 ? null : <QuietLink label={t.home.tournaments.all} onPress={() => router.push('/tournaments')} />}
       </ScrollView>
       {note?.item.kind === 'toast' ? <Toast key={note.n} text={note.item.text} ms={TOAST_MS} /> : null}
       <SafetySheet

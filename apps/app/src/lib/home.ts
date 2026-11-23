@@ -160,11 +160,21 @@ export function hasMoreVotes(groups: readonly VoteGroup[], limit: number = VOTE_
  * The matches to vote, across tournaments, by tournament. Read from the cards as the feed loaded them (a vote made here
  * does not move a row: the list stays put while you go down it). Today's matches still taking votes (the ones you
  * already voted sit beside them); nothing left to vote today: tomorrow's (the later days); all voted: today's, to show
- * the split.
+ * the split. `day` asks for one day's list instead (falls back to the above when that day has none).
  */
-export function voteList(cards: readonly FeedCard[], ranks: ReadonlyMap<string, number> = new Map()): VoteList {
+export function voteList(cards: readonly FeedCard[], ranks: ReadonlyMap<string, number> = new Map(), day?: 'today' | 'tomorrow'): VoteList {
   const split = splitToday([...cards]);
   const matches = (list: FeedCard[]) => list.filter((c): c is CardMatch => c.kind === 'match' && !c.closed);
+  // asked for a day (the end card's «Δες τις ψήφους σου ›» and «Αύριο ›»): that day's list when it has one; today's keeps
+  // its closed rows too, so every vote of the day shows
+  if (day === 'today') {
+    const all = split.today.filter((c): c is CardMatch => c.kind === 'match');
+    if (all.length > 0) return { mode: 'today', groups: groupVotes(all, ranks) };
+  }
+  if (day === 'tomorrow') {
+    const later = matches(split.later);
+    if (later.length > 0) return { mode: 'tomorrow', groups: groupVotes(later, ranks) };
+  }
   const today = matches(split.today);
   if (today.some((m) => m.myVote === undefined)) return { mode: 'today', groups: groupVotes(today, ranks) };
   const later = matches(split.later);
