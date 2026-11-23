@@ -86,7 +86,7 @@ export function dayEndRows(end: DayEnd, quiz: QuizCardView | null, t: Copy): Day
   const d = t.home.done;
   const out: DayEndRow[] = [];
   if (end.tomorrow?.time) out.push({ key: 'tomorrow', label: fmt(d.tomorrow, { n: end.tomorrow.n, time: end.tomorrow.time }), href: '/all-matches?day=tomorrow' });
-  if (quiz && !quiz.done) out.push({ key: 'quiz', label: fmt(d.quiz, { n: quiz.n - quiz.answered }), href: '/quiz' });
+  if (quiz && !quiz.done) out.push({ key: 'quiz', label: quiz.n - quiz.answered === 1 ? d.quizOne : fmt(d.quiz, { n: quiz.n - quiz.answered }), href: '/quiz' });
   // «Όλα τα τουρνουά ›» without its own ›: the card draws one at the end of every row
   out.push({ key: 'tournaments', label: t.home.tournaments.all.replace(/\s*›$/, ''), href: '/tournaments' });
   return out;

@@ -440,7 +440,7 @@ export function DayEndCard({ end, rows, onRow, onVotes }: { end: DayEnd; rows: D
           <Text accessibilityRole="header" style={styles.endTitle}>
             {end.variant === 'done' ? d.title : d.closed}
           </Text>
-          {end.variant === 'done' ? <Text style={styles.endLine}>{fmt(d.line, { n: end.voted })}</Text> : null}
+          {end.variant === 'done' ? <Text style={styles.endLine}>{end.voted === 1 ? d.lineOne : fmt(d.line, { n: end.voted })}</Text> : null}
         </View>
         {rows.map((row, i) => (
           <Reveal key={row.key} i={i + 2}>

@@ -302,8 +302,10 @@ export const en: Copy = {
     done: {
       title: "You're done for today ✓",
       line: 'You voted on all {n} matches. Results land as soon as they finish.',
+      lineOne: 'You voted on the only match today. The result lands as soon as it finishes.',
       tomorrow: 'Tomorrow: {n} matches, the first at {time}',
       quiz: 'The quiz is still waiting: {n} questions, +30',
+      quizOne: 'The quiz is still waiting: 1 question, +30',
       votes: 'See your votes ›',
       change: 'You can change a vote until the match starts.',
       closed: "Today's matches are closed. See you tomorrow.",

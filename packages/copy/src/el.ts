@@ -359,8 +359,12 @@ export const el = {
     done: {
       title: 'Τελείωσες για σήμερα ✓',
       line: 'Ψήφισες και τα {n} ματς. Τα αποτελέσματα έρχονται μόλις τελειώσουν.',
+      /** the day had a single match */
+      lineOne: 'Ψήφισες στο μοναδικό ματς της ημέρας. Το αποτέλεσμα έρχεται μόλις τελειώσει.',
       tomorrow: 'Αύριο: {n} ματς, το πρώτο στις {time}',
       quiz: 'Σου μένει το quiz: {n} ερωτήσεις, +30',
+      /** one question left */
+      quizOne: 'Σου μένει το quiz: 1 ερώτηση, +30',
       votes: 'Δες τις ψήφους σου ›',
       change: 'Αλλάζεις ψήφο μέχρι να ξεκινήσει το ματς.',
       /** everything closed and nothing tomorrow */

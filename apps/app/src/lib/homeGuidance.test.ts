@@ -108,6 +108,7 @@ describe('dayEndRows', () => {
   it('the quiz counts the questions still to play', () => {
     const end = { variant: 'done' as const, voted: 1, canChange: true, tomorrow: null };
     expect(dayEndRows(end, quiz(2), t)[0]?.label).toBe('Σου μένει το quiz: 4 ερωτήσεις, +30');
+    expect(dayEndRows(end, quiz(5), t)[0]?.label).toBe('Σου μένει το quiz: 1 ερώτηση, +30');
   });
   it('quiz played or locked, nothing tomorrow: only the tournaments row', () => {
     const end = { variant: 'closed' as const, voted: 0, canChange: false, tomorrow: null };
