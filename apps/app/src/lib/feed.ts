@@ -35,6 +35,8 @@ export interface CardSide {
 export interface CardPct {
   pctA: number;
   pctB: number;
+  /** how many voted; 0 says «Κανείς δεν ψήφισε ακόμα» (absent in mock data) */
+  total?: number;
 }
 
 /** What a vote row (VoteRow) renders. Built from a server feed card or from mock data. */
@@ -203,7 +205,7 @@ export const toUiSide = (s: DbSide): Side => (s === 1 ? 'a' : 'b');
 export const toDbSide = (s: Side): DbSide => (s === 'a' ? 1 : 2);
 
 export function toPct(split: VoteSplit): CardPct {
-  return { pctA: split.pct1, pctB: split.pct2 };
+  return { pctA: split.pct1, pctB: split.pct2, total: split.total };
 }
 
 export const ROUND_KEYS = ['round64', 'round32', 'round16', 'quarter', 'semi', 'final'] as const;

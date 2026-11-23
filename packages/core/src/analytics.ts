@@ -10,6 +10,8 @@ export interface AnalyticsEvents {
   /** from: onboarding (left out) or «Αυτός είμαι εγώ» on a player's profile later */
   claim_completed: { result: 'ok' | 'requested' | 'taken' | 'other' | 'limited' | 'failed'; from?: 'profile' };
   vote_cast: { match_id: string; side: 1 | 2 };
+  /** the other side, before the lock (23 Nov 2026) */
+  vote_changed: { match_id: string; side: 1 | 2 };
   result_card_seen: { outcome: 'correct' | 'wrong' | 'none'; points: number };
   pro_sheet_viewed: { moment: string };
   /** the full-screen welcome after a Pro purchase */

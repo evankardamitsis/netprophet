@@ -9,6 +9,7 @@ import { hasTime } from '../lib/tournaments';
 import { runJpop, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { HOLD_MS, holdFor, pointOf, type HoldPerson } from '../lib/playerHold';
 import { fmt, type Side } from '../lib/votes';
+import { setLiveSplit, useLiveSplit } from '../lib/liveSplits';
 import { cardSurface, colors, fonts, motion, text } from '../theme';
 import { Logo } from './Logo';
 import { StagePill } from './StagePill';
@@ -18,9 +19,11 @@ import { StagePill } from './StagePill';
  * (and the club, with its logo), then the two names as full-width buttons, one under the other (a pair shows both surnames). Tap a name to vote.
  *
  * A tap on a name votes at once (founder, 22 Oct: no lock-in): the name presses in and fills ink, `onVote` runs (the
- * screen's vote path: cast_vote, the burst, quests, error toasts) and the percentages pop in when the split comes back.
- * A vote that fails puts the row back.
- * voted     your name ink, the other muted, both percentages
+ * screen's vote path: cast_vote, the burst, quests, error toasts). A vote that fails puts the row back as it was.
+ * The crowd's split shows before you vote too and moves while you look (founder, 23 Nov 2026: liveSplits, polled by
+ * the screen); with no votes yet, «Κανείς δεν ψήφισε ακόμα, γίνε ο πρώτος». Tap the other name to change your vote,
+ * as often as you want, until the match locks.
+ * voted     your name filled, the other muted, both percentages
  * resolved  the winner lime with ✓ and the points you got (`result`)
  * A hold on a name opens the player's run (playerHold); a hold elsewhere on the row opens «Αναφορά».
  */
@@ -72,7 +75,8 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
   const picked = state.phase === 'idle' ? null : state.side;
   const enter = useStgIn(ENTER_MS, Math.min(index, 8) * motion.stagger);
 
-  const open = !result && !match.closed && state.phase === 'idle';
+  // a name can be tapped until the lock: the first vote, or a change of mind; not while one is on its way
+  const open = !result && !match.closed && state.phase !== 'sending';
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -83,26 +87,33 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
   const tap = useCallback(
     (side: Side) => {
       if (!open) return;
+      if (state.phase === 'voted' && state.side === side) return;
+      const before = state;
       haptic('tap');
       setState({ phase: 'sending', side });
       onVote(match.id, side).then(
         (split) => {
           cast.set(match.id, { side, split });
+          setLiveSplit(match.id, split);
           if (mounted.current) {
             haptic('done');
             setState({ phase: 'voted', side, split });
           }
         },
-        // the screen says why in a toast; the row goes back to a fresh pick
+        // the screen says why in a toast; the row goes back to how it was (no vote, or the earlier one)
         () => {
-          if (mounted.current) setState({ phase: 'idle' });
+          if (mounted.current) setState(before);
         },
       );
     },
-    [open, onVote, match.id],
+    [open, onVote, match.id, state],
   );
 
-  const split = state.phase === 'voted' ? state.split : null;
+  const live = useLiveSplit(match.id);
+  const split = live ?? (state.phase === 'voted' ? state.split : null) ?? match.split ?? null;
+  // a split with nobody in it says so instead of 0% / 0%
+  const empty = split?.total === 0;
+  const showPct = split !== null && !empty;
   const place = rowWhere(where ?? [match.group?.title, match.category].filter(Boolean).join(' · '), match.club);
   const small = place.line;
   const hold = onLongPress ? () => onLongPress(match.id) : undefined;
@@ -135,7 +146,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
                 data={match[s]}
                 picked={picked === s}
                 other={picked !== null && picked !== s}
-                pct={split ? (s === 'a' ? split.pctA : split.pctB) : null}
+                pct={showPct && split ? (s === 'a' ? split.pctA : split.pctB) : null}
                 won={result ? result.winner === s : null}
                 disabled={!open}
                 onTap={tap}
@@ -143,6 +154,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
               />
             ))}
             {result && picked === result.winner ? <Called points={result.points} /> : null}
+            {empty && !result && !match.closed && picked === null ? <Text style={styles.small}>{t.home.vote.noVotesYet}</Text> : null}
             {note && !result ? <Text style={styles.small}>{note}</Text> : null}
           </View>
         </View>
@@ -211,6 +223,7 @@ function NameButton({
       onPressOut={press.onPressOut}
     >
       <Animated.View style={[styles.name, face, press.style, popStyle]}>
+        {pct !== null && won === null ? <Bar pct={pct} picked={picked} reduced={reduced} /> : null}
         <Text numberOfLines={1} style={[styles.nameText, { color: fg }]}>
           {label}
         </Text>
@@ -218,6 +231,17 @@ function NameButton({
       </Animated.View>
     </Pressable>
   );
+}
+
+/** a thin line along the bottom of a name, as wide as its share; it slides when the split moves */
+function Bar({ pct, picked, reduced }: { pct: number; picked: boolean; reduced: boolean }) {
+  const style: CSSTransitionProperties & Pick<ViewStyle, 'width'> = {
+    width: `${Math.max(0, Math.min(100, pct))}%`,
+    transitionProperty: 'width',
+    transitionDuration: reduced ? 0 : motion.revealDur,
+    transitionTimingFunction: 'ease-out',
+  };
+  return <Animated.View pointerEvents="none" style={[styles.bar, picked ? styles.barPicked : null, style]} />;
 }
 
 /** the percentage (or ✓) pops in when it arrives */
@@ -264,6 +288,8 @@ const styles = StyleSheet.create({
   },
   nameText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21 },
   pct: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 19 },
+  bar: { position: 'absolute', left: 0, bottom: 0, height: 4, backgroundColor: colors.slate, opacity: 0.45 },
+  barPicked: { backgroundColor: colors.ink, opacity: 0.35 },
   called: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pointsPill: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: 8, backgroundColor: colors.lime },
   pointsText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },

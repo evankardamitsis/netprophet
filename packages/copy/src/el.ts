@@ -339,6 +339,8 @@ export const el = {
       a11yVote: 'Ψήφος: {name}',
       /** after the result: «Το είχες ✓» */
       called: 'Το είχες ✓',
+      /** a match nobody voted on yet (the split shows before you vote, 23 Nov 2026) */
+      noVotesYet: 'Κανείς δεν ψήφισε ακόμα, γίνε ο πρώτος',
       empty: 'Κανένα ματς για ψήφο ακόμα.',
     },
     pro: {

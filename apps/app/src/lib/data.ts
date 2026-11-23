@@ -217,7 +217,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     }
     try {
       const res = await api.castVote(matchId, toDbSide(side));
-      track('vote_cast', { match_id: matchId, side: toDbSide(side) });
+      track(res.changed ? 'vote_changed' : 'vote_cast', { match_id: matchId, side: toDbSide(side) });
       void askForPushOnce(api);
       return toPct(res.split);
     } catch (err) {

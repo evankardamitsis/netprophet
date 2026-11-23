@@ -53,6 +53,7 @@ import { momentsAct, useMoments } from '../../src/lib/useMoments';
 import { currentMe } from '../../src/lib/meStore';
 import { clearSeenResultPushes } from '../../src/lib/push';
 import { markResultsSeen } from '../../src/lib/resultsSeen';
+import { pollIds, useSplitPoller } from '../../src/lib/liveSplits';
 import type { MomentKind } from '../../src/lib/moments';
 
 /**
@@ -370,6 +371,8 @@ export default function HomeScreen() {
   const votes = voteList(cards, tournamentRanks(tournaments.data?.items ?? [], meNow?.profile.area_ids ?? []));
   // always the first three still open; «Περισσότερα ›» opens the rest on its own page, so the home keeps its length
   const shownVotes = topVotes(votes.groups);
+  // the percentages move while Σήμερα is open (founder, 23 Nov 2026)
+  useSplitPoller(pollIds(shownVotes.flatMap((g) => g.rows.filter((r) => !r.closed).map((r) => r.id))));
   const resultsView = resultsLine(results, t, now);
   const mine = myMatch.match;
   const people = yoursNow(cards, yours, now, t, mine?.matchId);

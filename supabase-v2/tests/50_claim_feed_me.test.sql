@@ -86,8 +86,8 @@ select is((:'feed'::jsonb -> 'items' -> 4 ->> 'kind'), 'sponsored', 'feed: a lab
 select is((:'feed'::jsonb -> 'items' -> 4 ->> 'label'), 'Χορηγούμενο', 'feed: the ad carries the Χορηγούμενο label');
 select is((select count(*)::int from jsonb_array_elements(:'feed'::jsonb -> 'items') e where e ->> 'kind' = 'match' and e ->> 'match_id' = :'m2'), 1, 'feed: matches you voted on are still listed');
 select is((:'feed'::jsonb -> 'items' -> 6 ->> 'match_id'), :'m2', 'feed: voted matches sink below the unvoted ones');
-select is((:'feed'::jsonb -> 'items' -> 6 -> 'split' ->> 'total')::int, 1, 'feed: the split is only on matches you voted on');
-select is((:'feed'::jsonb -> 'items' -> 0 -> 'split'), 'null'::jsonb, 'feed: no split on an unvoted match');
+select is((:'feed'::jsonb -> 'items' -> 6 -> 'split' ->> 'total')::int, 1, 'feed: a voted match carries its split');
+select is((:'feed'::jsonb -> 'items' -> 0 -> 'split' ->> 'total')::int, 0, 'feed: an unvoted match carries its split too (23 Nov 2026), here with no votes');
 
 select * from finish();
 rollback;
