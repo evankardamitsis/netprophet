@@ -26,3 +26,9 @@ export function fmt(template: string, values: Record<string, string | number>): 
     key in values ? String(values[key]) : whole,
   );
 }
+
+/** who the crowd backs on a vote row (23 Nov 2026): the bigger share is the favourite, the smaller the underdog */
+export type CrowdRole = 'favorite' | 'underdog' | 'even';
+export function crowdRole(mine: number, theirs: number): CrowdRole {
+  return mine > theirs ? 'favorite' : mine < theirs ? 'underdog' : 'even';
+}

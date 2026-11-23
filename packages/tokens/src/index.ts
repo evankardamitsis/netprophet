@@ -38,6 +38,12 @@ export const colors = {
   /** the logo's bouncing balls in their own colours (tennis is lime, football paper and ink) */
   padelBall: '#F2E14C',
   basketBall: '#E8742A',
+  /**
+   * The crowd's split on a vote row (founder, 23 Nov 2026): the side most people pick in a deep green, the other in a
+   * warm clay. Only for the percentages and their bars; never an action (blue), never "what happened" (lime).
+   */
+  favorite: '#2E7A3A',
+  underdog: '#C2552C',
 } as const;
 
 /**

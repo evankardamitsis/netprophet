@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fmt, voteSplit } from './votes';
+import { fmt, voteSplit, crowdRole } from './votes';
 import { parseBezier } from './ease';
 
 describe('voteSplit', () => {
@@ -35,5 +35,13 @@ describe('parseBezier', () => {
   });
   it('rejects junk', () => {
     expect(() => parseBezier('ease')).toThrow();
+  });
+});
+
+describe('crowdRole', () => {
+  it('the bigger share is the favourite, the smaller the underdog, a tie neither', () => {
+    expect(crowdRole(62, 38)).toBe('favorite');
+    expect(crowdRole(38, 62)).toBe('underdog');
+    expect(crowdRole(50, 50)).toBe('even');
   });
 });

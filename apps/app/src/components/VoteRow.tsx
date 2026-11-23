@@ -8,7 +8,7 @@ import { rowWhere, sideLabel, rowTime } from '../lib/home';
 import { hasTime } from '../lib/tournaments';
 import { runJpop, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { HOLD_MS, holdFor, pointOf, type HoldPerson } from '../lib/playerHold';
-import { fmt, type Side } from '../lib/votes';
+import { crowdRole, fmt, type CrowdRole, type Side } from '../lib/votes';
 import { setLiveSplit, useLiveSplit } from '../lib/liveSplits';
 import { cardSurface, colors, fonts, motion, text } from '../theme';
 import { Logo } from './Logo';
@@ -147,6 +147,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
                 picked={picked === s}
                 other={picked !== null && picked !== s}
                 pct={showPct && split ? (s === 'a' ? split.pctA : split.pctB) : null}
+                crowd={showPct && split ? crowdRole(s === 'a' ? split.pctA : split.pctB, s === 'a' ? split.pctB : split.pctA) : 'even'}
                 won={result ? result.winner === s : null}
                 disabled={!open}
                 onTap={tap}
@@ -163,12 +164,15 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
   );
 });
 
+const CROWD_COLOR: Record<CrowdRole, string> = { favorite: colors.favorite, underdog: colors.underdog, even: colors.slate };
+
 function NameButton({
   side,
   data,
   picked,
   other,
   pct,
+  crowd,
   won,
   disabled,
   onTap,
@@ -180,6 +184,8 @@ function NameButton({
   /** the other name was picked: this one steps back */
   other: boolean;
   pct: number | null;
+  /** the crowd's favourite or underdog: the colour of the percentage and its bar */
+  crowd: CrowdRole;
   /** played: true for the winner, false for the other, null before */
   won: boolean | null;
   disabled: boolean;
@@ -208,7 +214,7 @@ function NameButton({
     transitionDuration: reduced ? 0 : FILL_MS,
     transitionTimingFunction: 'ease-out',
   };
-  const right = won === true ? '✓' : pct !== null ? `${pct}%` : '';
+  const tone = CROWD_COLOR[crowd];
 
   return (
     <Pressable
@@ -223,31 +229,91 @@ function NameButton({
       onPressOut={press.onPressOut}
     >
       <Animated.View style={[styles.name, face, press.style, popStyle]}>
-        {pct !== null && won === null ? <Bar pct={pct} picked={picked} reduced={reduced} /> : null}
+        {pct !== null && won === null ? <Bar pct={pct} color={tone} reduced={reduced} /> : null}
         <Text numberOfLines={1} style={[styles.nameText, { color: fg }]}>
           {label}
         </Text>
-        {right ? <Pct key={right} text={right} color={fg} /> : null}
+        {won === true ? (
+          <Tick color={fg} />
+        ) : pct !== null ? (
+          // on your lime pick the number stays ink to read; elsewhere it takes the crowd's colour
+          <Pct value={pct} color={picked ? colors.ink : other && won === null ? fg : tone} reduced={reduced} />
+        ) : null}
       </Animated.View>
     </Pressable>
   );
 }
 
-/** a thin line along the bottom of a name, as wide as its share; it slides when the split moves */
-function Bar({ pct, picked, reduced }: { pct: number; picked: boolean; reduced: boolean }) {
-  const style: CSSTransitionProperties & Pick<ViewStyle, 'width'> = {
-    width: `${Math.max(0, Math.min(100, pct))}%`,
-    transitionProperty: 'width',
+/**
+ * A line along the bottom of a name, as wide as its share, in the crowd's colour. It grows from nothing when it first
+ * shows and slides when the split moves.
+ */
+function Bar({ pct, color, reduced }: { pct: number; color: string; reduced: boolean }) {
+  const [shown, setShown] = useState(reduced ? pct : 0);
+  useEffect(() => {
+    // one frame at 0 first, so the width transition runs on arrival too
+    const id = requestAnimationFrame(() => setShown(pct));
+    return () => cancelAnimationFrame(id);
+  }, [pct]);
+  const style: CSSTransitionProperties & Pick<ViewStyle, 'width' | 'backgroundColor'> = {
+    width: `${Math.max(0, Math.min(100, shown))}%`,
+    backgroundColor: color,
+    transitionProperty: ['width', 'backgroundColor'],
     transitionDuration: reduced ? 0 : motion.revealDur,
     transitionTimingFunction: 'ease-out',
   };
-  return <Animated.View pointerEvents="none" style={[styles.bar, picked ? styles.barPicked : null, style]} />;
+  return <Animated.View pointerEvents="none" style={[styles.bar, style]} />;
 }
 
-/** the percentage (or ✓) pops in when it arrives */
-function Pct({ text: value, color }: { text: string; color: string }) {
+/** counts from `from` to `to` over `ms` (ease-out), a frame at a time; reduced motion jumps */
+function useCountTo(to: number, ms: number, reduced: boolean): number {
+  const [now, setNow] = useState(reduced ? to : 0);
+  const from = useRef(reduced ? to : 0);
+  useEffect(() => {
+    if (reduced) {
+      setNow(to);
+      from.current = to;
+      return undefined;
+    }
+    const start = from.current;
+    const t0 = Date.now();
+    let id = 0;
+    const step = () => {
+      const k = Math.min(1, (Date.now() - t0) / ms);
+      const v = Math.round(start + (to - start) * (1 - (1 - k) ** 3));
+      setNow(v);
+      from.current = v;
+      if (k < 1) id = requestAnimationFrame(step);
+    };
+    id = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(id);
+  }, [to, ms, reduced]);
+  return now;
+}
+
+/**
+ * The percentage: counts up when it arrives and rolls to the new number when the split moves, with a small pulse
+ * each time it changes (founder, 23 Nov 2026: "slightly micro animated, not static").
+ */
+function Pct({ value, color, reduced }: { value: number; color: string; reduced: boolean }) {
+  const shown = useCountTo(value, motion.revealDur, reduced);
+  const pulse = useSharedValue(1);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (!reduced) runJpop(pulse, JPOP_MS);
+  }, [value, reduced, pulse]);
+  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
+  return <Animated.Text style={[styles.pct, { color }, pulseStyle]}>{`${shown}%`}</Animated.Text>;
+}
+
+/** the winner's ✓ pops in */
+function Tick({ color }: { color: string }) {
   const pop = usePopIn(450, 120);
-  return <Animated.Text style={[styles.pct, { color }, pop]}>{value}</Animated.Text>;
+  return <Animated.Text style={[styles.pct, { color }, pop]}>✓</Animated.Text>;
 }
 
 /** «Το είχες ✓» and the points, in lime: earned */
@@ -288,8 +354,7 @@ const styles = StyleSheet.create({
   },
   nameText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21 },
   pct: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 19 },
-  bar: { position: 'absolute', left: 0, bottom: 0, height: 4, backgroundColor: colors.slate, opacity: 0.45 },
-  barPicked: { backgroundColor: colors.ink, opacity: 0.35 },
+  bar: { position: 'absolute', left: 0, bottom: 0, height: 4, opacity: 0.8 },
   called: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pointsPill: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: 8, backgroundColor: colors.lime },
   pointsText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
