@@ -289,6 +289,7 @@ export const en: Copy = {
       friendlies: 'Friendlies',
       a11yVote: 'Vote: {name}',
       called: 'You called it ✓',
+      noVotesYet: 'No votes yet. Be the first.',
       empty: 'No matches to vote on yet.',
     },
     pro: {

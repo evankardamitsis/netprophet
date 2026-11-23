@@ -25,6 +25,7 @@ import { useEntrance, usePress, useStgIn } from '../../../src/lib/motion';
 import { SCHEDULE_RATIO, scheduleMessage, shareView, shortName } from '../../../src/lib/scheduleShare';
 import { shareCard } from '../../../src/lib/shareCard';
 import { fmt } from '../../../src/lib/votes';
+import { pollIds, useSplitPoller } from '../../../src/lib/liveSplits';
 import {
   bracketRounds,
   dayLong,
@@ -376,6 +377,7 @@ function TodayTab({
   const fed = useMemo(() => new Map(feed.cards.flatMap((c): [string, CardMatch][] => (c.kind === 'match' ? [[c.id, c]] : []))), [feed.cards]);
   const points = useMemo(() => new Map(feed.results.filter((r) => r.ok).map((r) => [r.matchId, r.points] as [string, number])), [feed.results]);
   const groups = useMemo(() => todayGroups(matches, d.id, fed, points, now, t), [matches, d.id, fed, points, now, t]);
+  useSplitPoller(pollIds(groups.flatMap((g) => g.rows.filter((r) => !r.result && !r.match.closed).map((r) => r.match.id))));
   let n = 0;
   return (
     <View style={styles.block}>
@@ -470,6 +472,7 @@ function Schedule({
       ),
     [matches, d.id, d.me, fed, now, t],
   );
+  useSplitPoller(pollIds([...votable.keys()]));
   const courts = isToday ? nowNext(matches, now, t) : [];
   // where each match sits in the page: the block's y, the list's y in it, the row's y in the list
   const at = useRef({ block: 0, list: 0, rows: new Map<string, number>() });

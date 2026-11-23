@@ -100,7 +100,7 @@ begin
                  'my_vote', mv.option,
                  -- started, no result yet: the card stays, without votes
                  'closed', not core.match_is_open(m),
-                 'split', case when mv.id is not null or not core.match_is_open(m) then core.vote_split(m.id) end,
+                 'split', core.vote_split(m.id),  -- on every card since 23 Nov 2026
                  'moved_from', case when (m.provenance ->> 'moved_at')::timestamptz > now() - interval '3 days' then m.provenance -> 'moved_from_at' end,
                  'club', cl.name, 'club_logo', cl.logo_path, 'surface', coalesce(cl.surface, t.surface)) as card
           from core.matches m

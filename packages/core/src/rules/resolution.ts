@@ -33,22 +33,25 @@ export function lockInstant(match: Match): Instant {
   return voteLockInstant(match.startsAt, match.lockAt, match.untimedLockTime ?? null);
 }
 
-export type VoteRejection = 'not_open' | 'locked' | 'invalid_option' | 'already_voted';
+export type VoteRejection = 'not_open' | 'locked' | 'invalid_option';
 
 export type VoteValidation = { ok: true } | { ok: false; reason: VoteRejection };
 
-/** Votes are accepted only on announced or scheduled matches, strictly before the lock instant. */
+/**
+ * Votes are accepted only on announced or scheduled matches, strictly before the lock instant. A vote already there
+ * (`alreadyVoted`) is a change of mind and follows the same gate (founder, 23 Nov 2026: change it as often as you want
+ * until the lock); a change is not a new vote, so nothing that counts votes runs again.
+ */
 export function validateVote(args: {
   match: Match;
   optionIndex: number;
   castAt: Instant;
   alreadyVoted: boolean;
 }): VoteValidation {
-  const { match, optionIndex, castAt, alreadyVoted } = args;
+  const { match, optionIndex, castAt } = args;
   if (match.status !== 'announced' && match.status !== 'scheduled') return { ok: false, reason: 'not_open' };
   if (toMs(castAt) >= toMs(lockInstant(match))) return { ok: false, reason: 'locked' };
   if (optionIndex !== 0 && optionIndex !== 1) return { ok: false, reason: 'invalid_option' };
-  if (alreadyVoted) return { ok: false, reason: 'already_voted' };
   return { ok: true };
 }
 

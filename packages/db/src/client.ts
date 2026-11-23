@@ -3,6 +3,7 @@ import type { Database } from './types';
 import type {
   BlockedUser,
   CastVoteResult,
+  VoteSplit,
   ClaimCandidate,
   ConfirmationAnswer,
   GetFeedResult,
@@ -112,6 +113,8 @@ export function rpc(client: NetprophetClient) {
     castVote: (matchId: string, side: Side, clientEventId?: string) =>
       call<CastVoteResult>(client, 'cast_vote', { p_match_id: matchId, p_side: side, p_client_event_id: clientEventId }),
     getFeed: (limit = 20) => call<GetFeedResult>(client, 'get_feed', { p_limit: limit }),
+    /** the live splits of up to 100 matches, by match id (polled while a screen with vote rows is open) */
+    voteSplits: (matchIds: readonly string[]) => call<Record<string, VoteSplit>>(client, 'vote_splits', { p_ids: [...matchIds] }),
     getQuests: () => call<GetQuestsResult>(client, 'get_quests', {}),
     getQuiz: () => call<GetQuizResult>(client, 'get_quiz', {}),
     /** option is 1-based */

@@ -1024,6 +1024,10 @@ export type Database = {
         Args: { p_patch: Json };
         Returns: Json;
       };
+      vote_splits: {
+        Args: { p_ids: string[] };
+        Returns: Json;
+      };
       vote_trait: {
         Args: { p_player: string; p_trait: string; p_on?: boolean };
         Returns: Json;

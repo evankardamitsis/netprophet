@@ -155,7 +155,7 @@
           }
         },
         {
-          "name": "second vote on the same match",
+          "name": "a change of mind on the same match, before the lock",
           "input": {
             "matchStatus": "scheduled",
             "startsAt": "2026-10-09T15:00:00Z",
@@ -165,8 +165,22 @@
             "alreadyVoted": true
           },
           "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "a change of mind after the lock",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T15:00:00Z",
+            "alreadyVoted": true
+          },
+          "expected": {
             "ok": false,
-            "reason": "already_voted"
+            "reason": "locked"
           }
         }
       ]

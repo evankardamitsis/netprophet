@@ -18,6 +18,8 @@ export interface CastVoteResult {
   side: Side;
   /** true when this exact vote already existed (retry or double tap): nothing changed */
   replayed: boolean;
+  /** true when the vote moved to the other side (allowed until the lock, 23 Nov 2026) */
+  changed?: boolean;
   split: VoteSplit;
 }
 
@@ -123,7 +125,7 @@ export interface FeedMatchCard {
    * day at the tournament's lock time (14:00 by default)
    */
   lock_at?: string | null;
-  /** after the user voted, and on a closed match */
+  /** on every card since 23 Nov 2026 (before: only after the user voted, and on a closed match) */
   split: VoteSplit | null;
   /** the old starts_at, when the match moved to a new day in the last 3 days */
   moved_from?: string | null;

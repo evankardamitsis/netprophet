@@ -1,6 +1,6 @@
--- cast_vote: only before lock, one vote per user and match, idempotent replays.
+-- cast_vote: only before lock, one vote per user and match (changeable until the lock), idempotent replays.
 begin;
-select plan(24);
+select plan(25);
 
 select tests.create_user('cv-a@test.local') as a \gset
 select tests.create_user('cv-b@test.local') as b \gset
@@ -20,11 +20,12 @@ select is((select votes_cast from core.user_game_state where user_id = :'a'::uui
 select is((api.cast_vote(:'m1'::uuid, 1) ->> 'replayed')::boolean, true, 'same vote again is a replay');
 select is((select count(*)::int from core.votes where user_id = :'a'::uuid), 1, 'replay did not add a row');
 select is((select votes_cast from core.user_game_state where user_id = :'a'::uuid), 1, 'replay did not double count');
-select throws_ok(format($$select api.cast_vote(%L, 2)$$, :'m1'), '23505', null, 'a vote cannot be switched to the other side');
+select is((api.cast_vote(:'m1'::uuid, 2) ->> 'changed')::boolean, true, 'a vote can be switched to the other side before the lock');
+select is((api.cast_vote(:'m1'::uuid, 1) ->> 'side')::int, 1, 'and back again');
 select throws_ok(format($$select api.cast_vote(%L, 3)$$, :'m2'), '22023', null, 'side must be 1 or 2');
 select throws_ok($$select api.cast_vote(gen_random_uuid(), 1)$$, 'P0002', null, 'unknown match');
 
--- the split is only returned to someone who voted, and reflects other voters
+-- the split reflects other voters
 select tests.login(:'b'::uuid);
 select is((api.cast_vote(:'m1'::uuid, 2) -> 'split' ->> 'pct1')::int, 50, 'split after a second voter on the other side: 50 percent');
 select is((api.cast_vote(:'m1'::uuid, 2) -> 'split' ->> 'total')::int, 2, 'split total is 2');

@@ -12,6 +12,7 @@ import { tournamentRanks, voteList } from '../../src/lib/home';
 import { currentMe } from '../../src/lib/meStore';
 import { useNotes, useVotePath } from '../../src/lib/useVotePath';
 import { fmt } from '../../src/lib/votes';
+import { pollIds, useSplitPoller } from '../../src/lib/liveSplits';
 import { colors, fonts, text } from '../../src/theme';
 
 /**
@@ -32,6 +33,7 @@ export default function AllMatchesScreen() {
 
   const votes = voteList(cards, tournamentRanks(tournaments.data?.items ?? [], currentMe()?.profile.area_ids ?? []));
   const none = votes.mode === 'none' && !loading;
+  useSplitPoller(pollIds(votes.groups.flatMap((g) => g.rows.filter((r) => !r.closed).map((r) => r.id))));
 
   return (
     <View style={styles.screen}>
