@@ -4,8 +4,8 @@ import { resolveLocale, type LocaleChoice } from './lib/locale';
 
 /**
  * The app's language, one store for the whole app: `useCopy()` gives the dictionary, `useLocale()` the locale, and
- * `setLocale()` changes the pick («Γλώσσα» in Ρυθμίσεις). LocaleProvider (src/lib/LocaleProvider.tsx) reads the phone
- * and the saved pick before the first screen, and saves every change; this file stays free of native modules so the
+ * `setLocale()` changes the pick («Γλώσσα» in Ρυθμίσεις: Ελληνικά or English). LocaleProvider (src/lib/LocaleProvider.tsx) reads the saved
+ * pick before the first screen, and saves every change; this file stays free of native modules so the
  * tests can import it.
  */
 
@@ -17,14 +17,13 @@ export interface LocaleState {
   locale: Locale;
 }
 
-let deviceCode: string | null = null;
 let state: LocaleState = { choice: 'auto', locale: 'el' };
 let persist: ((choice: LocaleChoice) => void) | null = null;
 const listeners = new Set<() => void>();
 const resets = new Set<() => void>();
 
 function commit(choice: LocaleChoice): void {
-  const locale = resolveLocale(choice, deviceCode);
+  const locale = resolveLocale(choice);
   if (choice === state.choice && locale === state.locale) return;
   const changed = locale !== state.locale;
   state = { choice, locale };
@@ -33,14 +32,13 @@ function commit(choice: LocaleChoice): void {
   listeners.forEach((l) => l());
 }
 
-/** LocaleProvider, once: the phone's language code, the saved pick and how to save the next one */
-export function startLocale(languageCode: string | null, choice: LocaleChoice, save: (choice: LocaleChoice) => void): void {
-  deviceCode = languageCode;
+/** LocaleProvider, once: the saved pick and how to save the next one */
+export function startLocale(choice: LocaleChoice, save: (choice: LocaleChoice) => void): void {
   persist = save;
   commit(choice);
 }
 
-/** «Αυτόματα», «Ελληνικά» or «English»: switches the app at once and remembers it on this phone */
+/** «Ελληνικά» or «English»: switches the app at once and remembers it on this phone */
 export function setLocale(choice: LocaleChoice): void {
   persist?.(choice);
   commit(choice);

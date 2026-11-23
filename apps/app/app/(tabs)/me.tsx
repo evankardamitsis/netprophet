@@ -995,13 +995,13 @@ function SoundsRow() {
 }
 
 /**
- * «Γλώσσα» (founder, 16 Nov 2026): Αυτόματα follows the phone (Greek phone, Greek; any other, English), or pick one.
- * Saved on this phone. The pill slides first, then the app switches (every screen remounts in the new language).
+ * «Γλώσσα» (founder, 23 Nov 2026): Ελληνικά, the default whatever the phone speaks, or English. Saved on this phone. The pill slides first, then the app switches (every screen remounts in the new language).
  */
 function LanguageRow() {
   const t = useCopy();
   const { choice } = useLocaleState();
-  const [picked, setPicked] = useState<LocaleChoice>(choice);
+  // nothing saved reads Greek, so the pill shows Ελληνικά
+  const [picked, setPicked] = useState<LocaleChoice>(choice === 'auto' ? 'el' : choice);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
@@ -1020,7 +1020,6 @@ function LanguageRow() {
       </View>
       <Segmented
         options={[
-          { id: 'auto' as const, label: names.auto },
           { id: 'el' as const, label: names.el },
           { id: 'en' as const, label: names.en },
         ]}

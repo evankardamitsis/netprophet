@@ -712,9 +712,9 @@ export const el = {
     soundsLine: 'Μικροί ήχοι από τον Baller σου. Σωπαίνουν όταν το κινητό είναι στο αθόρυβο.',
     /** Ρυθμίσεις (founder, 16 Nov 2026): the app follows the phone's language unless you pick one here */
     language: 'Γλώσσα',
-    languageLine: 'Παίρνει τη γλώσσα του κινητού σου, εκτός αν διαλέξεις εσύ.',
+    languageLine: 'Η εφαρμογή μιλάει Ελληνικά. Αν θες, διάλεξε English.',
     /** each language in its own words, so you find yours whatever the app speaks now */
-    languages: { auto: 'Αυτόματα', el: 'Ελληνικά', en: 'English' },
+    languages: { el: 'Ελληνικά', en: 'English' },
     /** the push when someone reacts to your match (founder, 20 Oct); saved on the account, on unless switched off */
     reactionsPush: 'Αντιδράσεις στα ματς σου',
     reactionsPushLine: 'Σου λέμε όταν κάποιος αντιδρά σε ματς σου. Το πολύ μία ειδοποίηση ανά ματς κάθε 3 ώρες.',
