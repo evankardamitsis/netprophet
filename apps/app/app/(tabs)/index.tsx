@@ -13,7 +13,9 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteRow } from '../../src/components/VoteRow';
 import {
   AddMatchPill,
+  DayEndCard,
   HomeHeader,
+  MoreVotesRow,
   MyMatchRow,
   ProCard,
   QuietLink,
@@ -23,6 +25,7 @@ import {
   TournamentStrip,
   VoteGroupHeading,
   YoursBlock,
+  YoursEmpty,
   YoursRow,
 } from '../../src/components/HomeCards';
 import { useCopy } from '../../src/i18n';
@@ -30,10 +33,13 @@ import { openProEntry } from '../../src/lib/proEntry';
 import { ONBOARDING_MOMENT, takeOnboardingPro } from '../../src/lib/proOnboarding';
 import { useBaller, useConfirmations, useFeed, useMyMatch, usePro, useQuiz, useTournaments, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
-import { hasMoreVotes, homeSections, homeTournaments, quizCard, resultsLine, todayHeading, topVotes, tournamentRanks, tournamentStrip, voteList, yoursNow, type HomeSection } from '../../src/lib/home';
-import { useFollowedIds } from '../../src/lib/myPeople';
+import { homeSections, homeTournaments, quizCard, resultsLine, todayHeading, topVotes, tournamentRanks, tournamentStrip, voteList, yoursNow, type HomeSection } from '../../src/lib/home';
+import { dayEnd, dayEndRows, moreVotes, noneTodayLine, quizChip, type VoteOf } from '../../src/lib/homeGuidance';
+import { useFollows } from '../../src/lib/myPeople';
+import { sessionVote, useSessionVotes } from '../../src/lib/sessionVotes';
+import { openCount } from '../../src/lib/tournaments';
 import { yoursSet } from '../../src/lib/tournamentToday';
-import { useNotes, useVotePath } from '../../src/lib/useVotePath';
+import { useNotes, useVotePath, VOTE_SETTLE_MS } from '../../src/lib/useVotePath';
 import { skipIds, takenToast } from '../../src/lib/resultsSummary';
 import type { Celebration as CelebrationItem, MyResultCelebration } from '@netprophet/db';
 import { isMyResult } from '../../src/lib/myResult';
@@ -60,7 +66,8 @@ import type { MomentKind } from '../../src/lib/moments';
  * Τουρνουά, the home (layout C, founder 25 Oct), top to bottom (homeSections): the page header («Σήμερα» and the date,
  * scrolls with the page), the results card (only while results wait; it opens the results one by one, as Σήμερα played
  * them), «Οι δικοί σου», «Τουρνουά σήμερα» as a strip you swipe, Pro, the quiz, «Ψήφισε σήμερα» (the first three; tap a
- * name to vote; «Περισσότερα ›» opens «Όλα τα ματς σήμερα»), the sponsor's banner and the two quiet links. Everything under the layout is Σήμερα's machinery as it was: the header's held numbers while
+ * name to vote; «Δες όλα τα ματς ›» opens «Όλα τα ματς σήμερα», «Όλα τα τουρνουά ›» under it; once the day is voted, the end
+ * card), the sponsor's banner and «Ψάξε παίκτη ›». Everything under the layout is Σήμερα's machinery as it was: the header's held numbers while
  * results wait, the vote burst (quests, badges, celebrations), the moments pacer (Baller, «Για σένα»), the tour.
  */
 /** the results deck opens on a tap: its first card comes in after this short beat */
@@ -77,7 +84,17 @@ export default function HomeScreen() {
   const myMatch = useMyMatch();
   const { state: proState } = usePro();
   const tournaments = useTournaments();
-  const followed = useFollowedIds();
+  // the ids you follow, read again on each return to the home (a follow made on Παίκτες ends the empty line)
+  const [focusN, setFocusN] = useState(0);
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) firstFocus.current = false;
+      else setFocusN((n) => n + 1);
+    }, []),
+  );
+  const follows = useFollows(focusN);
+  const followed = follows.ids;
   // the results card opens the deck; a results push lands here with ?results=1 and opens it at once
   const [deckOpen, setDeckOpen] = useState(false);
   // a tap on the card opens the results in the full view and they stay full (founder, 22 Oct); a push opens them as before
@@ -369,14 +386,43 @@ export default function HomeScreen() {
   const meNow = currentMe();
   const yours = yoursSet(meNow?.player?.id ?? null, followed);
   const votes = voteList(cards, tournamentRanks(tournaments.data?.items ?? [], meNow?.profile.area_ids ?? []));
-  // always the first three still open; «Περισσότερα ›» opens the rest on its own page, so the home keeps its length
+  // always the first three still open; «Δες όλα τα ματς ›» opens the rest on its own page, so the home keeps its length
   const shownVotes = topVotes(votes.groups);
+  // this session's votes over the feed's (it is read on load and on a pull only), so the last vote brings the end card
+  useSessionVotes();
+  const voteOf: VoteOf = (m) => sessionVote(m.id) ?? m.myVote;
+  const more = moreVotes(votes.groups, shownVotes, voteOf);
+  // the end of the day (board 2A): the card takes the vote rows' place. On load at once; after the last vote, once its
+  // reveal has played (VOTE_SETTLE_MS), so the row is not pulled away under the finger
+  const end = dayEnd(cards, now, voteOf);
+  const ending = end !== null;
+  const [endShown, setEndShown] = useState(false);
+  const endLoaded = useRef(false);
+  useEffect(() => {
+    if (!ending) {
+      setEndShown(false);
+      return undefined;
+    }
+    if (!endLoaded.current) {
+      setEndShown(true);
+      return undefined;
+    }
+    const id = setTimeout(() => setEndShown(true), VOTE_SETTLE_MS);
+    return () => clearTimeout(id);
+  }, [ending]);
+  useEffect(() => {
+    if (!loading) endLoaded.current = true;
+  }, [loading]);
+  const dayDone = endShown && end !== null ? end : null;
   // the percentages move while Σήμερα is open (founder, 23 Nov 2026)
-  useSplitPoller(pollIds(shownVotes.flatMap((g) => g.rows.filter((r) => !r.closed).map((r) => r.id))));
+  useSplitPoller(pollIds(dayDone ? [] : shownVotes.flatMap((g) => g.rows.filter((r) => !r.closed).map((r) => r.id))));
   const resultsView = resultsLine(results, t, now);
   const mine = myMatch.match;
   const people = yoursNow(cards, yours, now, t, mine?.matchId);
   const quizView = unlocks.has('daily_quiz') && quiz.quiz ? quizCard(quiz.quiz, t) : null;
+  // the chip on the «Σήμερα» line (board 4B), behind the same gate as the card
+  const chip = quizChip(quizView, t);
+  const noneToday = votes.mode !== 'today' ? noneTodayLine(cards, now, t) : null;
   const todays = tournaments.data ? homeTournaments(tournaments.data.items, cards, meNow?.profile.area_ids ?? [], now, t) : [];
   const strip = tournamentStrip(todays);
   // the sponsor's banner only when the admin has one running (the feed carries it); nothing configured, nothing shown
@@ -400,14 +446,16 @@ export default function HomeScreen() {
   };
 
   const hasYours = !!mine || confirmations.items.length > 0 || people.length > 0;
+  // nobody followed yet: «Οι δικοί σου» shows one line that opens Παίκτες (board 5.5), once the list has come in
+  const yoursEmpty = !hasYours && follows.loaded && followed.length === 0;
   // the order is homeSections' (layout C, founder 25 Oct); each block is drawn here
-  const sections = homeSections({ results: deckOpen || resultsView !== null || deckEnded, yours: hasYours, quiz: quizView !== null, sponsor: sponsored?.kind === 'sponsored' });
+  const sections = homeSections({ results: deckOpen || resultsView !== null || deckEnded, yours: hasYours || yoursEmpty, quiz: quizView !== null, sponsor: sponsored?.kind === 'sponsored' });
   const block = (id: HomeSection, i: number): ReactNode => {
     switch (id) {
       case 'header':
         return (
           <Reveal i={i}>
-            <HomeHeader date={todayHeading(now, t)} />
+            <HomeHeader date={todayHeading(now, t)} quiz={chip} onQuiz={() => router.push('/quiz')} />
           </Reveal>
         );
       case 'results':
@@ -431,6 +479,7 @@ export default function HomeScreen() {
         return (
           <Reveal i={i}>
             <YoursBlock>
+              {yoursEmpty ? <YoursEmpty onPress={() => router.push('/players')} /> : null}
               {mine ? <MyMatchRow match={mine} onPress={openMine} /> : null}
               {mine ? <ProLine moment="my_match" label={t.pro.entries.opponent} /> : null}
               {confirmations.items.map((item) => (
@@ -471,7 +520,7 @@ export default function HomeScreen() {
             </Reveal>
             {strip.length > 0 ? (
               <Reveal i={i + 1}>
-                <TournamentStrip items={strip} firstRef={tourTournament} onAll={() => router.push('/tournaments')} />
+                <TournamentStrip items={strip} firstRef={tourTournament} onAll={() => router.push('/tournaments')} allCount={openCount(tournaments.data?.items)} />
               </Reveal>
             ) : tournaments.data ? (
               <Text style={styles.end}>{t.home.tournaments.none}</Text>
@@ -487,11 +536,23 @@ export default function HomeScreen() {
           </Reveal>
         ) : null;
       case 'vote':
+        // every match of today voted or closed: the end card in the rows' place (board 2A), and what comes next
+        if (dayDone) {
+          return (
+            <DayEndCard
+              end={dayDone}
+              rows={dayEndRows(dayDone, quizView, t)}
+              onRow={(row) => router.push(row.href as never)}
+              onVotes={() => router.push('/all-matches?day=today')}
+            />
+          );
+        }
         return (
           <>
             <Reveal i={i}>
               <Text style={styles.h2}>{votes.mode === 'tomorrow' ? t.home.vote.tomorrow : t.home.vote.title}</Text>
             </Reveal>
+            {noneToday ? <Text style={styles.end}>{noneToday}</Text> : null}
             {shownVotes.map((g, gi) => (
               <View key={g.key} style={styles.voteGroup}>
                 <VoteGroupHeading
@@ -506,8 +567,14 @@ export default function HomeScreen() {
                 ))}
               </View>
             ))}
-            {hasMoreVotes(votes.groups) ? <QuietLink label={t.home.vote.more} onPress={() => router.push('/all-matches')} /> : null}
-            {votes.mode === 'none' && !loading ? error && empty ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
+            {more ? (
+              <Reveal i={i + 1}>
+                <MoreVotesRow more={more} onPress={() => router.push('/all-matches')} />
+              </Reveal>
+            ) : null}
+            {votes.mode === 'none' && !loading && !noneToday ? error && empty ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
+            {/* right under the votes (board 3A), moved up from the quiet links at the bottom */}
+            <QuietLink label={t.home.tournaments.all} onPress={() => router.push('/tournaments')} />
           </>
         );
       case 'sponsor':
@@ -515,7 +582,6 @@ export default function HomeScreen() {
       case 'links':
         return (
           <View style={styles.links}>
-            <QuietLink label={t.home.tournaments.all} onPress={() => router.push('/tournaments')} />
             <QuietLink label={t.home.tournaments.search} onPress={() => router.push('/players?focus=1')} />
           </View>
         );

@@ -10,6 +10,9 @@ import { runJpop, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { HOLD_MS, holdFor, pointOf, type HoldPerson } from '../lib/playerHold';
 import { crowdRole, fmt, type CrowdRole, type Side } from '../lib/votes';
 import { setLiveSplit, useLiveSplit } from '../lib/liveSplits';
+import { closesInMinutes } from '../lib/homeGuidance';
+import { useMinuteClock } from '../lib/minuteClock';
+import { noteSessionVote } from '../lib/sessionVotes';
 import { cardSurface, colors, fonts, motion, text } from '../theme';
 import { Logo } from './Logo';
 import { StagePill } from './StagePill';
@@ -95,6 +98,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
         (split) => {
           cast.set(match.id, { side, split });
           setLiveSplit(match.id, split);
+          noteSessionVote(match.id, side);
           if (mounted.current) {
             haptic('done');
             setState({ phase: 'voted', side, split });
@@ -117,6 +121,8 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
   const place = rowWhere(where ?? [match.group?.title, match.category].filter(Boolean).join(' · '), match.club);
   const small = place.line;
   const hold = onLongPress ? () => onLongPress(match.id) : undefined;
+  // the countdown to the lock, on a row still open
+  const counts = !result && !match.closed && !!match.lockAt;
 
   return (
     <Animated.View style={enter}>
@@ -137,7 +143,10 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
                 <Text numberOfLines={1} style={[styles.small, styles.whereText]}>
                   {small}
                 </Text>
+                {counts ? <ClosesIn lockAt={match.lockAt} /> : null}
               </View>
+            ) : counts ? (
+              <ClosesIn lockAt={match.lockAt} />
             ) : null}
             {(['a', 'b'] as const).map((s) => (
               <NameButton
@@ -163,6 +172,28 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
     </Animated.View>
   );
 });
+
+/**
+ * «Κλείνει σε 20′» (home guidance board 5.1): a sand tag from 30 minutes before the lock, counting down on the minute
+ * (one shared clock). Sand, not lime: nothing has happened yet. It pops in when it first shows.
+ */
+function ClosesIn({ lockAt }: { lockAt?: string }) {
+  const t = useCopy();
+  const now = useMinuteClock();
+  const n = closesInMinutes(lockAt, new Date(now));
+  return n === null ? null : <ClosesInTag text={fmt(t.home.vote.closesIn, { n })} />;
+}
+
+function ClosesInTag({ text: label }: { text: string }) {
+  const pop = usePopIn(motion.revealDurShort, 0);
+  return (
+    <Animated.View style={[styles.closes, pop]}>
+      <Text numberOfLines={1} style={styles.closesText}>
+        {label}
+      </Text>
+    </Animated.View>
+  );
+}
 
 const CROWD_COLOR: Record<CrowdRole, string> = { favorite: colors.favorite, underdog: colors.underdog, even: colors.slate };
 
@@ -339,7 +370,9 @@ const styles = StyleSheet.create({
   body: { flex: 1, minWidth: 0, gap: 6 },
   small: { ...text.meta, fontSize: 13, lineHeight: 17 },
   whereRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  whereText: { flexShrink: 1 },
+  whereText: { flexShrink: 1, flexGrow: 1 },
+  closes: { flexShrink: 0, alignSelf: 'flex-start', paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: colors.sand },
+  closesText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: colors.ink },
   center: { textAlign: 'center' },
   name: {
     minHeight: 46,

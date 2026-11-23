@@ -14,7 +14,16 @@ const MOCK_FOLLOWS = ['nik', 'gio'];
 let cached: string[] | null = null;
 
 export function useFollowedIds(): string[] {
+  return useFollows().ids;
+}
+
+/**
+ * The same, and whether the list has come in (so an empty «Οι δικοί σου» line never flashes for someone who follows).
+ * A new `reread` (the home passes one per focus) reads the list again, so a follow made on Παίκτες shows on return.
+ */
+export function useFollows(reread?: number): { ids: string[]; loaded: boolean } {
   const api = useApi();
+  const [loaded, setLoaded] = useState(!api || cached !== null);
   const [ids, setIds] = useState<string[]>(api ? cached ?? [] : MOCK_FOLLOWS);
   useEffect(() => {
     if (!api || !supabase) return undefined;
@@ -26,10 +35,11 @@ export function useFollowedIds(): string[] {
         if (!live || error || !data) return;
         cached = data.map((r) => r.player_id as string).filter(Boolean);
         setIds(cached);
+        setLoaded(true);
       });
     return () => {
       live = false;
     };
-  }, [api]);
-  return ids;
+  }, [api, reread]);
+  return { ids, loaded };
 }

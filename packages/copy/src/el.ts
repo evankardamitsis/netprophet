@@ -314,6 +314,8 @@ export const el = {
       /** «με Ρήγα · Open Γλυφάδας» */
       line: '{against} · {tournament}',
       now: 'Τώρα',
+      /** nobody followed yet: the empty block opens Παίκτες (home guidance board 5.5) */
+      empty: 'Ακολούθησε παίκτες και θα τους βλέπεις εδώ ›',
     },
     quiz: {
       title: 'Quiz της ημέρας',
@@ -325,6 +327,9 @@ export const el = {
       played: '{n} από {total}',
       earned: '+30',
       doneLine: 'Οι επόμενες αύριο στις 9:00',
+      /** the chip on the «Σήμερα» line (board 4B): «Quiz 2/6 ›», then «Quiz ✓» and the lime «+30» for the day */
+      chip: 'Quiz {n}/{total} ›',
+      chipDone: 'Quiz ✓',
     },
     vote: {
       title: 'Ψήφισε σήμερα',
@@ -342,6 +347,24 @@ export const el = {
       /** a match nobody voted on yet (the split shows before you vote, 23 Nov 2026) */
       noVotesYet: 'Κανείς δεν ψήφισε ακόμα, γίνε ο πρώτος',
       empty: 'Κανένα ματς για ψήφο ακόμα.',
+      /** under the first three (board 3A): the count row and the line under it */
+      all: 'Δες όλα τα ματς ({n}) ›',
+      left: '{n} ακόμα για ψήφο',
+      /** a sand tag on a row from 30 minutes before it locks */
+      closesIn: 'Κλείνει σε {n}′',
+      /** no match today, some tomorrow (board 5.4) */
+      noneToday: 'Σήμερα δεν έχει ματς. Αύριο {n}, από τις {time}.',
+    },
+    /** every match of the day voted or closed: the end card (board 2A) */
+    done: {
+      title: 'Τελείωσες για σήμερα ✓',
+      line: 'Ψήφισες και τα {n} ματς. Τα αποτελέσματα έρχονται μόλις τελειώσουν.',
+      tomorrow: 'Αύριο: {n} ματς, το πρώτο στις {time}',
+      quiz: 'Σου μένει το quiz: {n} ερωτήσεις, +30',
+      votes: 'Δες τις ψήφους σου ›',
+      change: 'Αλλάζεις ψήφο μέχρι να ξεκινήσει το ματς.',
+      /** everything closed and nothing tomorrow */
+      closed: 'Τα ματς της ημέρας έκλεισαν. Τα λέμε αύριο.',
     },
     pro: {
       tag: 'PRO',
@@ -372,6 +395,8 @@ export const el = {
       all: 'Όλα τα τουρνουά ›',
       /** the last card of the strip */
       allCard: 'Όλα ›',
+      /** the strip's last card with the count: «Όλα (7) ›» */
+      allCount: 'Όλα ({n}) ›',
       search: 'Ψάξε παίκτη ›',
       none: 'Κανένα τουρνουά σήμερα.',
     },
