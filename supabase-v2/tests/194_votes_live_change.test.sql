@@ -42,9 +42,6 @@ select throws_ok(format($$update core.votes set option = 1 where user_id = %L an
                  'the side of a vote cannot be updated directly');
 select tests.logout();
 
-create temp table many as select tests.mk_match_fresh() as id from generate_series(1, 101);
-grant select on many to public;
-
 -- the feed shows the split before you vote
 select tests.login(:'b'::uuid);
 create temp table f as select api.get_feed(100) as doc;
@@ -55,7 +52,11 @@ select is((pg_temp.card(:'m'::uuid) -> 'split' ->> 'total')::int, 1, 'before you
 select is((pg_temp.card(:'m'::uuid) -> 'split' ->> 'pct2')::int, 100, 'with the crowd''s real numbers');
 select is((pg_temp.card(:'other'::uuid) -> 'split' ->> 'total')::int, 0, 'no votes yet: total 0');
 
--- api.vote_splits
+-- api.vote_splits (the 101 extra matches come after the feed read, so they never push the others out of it)
+select tests.logout();
+create temp table many as select tests.mk_match_fresh() as id from generate_series(1, 101);
+grant select on many to public;
+select tests.login(:'b'::uuid);
 select is((api.vote_splits(array[:'m'::uuid, :'other'::uuid]) -> :'m' ->> 'side2')::int, 1, 'vote_splits gives the counts');
 select is((api.vote_splits(array[:'other'::uuid]) -> :'other' ->> 'total')::int, 0, 'and a match with no votes');
 select is(api.vote_splits(array[gen_random_uuid()]), '{}'::jsonb, 'an unknown match is left out');
