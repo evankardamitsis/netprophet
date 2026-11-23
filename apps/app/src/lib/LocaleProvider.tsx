@@ -1,19 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getLocales } from 'expo-localization';
 import type { Locale } from '@netprophet/copy';
 import type { rpc } from '@netprophet/db';
 import { startLocale, useLocaleState } from '../i18n';
 import { LOCALE_KEY, parseChoice, type LocaleChoice } from './locale';
-
-/** the phone's first language («el», «en»); null when the platform does not say */
-function phoneLanguage(): string | null {
-  try {
-    return getLocales()[0]?.languageCode ?? null;
-  } catch {
-    return null;
-  }
-}
 
 function save(choice: LocaleChoice): void {
   const write = choice === 'auto' ? AsyncStorage.removeItem(LOCALE_KEY) : AsyncStorage.setItem(LOCALE_KEY, choice);
@@ -23,12 +13,12 @@ function save(choice: LocaleChoice): void {
 let started: Promise<void> | null = null;
 let loaded = false;
 
-/** read the phone and the saved pick once; a failed read is «Αυτόματα» */
+/** read the saved pick once; nothing saved, or a failed read, is Greek */
 function start(): Promise<void> {
   started ??= AsyncStorage.getItem(LOCALE_KEY)
     .catch(() => null)
     .then((stored) => {
-      startLocale(phoneLanguage(), parseChoice(stored), save);
+      startLocale(parseChoice(stored), save);
       loaded = true;
     });
   return started;
