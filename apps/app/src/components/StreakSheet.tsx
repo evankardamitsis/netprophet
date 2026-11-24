@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import type { MeResult } from '@netprophet/db';
 import { useCopy } from '../i18n';
@@ -9,6 +8,7 @@ import { useLook, useStreakWeek } from '../lib/data';
 import { streakSheetView, type WeekCell } from '../lib/dailyStreak';
 import { usePopIn } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
+import { useSheetFrame } from '../lib/sheetFrame';
 
 const OUT_MS = motion.exitDur;
 
@@ -20,12 +20,13 @@ const OUT_MS = motion.exitDur;
 export function StreakSheet({ open, game, onClose }: { open: boolean; game: MeResult['game']; onClose: () => void }) {
   const t = useCopy();
   const s = t.streak.sheet;
-  const insets = useSafeAreaInsets();
   const week = useStreakWeek(open);
   const { look } = useLook();
   const owned = useMemo(() => (look ? new Set(look.items.filter((i) => i.owned).map((i) => i.key)) : null), [look]);
   const v = streakSheetView(game, week, owned, t);
   const p = useSharedValue(0);
+  const frame = useSheetFrame();
+  const travel = frame.travel(520);
   useEffect(() => {
     if (open) {
       p.value = 0;
@@ -40,14 +41,14 @@ export function StreakSheet({ open, game, onClose }: { open: boolean; game: MeRe
     }, OUT_MS);
   };
   const back = useAnimatedStyle(() => ({ opacity: Math.min(1, p.value) }));
-  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 520 }] }));
+  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * travel }] }));
 
   return (
     <Modal visible={open} transparent animationType="none" statusBarTranslucent onRequestClose={() => close()}>
-      <Animated.View style={[styles.back, back]}>
-        <Pressable accessibilityLabel={s.close} style={styles.fill} onPress={() => close()} />
-        <Animated.View style={[styles.sheet, { paddingBottom: 26 + insets.bottom }, sheet]}>
-          <View style={styles.handle} />
+      <Animated.View style={[styles.back, frame.back, back]}>
+        <Pressable accessibilityLabel={s.close} style={[styles.fill, frame.fill]} onPress={() => close()} />
+        <Animated.View style={[styles.sheet, frame.sheet, { paddingBottom: frame.bottom(26) }, sheet]}>
+          {frame.dialog ? null : <View style={styles.handle} />}
           {/* one idea, big (founder, 20 Nov: larger titles, less text): the number, the week, today, two tiles */}
           <View style={styles.head} accessible accessibilityRole="header" accessibilityLabel={`${v.count} ${v.unit}`}>
             <Text style={styles.count}>{v.count}</Text>

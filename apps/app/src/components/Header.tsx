@@ -36,32 +36,68 @@ const LOGO_H = 22;
  * While result cards are waiting to play, the numbers are the ones from before them (see lib/hud).
  */
 export function Header({ me }: { me: MeSummary | null }) {
-  const t = useCopy();
   const insets = useSafeAreaInsets();
-  const hud = useHudNumbers();
-  const { targets } = useHudActions();
-  const points = me ? Math.max(0, me.points - hud.pointsOffset) : undefined;
-  const streak = me ? hud.streakShown ?? me.streak : undefined;
   // the first-visit tour lights σερί and πόντοι together; only the header of the screen in front answers for them
   const front = useFront();
-  const statsRef = useTourTarget('stats', front);
+  const points = useShownPoints(me);
+  return (
+    <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
+      <BouncingLogo height={LOGO_H} />
+      <View style={styles.right}>
+        <Stats me={me} tourActive={front} />
+        <HeaderProPill />
+        <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} pro={me?.pro === true} />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * The side rail's top on a wide screen (tablet board, 24 Nov 2026): the header's logo, σερί and πόντοι, stacked. The
+ * header is not shown then, so the rail answers for the tour's «stats» and for the «+10» that flies to πόντοι.
+ */
+export function RailHead({ me }: { me: MeSummary | null }) {
+  return (
+    <View style={styles.railHead}>
+      <BouncingLogo height={LOGO_H + 4} />
+      <Stats me={me} tourActive />
+      <HeaderProPill />
+    </View>
+  );
+}
+
+/** the rail's foot: your Baller, which opens Εγώ as the header's does */
+export function RailAvatar({ me }: { me: MeSummary | null }) {
+  const points = useShownPoints(me);
+  return <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} pro={me?.pro === true} />;
+}
+
+/** πόντοι as shown: before waiting result cards play, the number from before them (lib/hud) */
+function useShownPoints(me: MeSummary | null): number | undefined {
+  const hud = useHudNumbers();
+  return me ? Math.max(0, me.points - hud.pointsOffset) : undefined;
+}
+
+/** σερί and πόντοι, with the σερί sheet */
+function Stats({ me, tourActive }: { me: MeSummary | null; tourActive: boolean }) {
+  const t = useCopy();
+  const hud = useHudNumbers();
+  const { targets } = useHudActions();
+  const points = useShownPoints(me);
+  const streak = me ? hud.streakShown ?? me.streak : undefined;
+  const statsRef = useTourTarget('stats', tourActive);
   // the daily σερί (switch on): a tap on σερί opens its sheet; before it, σερί opens «Τα νούμερά σου» as πόντοι do
   const game = useStreakGame();
   const daily = isDailyStreak(game);
   const [sheet, setSheet] = useState(false);
   return (
-    <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
-      <BouncingLogo height={LOGO_H} />
-      <View style={styles.right}>
-        <View ref={statsRef} collapsable={false} style={styles.stats}>
-          <Stat value={streak} label={t.streak.label} onPress={daily ? () => setSheet(true) : goNumbers} target={targets.streak} fx={hud.streakFx} pill />
-          <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
-        </View>
-        <HeaderProPill />
-        <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} pro={me?.pro === true} />
+    <>
+      <View ref={statsRef} collapsable={false} style={styles.stats}>
+        <Stat value={streak} label={t.streak.label} onPress={daily ? () => setSheet(true) : goNumbers} target={targets.streak} fx={hud.streakFx} pill />
+        <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
       </View>
       {daily && game ? <StreakSheet open={sheet} game={game} onClose={() => setSheet(false)} /> : null}
-    </View>
+    </>
   );
 }
 
@@ -240,6 +276,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  railHead: { alignItems: 'flex-start', gap: 18 },
   stats: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stat: { minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', gap: 0 },
   // line heights at least the font size: iOS clips glyphs that rise above the line box (web lets them spill)

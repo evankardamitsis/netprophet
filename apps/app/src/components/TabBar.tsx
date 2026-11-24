@@ -11,7 +11,10 @@ import { hasNewResults, useResultsSeen } from '../lib/resultsSeen';
 import { useTourTarget } from '../lib/tour';
 import type { TourTarget } from '../lib/tourSteps';
 import { useUnlocks } from '../lib/unlocks';
-import { colors, fonts, springBezier } from '../theme';
+import { colors, fonts, layout, springBezier } from '../theme';
+import type { MeSummary } from '../lib/data';
+import { useLayout } from '../lib/layout';
+import { RailAvatar, RailHead } from './Header';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
@@ -45,9 +48,21 @@ const COLOR_MS = 250;
 const PILL_MS = 500;
 const SPRING_CSS = cubicBezier(...springBezier);
 
-type Box = { x: number; width: number };
+type Box = { x: number; y: number; width: number; height: number };
 
-export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProps & { resultsAt: string | null }) {
+export function TabBar({
+  state,
+  descriptors,
+  navigation,
+  resultsAt,
+  rail = false,
+  me = null,
+}: TabBarProps & {
+  resultsAt: string | null;
+  /** from `wide` (tablet board, 24 Nov 2026): a side rail with the header's logo, σερί, πόντοι and your Baller */
+  rail?: boolean;
+  me?: MeSummary | null;
+}) {
   const insets = useSafeAreaInsets();
   const { has } = useUnlocks();
   const results = useResultsSeen();
@@ -57,6 +72,8 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
   // the first placement is drawn in place; only later moves slide
   const [placed, setPlaced] = useState(false);
   const reduced = useReducedMotion();
+  // on a tablet held upright the bar keeps its tabs together in the middle, not spread across the whole width
+  const { kind } = useLayout();
 
   const openName = state.routes[state.index]?.name ?? '';
   const focusedName = LIT_BY[openName] ?? openName;
@@ -77,47 +94,78 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
     return () => cancelAnimationFrame(id);
   }, [focusedBox]);
   const box = focusedBox ?? lastBox;
-  const pill: CSSTransitionProperties & Pick<ViewStyle, 'opacity' | 'left' | 'width'> = {
-    opacity: focusedBox ? 1 : 0,
-    left: box?.x ?? 0,
-    width: box?.width ?? 0,
-    transitionProperty: ['left', 'width', 'opacity'],
-    // the first placement is drawn in place, and with the system's reduce motion every move is
-    transitionDuration: placed && !reduced ? [PILL_MS, PILL_MS, COLOR_MS] : 0,
-    transitionTimingFunction: [SPRING_CSS, SPRING_CSS, 'linear'],
-  };
+  // the pill slides along the bar, or down the rail
+  const pill: CSSTransitionProperties & Pick<ViewStyle, 'opacity' | 'left' | 'width' | 'top' | 'height'> = rail
+    ? {
+        opacity: focusedBox ? 1 : 0,
+        top: box?.y ?? 0,
+        height: box?.height ?? 0,
+        transitionProperty: ['top', 'height', 'opacity'],
+        transitionDuration: placed && !reduced ? [PILL_MS, PILL_MS, COLOR_MS] : 0,
+        transitionTimingFunction: [SPRING_CSS, SPRING_CSS, 'linear'],
+      }
+    : {
+        opacity: focusedBox ? 1 : 0,
+        left: box?.x ?? 0,
+        width: box?.width ?? 0,
+        transitionProperty: ['left', 'width', 'opacity'],
+        // the first placement is drawn in place, and with the system's reduce motion every move is
+        transitionDuration: placed && !reduced ? [PILL_MS, PILL_MS, COLOR_MS] : 0,
+        transitionTimingFunction: [SPRING_CSS, SPRING_CSS, 'linear'],
+      };
+
+  const tabs = state.routes.map((route, index) => {
+    if (!IN_BAR.includes(route.name) || (route.name === 'ladder' && !has('ladder_friends'))) return null;
+    const focused = route.name === focusedName;
+    const here = state.index === index;
+    const label = String(descriptors[route.key]?.options.title ?? route.name);
+    return (
+      <TabItem
+        key={route.key}
+        tourId={`tab:${route.name}` as TourTarget}
+        label={label}
+        focused={focused}
+        rail={rail}
+        dot={route.name === 'results' && resultsNew}
+        onLayout={(e) => {
+          const { x, y, width, height } = e.nativeEvent.layout;
+          setBoxes((b) => {
+            const o = b[route.name];
+            return o && o.x === x && o.y === y && o.width === width && o.height === height ? b : { ...b, [route.name]: { x, y, width, height } };
+          });
+        }}
+        onPress={() => {
+          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+          if (!here && !event.defaultPrevented) {
+            Haptics.selectionAsync().catch(() => undefined);
+            navigation.navigate(route.name);
+          }
+        }}
+      />
+    );
+  });
+
+  if (rail) {
+    return (
+      <View style={[styles.rail, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 20, paddingLeft: insets.left + 16 }]}>
+        <RailHead me={me} />
+        <View style={styles.column}>
+          <Animated.View pointerEvents="none" style={[styles.railPill, pill]} />
+          {tabs}
+        </View>
+        <View style={styles.railFoot}>
+          <RailAvatar me={me} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     // the home indicator's strip is part of the bar, but the labels sit just above it, not a thumb's height above
     <View style={[styles.bar, { paddingBottom: insets.bottom > 0 ? Math.max(insets.bottom - 8, 8) : 10 }]}>
-      <View style={styles.row}>
+      <View style={[styles.row, kind !== 'phone' && styles.rowTablet]}>
         <Animated.View pointerEvents="none" style={[styles.pill, pill]} />
-        {state.routes.map((route, index) => {
-          if (!IN_BAR.includes(route.name) || (route.name === 'ladder' && !has('ladder_friends'))) return null;
-          const focused = route.name === focusedName;
-          const here = state.index === index;
-          const label = String(descriptors[route.key]?.options.title ?? route.name);
-          return (
-            <TabItem
-              key={route.key}
-              tourId={`tab:${route.name}` as TourTarget}
-              label={label}
-              focused={focused}
-              dot={route.name === 'results' && resultsNew}
-              onLayout={(e) => {
-                const { x, width } = e.nativeEvent.layout;
-                setBoxes((b) => (b[route.name]?.x === x && b[route.name]?.width === width ? b : { ...b, [route.name]: { x, width } }));
-              }}
-              onPress={() => {
-                const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-                if (!here && !event.defaultPrevented) {
-                  Haptics.selectionAsync().catch(() => undefined);
-                  navigation.navigate(route.name);
-                }
-              }}
-            />
-          );
-        })}
+        {tabs}
       </View>
     </View>
   );
@@ -127,10 +175,12 @@ function TabItem({
   tourId,
   label,
   focused,
+  rail,
   dot,
   onPress,
   onLayout,
 }: {
+  rail: boolean;
   /** the first-visit tour points at the tab by this id */
   tourId: TourTarget;
   label: string;
@@ -153,10 +203,10 @@ function TabItem({
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
       onLayout={onLayout}
-      style={styles.tab}
+      style={rail ? null : styles.tab}
     >
-      <Animated.View style={[styles.item, press.style]}>
-        <Animated.Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.label, fg]}>
+      <Animated.View style={[styles.item, rail && styles.railItem, press.style]}>
+        <Animated.Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.label, rail && styles.railLabel, fg]}>
           {label}
         </Animated.Text>
         {dot ? <Dot /> : null}
@@ -173,6 +223,7 @@ function Dot() {
 const styles = StyleSheet.create({
   bar: { paddingTop: 6, paddingHorizontal: 6, backgroundColor: colors.ink },
   row: { flexDirection: 'row' },
+  rowTablet: { width: '100%', maxWidth: 620, alignSelf: 'center' },
   // grows from the label's own width, so the space between labels is even
   tab: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' },
   pill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: 999, backgroundColor: colors.paper },
@@ -180,4 +231,11 @@ const styles = StyleSheet.create({
   item: { minHeight: 44, paddingHorizontal: 6, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 7, height: 7, borderRadius: 999, backgroundColor: colors.lime },
   label: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17 },
+  // the rail: the header's pieces on top, the tabs down its middle, your Baller at its foot
+  rail: { width: layout.rail, paddingRight: 16, backgroundColor: colors.ink, gap: 28 },
+  column: { gap: 4 },
+  railPill: { position: 'absolute', left: 0, right: 0, top: 0, borderRadius: 999, backgroundColor: colors.paper },
+  railItem: { minHeight: 48, paddingHorizontal: 16, justifyContent: 'flex-start' },
+  railLabel: { fontSize: 16, lineHeight: 21 },
+  railFoot: { marginTop: 'auto', alignItems: 'flex-start' },
 });

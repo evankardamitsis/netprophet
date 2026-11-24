@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { useCopy } from '../i18n';
 import { useClaimReport } from '../lib/data';
 import { alpha, colors, ease, fonts } from '../theme';
+import { useSheetFrame } from '../lib/sheetFrame';
 import { Primary } from './OnboardingControls';
 
 const IN_MS = 550;
@@ -25,6 +26,8 @@ export function ClaimReportSheet({ playerId, own = false, onClose }: { playerId:
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const p = useSharedValue(0);
+  const frame = useSheetFrame();
+  const travel = frame.travel(480);
   useEffect(() => {
     if (playerId) {
       setNote('');
@@ -36,7 +39,7 @@ export function ClaimReportSheet({ playerId, own = false, onClose }: { playerId:
     setTimeout(() => onClose(toast), OUT_MS);
   };
   const back = useAnimatedStyle(() => ({ opacity: p.value }));
-  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 480 }] }));
+  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * travel }] }));
 
   const send = async () => {
     if (!playerId) return;
@@ -48,9 +51,9 @@ export function ClaimReportSheet({ playerId, own = false, onClose }: { playerId:
 
   return (
     <Modal visible={playerId !== null} transparent animationType="none" onRequestClose={() => close()}>
-      <Animated.View style={[styles.back, back]}>
-        <Pressable accessibilityLabel={s.cancel} style={styles.fill} onPress={() => close()} />
-        <Animated.View style={[styles.sheet, sheet]}>
+      <Animated.View style={[styles.back, frame.back, back]}>
+        <Pressable accessibilityLabel={s.cancel} style={[styles.fill, frame.fill]} onPress={() => close()} />
+        <Animated.View style={[styles.sheet, frame.sheet, sheet]}>
           <Text style={styles.title}>{words.title}</Text>
           <Text style={styles.sub}>{words.sub}</Text>
           <TextInput

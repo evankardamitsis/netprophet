@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
 import type { BuySheet } from '../lib/look';
 import { usePurchase } from '../lib/purchase';
 import { buyNote } from '../lib/pro';
 import { usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
+import { useSheetFrame } from '../lib/sheetFrame';
 
 const OUT_MS = 400;
 
@@ -37,9 +37,10 @@ export function LookBuySheet({
   const [failed, setFailed] = useState<string | null>(null);
   /** the button while the store's sheet is on its way, then while the item reaches the account */
   const [paid, setPaid] = useState(false);
-  const insets = useSafeAreaInsets();
   const open = sheet !== null;
   const p = useSharedValue(0);
+  const frame = useSheetFrame();
+  const travel = frame.travel(420);
   useEffect(() => {
     if (open) {
       setBusy(false);
@@ -67,13 +68,13 @@ export function LookBuySheet({
     setFailed(buyNote(r, t));
   };
   const back = useAnimatedStyle(() => ({ opacity: Math.min(1, p.value) }));
-  const body = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 420 }] }));
+  const body = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * travel }] }));
   return (
     <Modal visible={open} transparent animationType="none" statusBarTranslucent onRequestClose={close}>
-      <Animated.View style={[styles.back, back]}>
-        <Pressable accessibilityLabel={t.look.close} style={styles.fill} onPress={close} />
-        <Animated.View style={[styles.sheet, { paddingBottom: 26 + insets.bottom }, body]}>
-          <View style={styles.handle} />
+      <Animated.View style={[styles.back, frame.back, back]}>
+        <Pressable accessibilityLabel={t.look.close} style={[styles.fill, frame.fill]} onPress={close} />
+        <Animated.View style={[styles.sheet, frame.sheet, { paddingBottom: frame.bottom(26) }, body]}>
+          {frame.dialog ? null : <View style={styles.handle} />}
           {sheet ? (
             <>
               <Text style={styles.title}>{sheet.title}</Text>

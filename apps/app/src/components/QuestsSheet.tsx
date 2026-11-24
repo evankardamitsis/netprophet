@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { greekCaps } from '@netprophet/copy';
 import type { GetQuestsResult, QuestRow } from '@netprophet/db';
 import { useCopy } from '../i18n';
@@ -10,6 +9,7 @@ import { useUnlocks } from '../lib/unlocks';
 import { chipText, doneLine, fraction, questTitle } from '../lib/quests';
 import { fmt } from '../lib/votes';
 import { alpha, colors, ease, fonts, motion } from '../theme';
+import { useSheetFrame } from '../lib/sheetFrame';
 
 const OUT_MS = 400;
 /** the bars fill a beat longer than a plain reveal (prototype ~800ms), after 150ms */
@@ -24,10 +24,11 @@ export function QuestsSheet({ open, quests, onClose }: { open: boolean; quests: 
   const t = useCopy();
   const q = t.quests;
   const weeklyOpen = useUnlocks().has('weekly_quests');
-  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const [week, setWeek] = useState(false);
   const p = useSharedValue(0);
+  const frame = useSheetFrame();
+  const travel = frame.travel(520);
   useEffect(() => {
     if (open) {
       setWeek(false);
@@ -40,7 +41,7 @@ export function QuestsSheet({ open, quests, onClose }: { open: boolean; quests: 
     setTimeout(onClose, OUT_MS);
   };
   const back = useAnimatedStyle(() => ({ opacity: Math.min(1, p.value) }));
-  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 520 }] }));
+  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * travel }] }));
   const arrow = useSharedValue(0);
   useEffect(() => {
     arrow.value = withSpring(week ? 1 : 0, motion.spring);
@@ -53,10 +54,10 @@ export function QuestsSheet({ open, quests, onClose }: { open: boolean; quests: 
 
   return (
     <Modal visible={open} transparent animationType="none" statusBarTranslucent onRequestClose={close}>
-      <Animated.View style={[styles.back, back]}>
-        <Pressable accessibilityLabel={q.close} style={styles.fill} onPress={close} />
-        <Animated.View style={[styles.sheet, { paddingBottom: 26 + insets.bottom }, sheet]}>
-          <View style={styles.handle} />
+      <Animated.View style={[styles.back, frame.back, back]}>
+        <Pressable accessibilityLabel={q.close} style={[styles.fill, frame.fill]} onPress={close} />
+        <Animated.View style={[styles.sheet, frame.sheet, { paddingBottom: frame.bottom(26) }, sheet]}>
+          {frame.dialog ? null : <View style={styles.handle} />}
           <Text style={styles.title}>{q.title}</Text>
           <ScrollView style={{ maxHeight: height * 0.66 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <Group header={q.today} reset={q.todayReset} rows={daily} open={open} />

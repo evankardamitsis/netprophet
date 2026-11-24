@@ -228,6 +228,26 @@ export const type = {
   label: { size: 12, line: 16, tracking: 0.6 },
 } as const;
 
+/**
+ * Width steps in points (founder, 24 Nov 2026, tablet board: all A). The layout follows the window's width, never the
+ * device: under `tablet` a phone layout; from `tablet` the page gets a reading column, cards sit two or three to a row
+ * and sheets open as centred dialogs; from `wide` a side rail replaces the header and the bottom bar.
+ */
+export const layout = {
+  tablet: 600,
+  wide: 1024,
+  /** the reading column of a page (one list, a form, the Ladder) */
+  measure: 720,
+  /** the home's right column on a wide screen */
+  side: 340,
+  /** a sheet or dialog */
+  sheet: 520,
+  /** the side rail */
+  rail: 232,
+  /** the widest the whole app gets (a desktop browser) */
+  page: 1440,
+} as const;
+
 export const motion = {
   revealDur: 700,
   stagger: 70,
@@ -244,7 +264,7 @@ export const motion = {
   spring: { damping: 14, stiffness: 180, mass: 1 },
 } as const;
 
-export const tokens = { colors, cosmetics, radii, spacing, type, motion } as const;
+export const tokens = { colors, cosmetics, radii, spacing, type, motion, layout } as const;
 
 /** CSS custom properties for web, as a `:root { ... }` block. */
 export function cssVars(): string {
