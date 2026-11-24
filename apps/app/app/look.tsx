@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -14,6 +14,7 @@ import { useMyAvatar } from '../src/lib/data';
 import type { LookPreview } from '../src/lib/look';
 import { usePress } from '../src/lib/motion';
 import { colors, fonts, text } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * Εμφάνιση as a dressing room (founder, 17 Oct: "full screen tryouts of stuff"): your Baller stands big under a soft
@@ -57,7 +58,7 @@ export default function LookScreen() {
   return (
     <View style={styles.screen}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 20 }]} showsVerticalScrollIndicator={false}>
+      <PageScroll focus contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 20 }]} showsVerticalScrollIndicator={false}>
         <View style={styles.top}>
           <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} hitSlop={8}>
             <Animated.Text style={[styles.topLink, back.style]}>{t.look.back}</Animated.Text>
@@ -85,7 +86,7 @@ export default function LookScreen() {
           onPlay={(kind) => baller.current?.play(kind)}
           onToast={(line) => setToast({ text: line, n: Date.now() })}
         />
-      </ScrollView>
+      </PageScroll>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
     </View>
   );

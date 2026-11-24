@@ -42,6 +42,7 @@ import {
   type Segment,
 } from '../../../src/lib/tournaments';
 import { colors, fonts, motion, text } from '../../../src/theme';
+import { PageScroll } from '../../../src/components/PageScroll';
 
 /**
  * One tournament (prototype V2, «Τα τουρνουά σου» opened; mockup D): «Σήμερα» (when it plays today: your match, your
@@ -80,7 +81,7 @@ export default function TournamentScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         ref={scroller}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -95,7 +96,7 @@ export default function TournamentScreen() {
         ) : null}
         {!data && notFound ? <Text style={styles.empty}>{c.detail.notFound}</Text> : null}
         {!data && !loading && error && !notFound ? <Text style={styles.empty}>{c.detail.error}</Text> : null}
-      </ScrollView>
+      </PageScroll>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
       {hint && !toast ? <Toast hint ms={HINT_MS} text={c.focus.hint} /> : null}
     </View>

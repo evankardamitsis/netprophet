@@ -13,6 +13,9 @@ import { useResults, useResultsTournaments, type SafetyTarget } from '../../src/
 import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useFadeUpIn, usePress } from '../../src/lib/motion';
 import { bezier, colors, fonts, motion, text, type } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
+import { CardGrid } from '../../src/components/CardGrid';
+import { useLayout } from '../../src/lib/layout';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): the scoreboard of the last two weeks, grouped by day and event.
@@ -71,13 +74,15 @@ export default function ResultsScreen() {
   const titleIn = useFadeUpIn(TITLE_IN_MS);
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
   const [said, setSaid] = useState<{ text: string; n: number } | null>(null);
+  const layoutKind = useLayout().kind;
   // the first result of a match you played yourself carries the one quiet Pro line (non-Pro only, once a day)
   const firstMine = groups.flatMap((g) => g.items).find((x) => x.mine)?.id ?? null;
   let index = 0;
+  const grid = layoutKind !== 'phone';
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -164,19 +169,31 @@ export default function ResultsScreen() {
                   </View>
                 ) : null}
               </View>
-              {g.items.map((item) => (
-                <Fragment key={item.id}>
-                  <ResultRow item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
-                  {item.id === firstMine ? <ProLine moment="result" label={t.pro.entries.result} /> : null}
-                </Fragment>
-              ))}
+              {grid ? (
+                <>
+                  {/* from 600 wide the results sit two or three to a row; the Pro line follows its group */}
+                  <CardGrid min={300}>
+                    {g.items.map((item) => (
+                      <ResultRow key={item.id} item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+                    ))}
+                  </CardGrid>
+                  {g.items.some((x) => x.id === firstMine) ? <ProLine moment="result" label={t.pro.entries.result} /> : null}
+                </>
+              ) : (
+                g.items.map((item) => (
+                  <Fragment key={item.id}>
+                    <ResultRow item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+                    {item.id === firstMine ? <ProLine moment="result" label={t.pro.entries.result} /> : null}
+                  </Fragment>
+                ))
+              )}
             </View>
           ))}
           {!loading && groups.length === 0 ? (
             error ? <Text style={styles.empty}>{t.results.error}</Text> : filtered ? <Text style={styles.empty}>{t.results.noneFound}</Text> : <BallerNote line={t.results.empty} />
           ) : null}
         </View>
-      </ScrollView>
+      </PageScroll>
       {said ? <Toast key={said.n} text={said.text} /> : null}
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
     </View>

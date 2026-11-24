@@ -39,6 +39,7 @@ import { fmt } from '../src/lib/votes';
 import { colors, fonts } from '../src/theme';
 import { useOnboardingGate } from '../src/lib/onboardingGate';
 import { markOnboardingPro } from '../src/lib/proOnboarding';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * Onboarding (prototype V2, after the welcome screen): your name, your player on the roster («Είσαι
@@ -424,7 +425,7 @@ export default function OnboardingScreen() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
-      <ScrollView
+      <PageScroll focus
         ref={scroll}
         contentContainerStyle={[styles.scroll, { paddingTop: 18 + insets.top, paddingBottom: Math.max(14, insets.bottom) }]}
         keyboardShouldPersistTaps="handled"
@@ -600,7 +601,7 @@ export default function OnboardingScreen() {
             </>
           ) : null}
         </StepIn>
-      </ScrollView>
+      </PageScroll>
     </KeyboardAvoidingView>
   );
 }

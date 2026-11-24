@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -20,6 +20,7 @@ import { SKIP_ONBOARDING_KEY } from '../src/lib/onboardingGate';
 import { authMode } from '../src/lib/reviewAccount';
 import { fmt } from '../src/lib/votes';
 import { cardSurface, colors, ease, fonts, text } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /** the lockup's height on the welcome card */
 const HERO_LOGO_H = 30;
@@ -52,7 +53,7 @@ export default function SignInScreen() {
   if (step === 'intro') return <Intro onStart={() => setStep('welcome')} />;
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
+      <PageScroll focus
         // bottom: only the home-indicator area; «Άλλη φορά» already carries a 44pt tap area of its own
         contentContainerStyle={[styles.scroll, { paddingTop: 18 + insets.top, paddingBottom: Math.max(BOTTOM_MIN, insets.bottom - LATER_SLACK) }]}
         keyboardShouldPersistTaps="handled"
@@ -77,7 +78,7 @@ export default function SignInScreen() {
         ) : (
           <Auth step={step as 'email' | 'code'} setStep={setStep} />
         )}
-      </ScrollView>
+      </PageScroll>
     </KeyboardAvoidingView>
   );
 }

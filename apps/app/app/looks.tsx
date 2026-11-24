@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BallArt } from '../src/components/Avatar';
 import { BG_KEYS, CardBackground } from '../src/components/CardBackground';
@@ -7,6 +7,7 @@ import { Baller } from '../src/components/Baller';
 import { WIN_EFFECTS } from '../src/components/WinEffects';
 import { DEFAULT_AVATARS } from '../src/lib/avatar';
 import { colors, fonts } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 const FRAMES = ['frame_gold', 'frame_seven', 'frame_ten', 'frame_month', 'frame_hundred', 'frame_week', 'frame_month_top', 'frame_level', 'frame_friends', 'frame_retro', 'frame_grass', 'frame_founding'];
 
@@ -22,7 +23,7 @@ export default function LooksScreen() {
   }, []);
   if (!__DEV__) return null;
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}>
+    <PageScroll focus style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}>
       <View style={styles.grid}>
         {WIN_EFFECTS.map((fx) => (
           <View key={fx} style={styles.fx}>
@@ -56,7 +57,7 @@ export default function LooksScreen() {
           </View>
         ))}
       </View>
-    </ScrollView>
+    </PageScroll>
   );
 }
 

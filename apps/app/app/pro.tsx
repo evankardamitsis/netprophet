@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -17,6 +17,7 @@ import { fmt } from '../src/lib/votes';
 import { ProTour } from '../src/components/ProTour';
 import { ProWelcome } from '../src/components/ProWelcome';
 import { alpha, colors, fonts } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * Pro (founder, 17 Oct: "very attractive to players so they buy it"): one promise, «Ο βοηθός της σεζόν σου», three
@@ -134,7 +135,7 @@ export default function ProScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 14 }]}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <PageScroll focus contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.kicker}>{p.title}</Text>
         <Animated.Text style={[styles.title, titleIn]}>{p.promise}</Animated.Text>
         {/* one line each (founder, 29 Oct: "too complicated, too much copy"); ProWelcome keeps the longer lines */}
@@ -154,7 +155,7 @@ export default function ProScreen() {
             ))}
           </View>
         ) : null}
-      </ScrollView>
+      </PageScroll>
 
       <View style={styles.actions}>
         {note ? <Text style={styles.note}>{note}</Text> : null}

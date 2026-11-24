@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, PanResponder, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
@@ -13,6 +13,7 @@ import { Baller, type BallerHandle } from './Baller';
 import { CardBackground } from './CardBackground';
 import { LookWardrobe } from './LookWardrobe';
 import { TOAST_MS, Toast } from './Toast';
+import { PageScroll } from './PageScroll';
 
 /**
  * «Γνώρισε τον Baller σου» (founder, 17 Oct: full-screen presentations, Baller as the trademark). Baller drops in and
@@ -151,7 +152,7 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
+      <PageScroll focus contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
         {onLater ? (
           <Pressable accessibilityRole="button" onPress={onLater} hitSlop={10} style={[styles.later, laterLabel ? styles.back : null]}>
             <Text style={styles.laterText}>{laterLabel ?? b.later}</Text>
@@ -237,7 +238,7 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
             />
           </View>
         ) : null}
-      </ScrollView>
+      </PageScroll>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
     </KeyboardAvoidingView>
   );

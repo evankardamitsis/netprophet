@@ -10,6 +10,7 @@ import { track } from '../lib/analytics';
 import { fmt } from '../lib/votes';
 import { colors, fonts, motion } from '../theme';
 import { Baller, type BallerHandle } from './Baller';
+import { useFocusPad } from '../lib/layout';
 
 /**
  * The full-screen welcome after buying Pro (founder): ink, your Baller dropping in, «Καλώς ήρθες στο Pro» slammed in
@@ -25,6 +26,7 @@ export function ProWelcome({ trialEnd, onDone }: { trialEnd: Date | null; onDone
   const t = useCopy();
   const p = t.pro;
   const insets = useSafeAreaInsets();
+  const focusPad = useFocusPad();
   const me = useMyBaller();
   const baller = useRef<BallerHandle>(null);
   useEffect(() => {
@@ -43,7 +45,7 @@ export function ProWelcome({ trialEnd, onDone }: { trialEnd: Date | null; onDone
   const last = words.pop() ?? '';
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 18 }]} accessibilityViewIsModal>
+    <View style={[styles.screen, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 18 }, focusPad]} accessibilityViewIsModal>
       <View style={styles.middle}>
         {me.look ? <Baller ref={baller} look={me.look} size={BALLER} kit={me.kit} gear={me.gear} frame={me.frame} effect={me.effect} enter="drop" /> : null}
         <Animated.Text style={[styles.title, title]} accessibilityRole="header">

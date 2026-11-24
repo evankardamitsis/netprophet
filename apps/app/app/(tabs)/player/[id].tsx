@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
@@ -22,6 +22,7 @@ import { fmt } from '../../../src/lib/votes';
 import { runJpop, useGrowIn, usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../../src/lib/motion';
 import type { ProfileView } from '../../../src/lib/players';
 import { colors, fonts } from '../../../src/theme';
+import { PageScroll } from '../../../src/components/PageScroll';
 
 /**
  * A player's profile (prototype V2, the `over` view): dark hero card with level, follow, name,
@@ -77,7 +78,7 @@ export default function PlayerScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && profile !== null} onRefresh={refresh} tintColor={colors.ink} />}
@@ -125,7 +126,7 @@ export default function PlayerScreen() {
         ) : !loading ? (
           <Text style={styles.note}>{notFound ? t.players.notFound : error ? t.players.error : ''}</Text>
         ) : null}
-      </ScrollView>
+      </PageScroll>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
       <ClaimReportSheet playerId={claimReport?.id ?? null} own={claimReport?.own ?? false} onClose={(text) => { setClaimReport(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />

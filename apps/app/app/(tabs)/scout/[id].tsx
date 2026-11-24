@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScoutReport } from '../../../src/components/ScoutReport';
@@ -8,6 +8,7 @@ import { useCopy } from '../../../src/i18n';
 import { useScout } from '../../../src/lib/data';
 import { usePress, useStgIn } from '../../../src/lib/motion';
 import { colors, fonts, motion, text } from '../../../src/theme';
+import { PageScroll } from '../../../src/components/PageScroll';
 
 /**
  * «Ο αντίπαλος πριν το ματς» (Pro): the other side of your own next match. Founder, 22 Oct 2026: as much as we know,
@@ -33,7 +34,7 @@ export default function ScoutScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={scout.loading && scout.opponents.length > 0} onRefresh={scout.refresh} tintColor={colors.ink} />}
@@ -55,7 +56,7 @@ export default function ScoutScreen() {
         {scout.opponents.map((o) => (
           <ScoutReport key={o.id} o={o} inTournament={scout.event !== null} />
         ))}
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

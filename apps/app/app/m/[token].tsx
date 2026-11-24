@@ -18,6 +18,7 @@ import { usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../src/li
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { fmt } from '../../src/lib/votes';
 import { colors, fonts, text } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
 
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
@@ -107,7 +108,7 @@ export default function MatchLinkScreen() {
   return (
     <View style={styles.screen}>
       <StatusBar style="dark" />
-      <ScrollView ref={scroll} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
+      <PageScroll focus ref={scroll} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
         <View style={styles.bar}>
           <BouncingLogo height={16} />
           <Text style={styles.barText} numberOfLines={1}>
@@ -138,7 +139,7 @@ export default function MatchLinkScreen() {
             onPress={bye.unhide ? () => onHide(false) : () => router.replace('/')}
           />
         )}
-      </ScrollView>
+      </PageScroll>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
     </View>
   );
