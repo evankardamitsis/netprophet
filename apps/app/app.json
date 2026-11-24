@@ -3,7 +3,7 @@
     "name": "NetProphet",
     "slug": "netprophet",
     "scheme": "netprophet",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F3F5EE",
@@ -20,13 +20,19 @@
     },
     "ios": {
       "bundleIdentifier": "gr.monadlabs.netprophet",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "CFBundleLocalizations": ["el", "en"]
+        "CFBundleLocalizations": ["el", "en"],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       }
     },
     "android": {
