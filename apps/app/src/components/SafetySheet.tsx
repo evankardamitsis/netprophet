@@ -7,6 +7,7 @@ import { useCopy } from '../i18n';
 import { useSafety, type SafetyTarget } from '../lib/data';
 import { fmt } from '../lib/votes';
 import { alpha, colors, ease, fonts } from '../theme';
+import { useSheetFrame } from '../lib/sheetFrame';
 import { Chip, Primary } from './OnboardingControls';
 
 const IN_MS = 550;
@@ -31,6 +32,8 @@ export function SafetySheet({ target, onClose }: { target: SafetyTarget | null; 
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [busy, setBusy] = useState(false);
   const p = useSharedValue(0);
+  const frame = useSheetFrame();
+  const travel = frame.travel(480);
   useEffect(() => {
     if (target) {
       setReason(null);
@@ -44,7 +47,7 @@ export function SafetySheet({ target, onClose }: { target: SafetyTarget | null; 
     setTimeout(() => onClose(toast), OUT_MS);
   };
   const back = useAnimatedStyle(() => ({ opacity: p.value }));
-  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 480 }] }));
+  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * travel }] }));
 
   const send = async () => {
     if (!reason) return;
@@ -64,9 +67,9 @@ export function SafetySheet({ target, onClose }: { target: SafetyTarget | null; 
 
   return (
     <Modal visible={target !== null} transparent animationType="none" onRequestClose={() => close()}>
-      <Animated.View style={[styles.back, back]}>
-        <Pressable accessibilityLabel={s.cancel} style={styles.fill} onPress={() => close()} />
-        <Animated.View style={[styles.sheet, sheet]}>
+      <Animated.View style={[styles.back, frame.back, back]}>
+        <Pressable accessibilityLabel={s.cancel} style={[styles.fill, frame.fill]} onPress={() => close()} />
+        <Animated.View style={[styles.sheet, frame.sheet, sheet]}>
           {!confirmBlock ? (
             <>
               <Text style={styles.title}>{s.title}</Text>

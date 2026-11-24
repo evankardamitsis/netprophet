@@ -14,7 +14,7 @@ import { identify, screen } from "../src/lib/analytics";
 import { listenForPushTaps, refreshPushToken } from "../src/lib/push";
 import { prepareStore } from "../src/lib/store";
 import { api, isLive } from "../src/lib/supabase";
-import { colors } from "../src/theme";
+import { colors, layout } from "../src/theme";
 import { initSounds } from "../src/lib/sound";
 import { watchOtaUpdates } from "../src/lib/otaUpdates";
 import { Loading } from "../src/components/Loading";
@@ -56,7 +56,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      {/* on a wide browser the app keeps a phone's width, centred on the ink backdrop */}
+      {/* on a desktop browser the app stops at the page's widest, centred on the ink backdrop */}
       <View style={styles.page}>
         <View style={styles.column}>
           <SafeAreaProvider>
@@ -179,8 +179,8 @@ function Routes() {
   );
 }
 
-/** the widest the app gets in a browser; phones are narrower and fill the screen */
-const MAX_WIDTH = 520;
+/** the widest the app gets in a browser (tablet board, 24 Nov: from 600 wide the tablet layout, from 1024 the rail) */
+const MAX_WIDTH = layout.page;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.paper },

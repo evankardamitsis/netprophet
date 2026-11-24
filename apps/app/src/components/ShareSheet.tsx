@@ -6,6 +6,7 @@ import { BouncingLogo } from './BouncingLogo';
 import { track } from '../lib/analytics';
 import { useStgIn } from '../lib/motion';
 import { alpha, colors, ease, fonts } from '../theme';
+import { useSheetFrame } from '../lib/sheetFrame';
 
 
 type App = 'whatsapp' | 'viber' | 'sms' | 'other';
@@ -47,6 +48,8 @@ export function ShareSheet({
   const s = t.addMatch.share;
   const [via, setVia] = useState<App | null>(null);
   const p = useSharedValue(0);
+  const frame = useSheetFrame();
+  const travel = frame.travel(420);
   useEffect(() => {
     if (open) {
       setVia(null);
@@ -58,7 +61,7 @@ export function ShareSheet({
     setTimeout(onClose, OUT_MS);
   };
   const back = useAnimatedStyle(() => ({ opacity: p.value }));
-  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 420 }] }));
+  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * travel }] }));
   const preview = useStgIn(700, 200);
 
   const send = async (app: App) => {
@@ -86,9 +89,9 @@ export function ShareSheet({
 
   return (
     <Modal visible={open} transparent animationType="none" onRequestClose={close}>
-      <Animated.View style={[styles.back, back]}>
-        <Pressable accessibilityLabel={s.close} style={styles.fill} onPress={close} />
-        <Animated.View style={[styles.sheet, sheet]}>
+      <Animated.View style={[styles.back, frame.back, back]}>
+        <Pressable accessibilityLabel={s.close} style={[styles.fill, frame.fill]} onPress={close} />
+        <Animated.View style={[styles.sheet, frame.sheet, sheet]}>
           <Animated.View style={[styles.frame, preview]}>
             <View style={styles.bubble}>
               <View style={styles.brand}>

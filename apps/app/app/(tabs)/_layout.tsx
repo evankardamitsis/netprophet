@@ -12,12 +12,15 @@ import { HudProvider } from '../../src/lib/hud';
 import { TourProvider } from '../../src/lib/tour';
 import { UnlocksProvider } from '../../src/lib/unlocks';
 import { useClearSeenPushes } from '../../src/lib/useClearSeenPushes';
+import { useLayout } from '../../src/lib/layout';
 import { useOpenPushes } from '../../src/lib/useOpenPushes';
 
 export default function TabsLayout() {
   const t = useCopy();
   const { session } = useAuth();
   const { me, raw, refresh } = useMe(session?.user.email);
+  // from 1024 wide a side rail holds the header and the tabs (tablet board, 24 Nov 2026)
+  const { rail } = useLayout();
   // seen results: their pushes leave the notification centre (launch, back to the front, the inbox emptied)
   useClearSeenPushes(raw?.inbox_unseen, refresh);
   // a tapped push's place opens here: this layout is only up when signed in and past onboarding, with its tabs mounted
@@ -30,8 +33,8 @@ export default function TabsLayout() {
             {/* back (the profile's «‹ Πίσω», Android's back) returns to the screen you came from, not the first tab */}
             <Tabs
               backBehavior="history"
-              tabBar={(props) => <TabBar {...props} resultsAt={raw?.results_at ?? null} />}
-              screenOptions={{ header: () => <Header me={me} /> }}
+              tabBar={(props) => <TabBar {...props} resultsAt={raw?.results_at ?? null} rail={rail} me={me} />}
+              screenOptions={{ header: () => <Header me={me} />, headerShown: !rail, tabBarPosition: rail ? 'left' : 'bottom' }}
             >
               {/* Τουρνουά is the home (founder, 22 Oct, mockup D); Παίκτες is a tab again (2 Nov):
                   Τουρνουά · Αποτελέσματα · Παίκτες · Κατάταξη · Εγώ */}
