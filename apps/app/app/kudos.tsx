@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { useCopy } from '../src/i18n';
 import { useKudos } from '../src/lib/data';
 import { kudoQuestion, kudoText } from '../src/lib/kudos';
 import { colors } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * «Πες κάτι στον Νίκο ›» from Αποτελέσματα (prototype kres): «Πες μια καλή κουβέντα» to one player, then back.
@@ -36,7 +37,7 @@ export default function KudosScreen() {
   return (
     <View style={styles.screen}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}>
+      <PageScroll focus contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}>
         <Back label={`‹ ${t.common.back}`} onPress={close} />
         {options && options.length > 0 ? (
           <KudosPicker
@@ -46,7 +47,7 @@ export default function KudosScreen() {
             onSkip={close}
           />
         ) : null}
-      </ScrollView>
+      </PageScroll>
       {toast ? <Toast text={toast} /> : null}
     </View>
   );

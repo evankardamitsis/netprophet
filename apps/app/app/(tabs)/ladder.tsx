@@ -15,6 +15,7 @@ import { useFadeUpIn, usePopIn, usePress, useSlamIn, useStgIn } from '../../src/
 import { useUnlocks } from '../../src/lib/unlocks';
 import { fmt } from '../../src/lib/votes';
 import { alpha, colors, fonts, text } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
 
 /**
  * Κατάταξη (prototype V2, isRank): this month's points among the people you know or all of Attica.
@@ -56,7 +57,7 @@ export default function LadderScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -80,7 +81,7 @@ export default function LadderScreen() {
           </View>
         ) : null}
         {!loading && error && !ladder ? <Text style={styles.empty}>{l.error}</Text> : null}
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

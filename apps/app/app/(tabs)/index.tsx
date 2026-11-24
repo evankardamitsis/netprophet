@@ -52,7 +52,8 @@ import { useHudActions } from '../../src/lib/hud';
 import { useTour, useTourTarget } from '../../src/lib/tour';
 import { placeInWindow, revealOffset, type Rect, type TourTarget } from '../../src/lib/tourSteps';
 import { useTabScrollTop } from '../../src/lib/scrollTop';
-import { colors, fonts, text } from '../../src/theme';
+import { colors, fonts, layout, text } from '../../src/theme';
+import { useColumns, useLayout, usePageColumn } from '../../src/lib/layout';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 import { momentsAct, useMoments } from '../../src/lib/useMoments';
@@ -286,6 +287,13 @@ export default function HomeScreen() {
   }, [quizRead, refreshTournaments, refreshMyMatch, refresh]);
   const empty = !loading && cards.length === 0;
   const scroller = useRef<ScrollView>(null);
+  // tablet board 24 Nov (all A): upright, one 720 column with the vote cards two to a row; from 1024 two columns,
+  // voting on the left and what you read (results, your people, the quiz, Pro, the tournaments) on the right
+  const page = usePageColumn(useLayoutMax());
+  const twoCols = page.layout.rail;
+  const mainW = twoCols ? page.width - layout.side - SIDE_GAP : page.width;
+  const voteCols = useColumns(VOTE_MIN, mainW, 2);
+  const voteW = voteCols > 1 ? (mainW - (voteCols - 1) * VOTE_GAP) / voteCols : undefined;
   // a tap on Τουρνουά while on it (or two) scrolls back to the top
   useTabScrollTop(scroller);
   // players from before Baller had a name meet it once, full screen. «Για σένα» no longer rises: the quiz and the
@@ -560,11 +568,13 @@ export default function HomeScreen() {
                   count={fmt(g.count === 1 ? t.home.vote.count.one : t.home.vote.count.many, { n: g.count })}
                   onPress={g.tournamentId ? () => router.push(`/tournament/${g.tournamentId}`) : undefined}
                 />
-                {g.rows.map((m, ri) => (
-                  <View key={m.id} ref={gi === 0 && ri === 0 ? tourVote : undefined} collapsable={false}>
-                    <VoteRow match={m} where={m.category ?? ''} onVote={onVote} onLongPress={onCardLongPress} index={ri} />
-                  </View>
-                ))}
+                <View style={voteW ? styles.voteGrid : styles.voteList}>
+                  {g.rows.map((m, ri) => (
+                    <View key={m.id} ref={gi === 0 && ri === 0 ? tourVote : undefined} collapsable={false} style={voteW ? { width: voteW } : null}>
+                      <VoteRow match={m} where={m.category ?? ''} onVote={onVote} onLongPress={onCardLongPress} index={ri} />
+                    </View>
+                  ))}
+                </View>
               </View>
             ))}
             {more ? (
@@ -598,13 +608,22 @@ export default function HomeScreen() {
         onContentSizeChange={(_w, h) => {
           contentH.current = h;
         }}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, page.style]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={onPull} tintColor={colors.ink} />}
       >
-        {sections.map((id, i) => (
-          <Fragment key={id}>{block(id, i)}</Fragment>
-        ))}
+        {twoCols ? (
+          <View style={styles.cols}>
+            <View style={styles.main}>
+              {sections.map((id, i) => (SIDE.includes(id) ? null : <Fragment key={id}>{block(id, i)}</Fragment>))}
+            </View>
+            <View style={styles.side}>
+              {sections.map((id, i) => (SIDE.includes(id) ? <Fragment key={id}>{block(id, i)}</Fragment> : null))}
+            </View>
+          </View>
+        ) : (
+          sections.map((id, i) => <Fragment key={id}>{block(id, i)}</Fragment>)
+        )}
       </ScrollView>
       {note?.item.kind === 'toast' ? <Toast key={note.n} text={note.item.text} /> : null}
       <SafetySheet
@@ -629,8 +648,25 @@ export default function HomeScreen() {
   );
 }
 
+/** the home's right column from 1024 wide: what you read beside the votes */
+const SIDE: HomeSection[] = ['results', 'yours', 'quiz', 'pro', 'tournaments'];
+const SIDE_GAP = 28;
+/** a vote card is never narrower than this; two sit in a row once they fit */
+const VOTE_MIN = 300;
+const VOTE_GAP = 8;
+
+/** upright the reading width; from 1024 the whole page, for the two columns */
+function useLayoutMax(): number {
+  return useLayout().rail ? layout.page : layout.measure;
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
+  cols: { flexDirection: 'row', alignItems: 'flex-start', gap: SIDE_GAP },
+  main: { flex: 1, minWidth: 0, gap: 14 },
+  side: { width: layout.side, gap: 14 },
+  voteList: { gap: 8 },
+  voteGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: VOTE_GAP },
   scroll: { paddingTop: 12, paddingHorizontal: 16, paddingBottom: 32, gap: 14 },
   h2: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, paddingTop: 10, marginTop: -6, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   h2Row: { flexDirection: 'row', alignItems: 'center', gap: 12 },

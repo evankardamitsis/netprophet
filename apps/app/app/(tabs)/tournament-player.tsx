@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ProLine } from '../../src/components/ProEntries';
@@ -12,6 +12,7 @@ import { sectionsOf, titleOf, type RunSection } from '../../src/lib/playerRun';
 import type { NextMatch, PathMatch } from '../../src/lib/tournamentToday';
 import { carry, usePlayerRun, type PlayerParams } from '../../src/lib/usePlayerRun';
 import { colors, fonts, motion, text } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
 
 /**
  * One player in one tournament (founder, 21 Oct; split in three after build 12): opened by holding their name on
@@ -40,11 +41,11 @@ function Content() {
   return (
     <Animated.View style={[styles.screen, grow]}>
       <CloseButton onPress={goBack} />
-      <ScrollView contentContainerStyle={[styles.scroll, styles.scrollEnd]} showsVerticalScrollIndicator={false}>
+      <PageScroll contentContainerStyle={[styles.scroll, styles.scrollEnd]} showsVerticalScrollIndicator={false}>
         {state.data && state.me ? <Body p={p} state={state} /> : null}
         {state.data && !state.me ? <Text style={styles.empty}>{t.tournaments.focus.notFound}</Text> : null}
         {!state.data && !state.loading ? <Text style={styles.empty}>{t.tournaments.detail.notFound}</Text> : null}
-      </ScrollView>
+      </PageScroll>
     </Animated.View>
   );
 }

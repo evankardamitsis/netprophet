@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +28,7 @@ import {
 import { useCountFromZero, useFadeUpIn, usePopIn, usePress, useStgIn } from '../src/lib/motion';
 import { useUnlocks } from '../src/lib/unlocks';
 import { colors, fonts, motion, text } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * «Τα στατιστικά σου» (founder, 18 Oct 2026; rebuilt 20 Oct as a Pro feature, in detail, pro player like).
@@ -77,7 +78,7 @@ export default function MatchStatsScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll focus
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && stats !== null} onRefresh={refresh} tintColor={colors.ink} />}
@@ -133,7 +134,7 @@ export default function MatchStatsScreen() {
         {me.view && kudos && has('kudos') ? <KudosCloud list={kudos} gender={nameGender(me.view.first)} /> : null}
         {/* the teaser is this screen's one Pro door (one blue), so the traits' own Pro link stays off */}
         {me.view && myTraits ? <MyTraits data={myTraits} first={me.view.first} proOpen={false} /> : null}
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

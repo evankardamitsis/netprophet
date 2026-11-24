@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -39,6 +39,7 @@ import { useUnlocks } from '../src/lib/unlocks';
 import { fmt } from '../src/lib/votes';
 import { colors, fonts, text } from '../src/theme';
 import { PLAYER_LEVEL_SHOWN } from '../src/lib/levelShown';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * «+ Ματς» (prototype V2, isForm and isDone). «Παίχτηκε»: when, tournament, singles / doubles / mixed, the
@@ -121,7 +122,7 @@ export default function AddMatch() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
-      <ScrollView
+      <PageScroll focus
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -284,7 +285,7 @@ export default function AddMatch() {
           <Primary label={form.mode === 'played' ? a.submitPlayed : a.submitSoon} busy={busy} onPress={() => void onSubmit()} />
         ) : null}
         {error ? <Text style={styles.error}>{error === 'duplicate' ? a.errors.duplicate : error === 'name_required' ? a.errors.nameRequired : error === 'name_shape' ? a.errors.nameShape : error === 'rate_limited' ? a.errors.rateLimited : a.errors.failed}</Text> : null}
-      </ScrollView>
+      </PageScroll>
     </KeyboardAvoidingView>
   );
 }
@@ -439,7 +440,7 @@ function Thank({ form, matchId, onDone }: { form: LogForm; matchId: string | nul
   }, [options, onDone]);
   if (!options || options.length === 0) return <View style={styles.screen} />;
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
+    <PageScroll focus style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
       <StatusBar style="dark" />
       <KudosPicker
         question={kudoQuestion(t, gender, plural, false)}
@@ -450,7 +451,7 @@ function Thank({ form, matchId, onDone }: { form: LogForm; matchId: string | nul
         }}
         onSkip={() => onDone(null)}
       />
-    </ScrollView>
+    </PageScroll>
   );
 }
 

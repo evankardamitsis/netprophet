@@ -9,6 +9,7 @@ import { useFadeUpIn, usePress, useSlamIn, useStgIn } from '../lib/motion';
 import { askForPush, pushAllowed } from '../lib/push';
 import { fmt } from '../lib/votes';
 import { colors, fonts } from '../theme';
+import { useFocusPad } from '../lib/layout';
 
 /**
  * After «Καλώς ήρθες στο Pro» (founder, 29 Oct): a short guide to what opened, one thing per screen, and where to find
@@ -24,6 +25,7 @@ export function ProTour({ onDone }: { onDone: () => void }) {
   const p = t.pro.tour;
   const api = useApi();
   const insets = useSafeAreaInsets();
+  const focusPad = useFocusPad();
   const [at, setAt] = useState(0);
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [asking, setAsking] = useState(false);
@@ -61,7 +63,7 @@ export function ProTour({ onDone }: { onDone: () => void }) {
   const label = asks ? p.notify.allow : last ? p.done : p.next;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 18 }]} accessibilityViewIsModal>
+    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 18 }, focusPad]} accessibilityViewIsModal>
       <View style={styles.top}>
         <View style={styles.backSlot}>
           {at > 0 ? (

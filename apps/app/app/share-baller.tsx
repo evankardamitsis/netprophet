@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { PixelRatio, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { PixelRatio, Platform, Pressable, Share, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { cardStats, ownerLine, shareMessage } from '../src/lib/ballerShare';
 import { useBaller, useLook, useMePage, useMyAvatar } from '../src/lib/data';
 import { usePopIn, usePress } from '../src/lib/motion';
 import { colors, fonts, text } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /** the picture that goes out: 1080 × 1350 pixels (view-shot sizes in points) */
 const OUT_W = 1080;
@@ -65,7 +66,7 @@ export default function ShareBallerScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}>
+      <PageScroll focus contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}>
         <Pressable accessibilityRole="button" onPress={close} onPressIn={back.onPressIn} onPressOut={back.onPressOut} hitSlop={10} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>‹ {t.common.back}</Animated.Text>
         </Pressable>
@@ -95,7 +96,7 @@ export default function ShareBallerScreen() {
             <Text style={styles.ctaText}>{busy ? s.making : s.send}</Text>
           </Animated.View>
         </Pressable>
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }
