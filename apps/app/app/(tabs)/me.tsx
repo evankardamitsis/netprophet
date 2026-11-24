@@ -48,6 +48,7 @@ import { useMoments } from '../../src/lib/useMoments';
 import { ownReportShown } from '../../src/lib/claimLater';
 import { ClaimReportSheet } from '../../src/components/ClaimReportSheet';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
+import { PageScroll } from '../../src/components/PageScroll';
 
 /** opening Εγώ is the player's own calm moment to meet Baller: it comes this long after the page settles */
 const MEET_BALLER_ON_ME_MS = 900;
@@ -156,7 +157,7 @@ export default function MeScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         ref={scrollRef}
         onScroll={(e) => {
           scrollY.current = e.nativeEvent.contentOffset.y;
@@ -236,7 +237,7 @@ export default function MeScreen() {
           </>
         ) : null}
         {!loading && error && !view ? <Text style={styles.empty}>{t.me.error}</Text> : null}
-      </ScrollView>
+      </PageScroll>
       {has('daily_quests') ? <QuestsSheet open={questsOpen} quests={quests.quests} onClose={() => setQuestsOpen(false)} /> : null}
     </View>
   );

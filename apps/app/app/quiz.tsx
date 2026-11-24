@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { ProNudge } from '../src/components/ProNudge';
 import { router } from 'expo-router';
@@ -20,6 +20,7 @@ import { cardView, firstUnanswered, verdict } from '../src/lib/quiz';
 import { useUnlocks } from '../src/lib/unlocks';
 import { momentsAct } from '../src/lib/useMoments';
 import { colors, fonts } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * «Οι ερωτήσεις της ημέρας» (prototype V2, isGame and isGameEnd): dots on top, the tag, the question, a clue box on
@@ -86,7 +87,7 @@ export default function QuizScreen() {
   return (
     <View style={styles.screen}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={[styles.body, pad]} showsVerticalScrollIndicator={false}>
+      <PageScroll focus contentContainerStyle={[styles.body, pad]} showsVerticalScrollIndicator={false}>
         {index >= quiz.cards.length ? (
           <End
             quiz={quiz}
@@ -100,7 +101,7 @@ export default function QuizScreen() {
         ) : (
           <Game key={index} quiz={quiz} index={index} onAnswer={onAnswer} onPrev={() => (index > 0 ? setIndex(index - 1) : leave())} onNext={() => setIndex(index + 1)} />
         )}
-      </ScrollView>
+      </PageScroll>
       {toast}
       {unlocks.has('daily_quests') ? <QuestsSheet open={questsOpen} quests={quests.quests} onClose={() => setQuestsOpen(false)} /> : null}
     </View>

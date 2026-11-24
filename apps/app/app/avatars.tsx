@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, AvatarSilhouette } from '../src/components/Avatar';
@@ -8,6 +8,7 @@ import { Back } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
 import { DEFAULT_AVATARS } from '../src/lib/avatar';
 import { colors, cosmetics, fonts, text } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * Development builds only: the drawn avatars for the founder's review before they go into the app. The 12 defaults
@@ -18,7 +19,7 @@ export default function AvatarsScreen() {
   const insets = useSafeAreaInsets();
   const close = () => (router.canGoBack() ? router.back() : router.replace('/me'));
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}>
+    <PageScroll focus style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}>
       <Back label={t.common.back} onPress={close} />
       <Text style={styles.title}>Avatar</Text>
       <View style={styles.grid}>
@@ -57,7 +58,7 @@ export default function AvatarsScreen() {
           </View>
         ))}
       </View>
-    </ScrollView>
+    </PageScroll>
   );
 }
 

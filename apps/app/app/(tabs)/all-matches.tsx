@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BallerNote } from '../../src/components/BallerNote';
 import { QuietLink, Reveal, VoteGroupHeading } from '../../src/components/HomeCards';
@@ -14,6 +14,7 @@ import { useNotes, useVotePath } from '../../src/lib/useVotePath';
 import { fmt } from '../../src/lib/votes';
 import { pollIds, useSplitPoller } from '../../src/lib/liveSplits';
 import { colors, fonts, text } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
 
 /**
  * «Όλα τα ματς σήμερα» (founder, 25 Oct): «Περισσότερα ›» on the home opens this page, so the home keeps its length. The
@@ -41,7 +42,7 @@ export default function AllMatchesScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={refresh} tintColor={colors.ink} />}
@@ -68,7 +69,7 @@ export default function AllMatchesScreen() {
         ))}
         {none ? error ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
         {loading && cards.length === 0 ? null : <QuietLink label={t.home.tournaments.all} onPress={() => router.push('/tournaments')} />}
-      </ScrollView>
+      </PageScroll>
       {note?.item.kind === 'toast' ? <Toast key={note.n} text={note.item.text} ms={TOAST_MS} /> : null}
       <SafetySheet
         target={safety}

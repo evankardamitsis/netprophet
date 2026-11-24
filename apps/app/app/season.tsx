@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ import { seasonMessage, seasonView, type SeasonStat } from '../src/lib/season';
 import { shareCard } from '../src/lib/shareCard';
 import { useCountFromZero, usePopIn, usePress, useStgIn } from '../src/lib/motion';
 import { colors, fonts, motion, text } from '../src/theme';
+import { PageScroll } from '../src/components/PageScroll';
 
 /**
  * Pro «Η σεζόν σου», full screen on ink from Εγώ and the month-end moment: your Baller and the month in big numbers
@@ -72,7 +73,7 @@ export default function SeasonScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} showsVerticalScrollIndicator={false}>
+      <PageScroll focus contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} showsVerticalScrollIndicator={false}>
         <Pressable accessibilityRole="button" onPress={close} onPressIn={back.onPressIn} onPressOut={back.onPressOut} hitSlop={10} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>‹ {t.common.back}</Animated.Text>
         </Pressable>
@@ -150,7 +151,7 @@ export default function SeasonScreen() {
             </Pressable>
           </>
         ) : null}
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

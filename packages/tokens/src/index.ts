@@ -238,6 +238,8 @@ export const layout = {
   wide: 1024,
   /** the reading column of a page (one list, a form, the Ladder) */
   measure: 720,
+  /** a focused page: sign in, onboarding, the quiz, Pro */
+  focus: 560,
   /** the home's right column on a wide screen */
   side: 340,
   /** a sheet or dialog */

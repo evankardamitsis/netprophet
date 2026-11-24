@@ -31,3 +31,13 @@ export function useColumns(min: number, available?: number, max = 3): number {
   const room = available ?? l.content - 2 * l.gutter;
   return l.kind === 'phone' ? 1 : columnsFor(room, min, 12, max);
 }
+
+/**
+ * Side padding that keeps a full-screen view's content in a centred column of `max` (560 by default) while its
+ * background still fills the screen; nothing on a phone. For screens whose root is a plain View, not a PageScroll.
+ */
+export function useFocusPad(max: number = steps.focus): ViewStyle | null {
+  const l = useLayout();
+  if (l.kind === 'phone') return null;
+  return { paddingHorizontal: Math.max(l.gutter, (l.content - max) / 2) };
+}

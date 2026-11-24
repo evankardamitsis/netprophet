@@ -13,6 +13,8 @@ import { nextFooter, nextRow, type NextRow } from '../../src/lib/nextTournament'
 import { blocksOf, boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey, type TournamentSection } from '../../src/lib/tournaments';
 import { colors, fonts, text } from '../../src/theme';
 import { isHttpsUrl, safeOpen } from '../../src/lib/openUrl';
+import { PageScroll } from '../../src/components/PageScroll';
+import { CardGrid } from '../../src/components/CardGrid';
 
 /**
  * The Τουρνουά tab, «Τα τουρνουά σου» (founder, 14 Oct: a tab in the bottom bar that also holds «+ Ματς»). Founder,
@@ -45,7 +47,7 @@ export default function TournamentsScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -75,7 +77,7 @@ export default function TournamentsScreen() {
           </>
         ) : null}
         {!loading && error && !data ? <Text style={styles.empty}>{c.error}</Text> : null}
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }
@@ -120,9 +122,12 @@ function Section({ section, today, next }: { section: TournamentSection; today: 
       <Reveal i={next()}>
         <Text style={styles.groupTitle}>{greekCaps(section.title)}</Text>
       </Reveal>
-      {section.items.map((item) => (
-        <TournamentRow key={item.id} item={item} today={today} i={next()} />
-      ))}
+      {/* from 600 wide two or three to a row (tablet board, 24 Nov) */}
+      <CardGrid min={300} gap={GROUP_GAP}>
+        {section.items.map((item) => (
+          <TournamentRow key={item.id} item={item} today={today} i={next()} />
+        ))}
+      </CardGrid>
     </View>
   );
 }
@@ -304,6 +309,8 @@ function TournamentRow({ item, today, i }: { item: TournamentItem; today: string
   );
 }
 
+const GROUP_GAP = 10;
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
@@ -323,7 +330,7 @@ const styles = StyleSheet.create({
   mineWhen: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
   mineWhat: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20, color: colors.mist, textAlign: 'right' },
   alertsOn: { marginTop: 4, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.mist },
-  group: { gap: 10 },
+  group: { gap: GROUP_GAP },
   groupTitle: { ...text.label, marginTop: 4 },
   card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 6 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },

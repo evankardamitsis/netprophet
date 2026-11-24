@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
@@ -8,6 +8,7 @@ import { useFadeUpIn, usePress } from '../../src/lib/motion';
 import { titleOf } from '../../src/lib/playerRun';
 import { carry, usePlayerRun, type PlayerParams } from '../../src/lib/usePlayerRun';
 import { colors, fonts, motion, text } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
 
 /**
  * «Η πορεία στο ταμπλό» (founder, 21 Oct, after build 12: the draw at the bottom of the sheet "looked bad and did not
@@ -32,7 +33,7 @@ function Content() {
   return (
     <View style={styles.screen}>
       <CloseButton onPress={goBack} />
-      <ScrollView contentContainerStyle={[styles.scroll, styles.scrollEnd]} showsVerticalScrollIndicator={false}>
+      <PageScroll contentContainerStyle={[styles.scroll, styles.scrollEnd]} showsVerticalScrollIndicator={false}>
         {me ? (
           <Animated.View style={[styles.head, head]}>
             <Text style={styles.label}>{greekCaps(f.openPath)}</Text>
@@ -49,7 +50,7 @@ function Content() {
         ) : state.data ? (
           <Text style={styles.empty}>{f.noRun}</Text>
         ) : null}
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
@@ -9,6 +9,8 @@ import { usePlayerSearch, usePlayersHome } from '../../src/lib/data';
 import { useFadeUpIn } from '../../src/lib/motion';
 import { fmt } from '../../src/lib/votes';
 import { colors, fonts, text } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
+import { CardGrid } from '../../src/components/CardGrid';
 
 /**
  * Παίκτες (prototype V2, isPlayers): search the roster, and before searching your friends and who plays
@@ -42,7 +44,7 @@ export default function PlayersScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <PageScroll
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -70,14 +72,17 @@ export default function PlayersScreen() {
             style={[styles.search, NO_WEB_RING, { borderColor: focused || query ? colors.ink : colors.fog }]}
           />
           {label ? <Text style={styles.label}>{greekCaps(label)}</Text> : null}
-          {rows.map((row, i) => (
-            <PlayerListRow key={row.id} row={row} index={i} onPress={() => router.push(`/player/${row.id}`)} />
-          ))}
+          {/* from 600 wide two players to a row (tablet board, 24 Nov) */}
+          <CardGrid min={300} gap={10} max={2}>
+            {rows.map((row, i) => (
+              <PlayerListRow key={row.id} row={row} index={i} onPress={() => router.push(`/player/${row.id}`)} />
+            ))}
+          </CardGrid>
           {search.rows === null && !home.loading && home.rows.length === 0 ? (
             <Text style={styles.empty}>{home.error ? t.players.error : t.players.empty}</Text>
           ) : null}
         </View>
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

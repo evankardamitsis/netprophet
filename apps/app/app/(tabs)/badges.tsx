@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { BadgeRow } from '@netprophet/db';
@@ -11,6 +11,8 @@ import { badgeName, earned, leftLine, locked, moreLine, pct, pickSelected, ruleL
 import { useBadges, useMyGender } from '../../src/lib/data';
 import { usePress, useStgIn } from '../../src/lib/motion';
 import { alpha, colors, fonts, text } from '../../src/theme';
+import { PageScroll } from '../../src/components/PageScroll';
+import { columnsFor, usePageColumn } from '../../src/lib/layout';
 
 /**
  * Badges (prototype V2): the selected badge in a big card (rule, tier, bar, «Βάλ' το στην κάρτα» for the four that
@@ -27,7 +29,7 @@ export default function BadgesScreen() {
   const { badges, refresh, wear } = useBadges();
   const [picked, setPicked] = useState<string | null>(null);
   const scroll = useRef<ScrollView>(null);
-  const { width } = useWindowDimensions();
+  const col = usePageColumn();
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
   const back = usePress();
 
@@ -54,14 +56,18 @@ export default function BadgesScreen() {
     scroll.current?.scrollTo({ y: 0, animated: true });
   };
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/me'));
-  const colW = (width - PAD * 2 - GAP) / 2;
+  // two to a row on a phone; on a tablet as many as fit the page's column (tablet board, 24 Nov)
+  const phone = col.layout.kind === 'phone';
+  const room = phone ? col.width - PAD * 2 : col.width;
+  const cols = phone ? 2 : columnsFor(room, 160, GAP, 4);
+  const colW = (room - GAP * (cols - 1)) / cols;
   const have = earned(list);
   const lockedList = locked(list);
   let n = 0;
 
   return (
     <View style={styles.screen}>
-      <ScrollView ref={scroll} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <PageScroll ref={scroll} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>{t.badges.back}</Animated.Text>
         </Pressable>
@@ -98,7 +104,7 @@ export default function BadgesScreen() {
           </>
         ) : null}
         {list.length > 0 ? <Text style={styles.footer}>{t.badges.footer}</Text> : null}
-      </ScrollView>
+      </PageScroll>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
     </View>
   );
