@@ -141,7 +141,7 @@ begin
                   'opened_30d', (select a.opened_30d from core.activity_daily a where a.day = d.day))
                 order by d.day desc), '[]'::jsonb)
                 from days d),
-      'days_shown', v_days);
+      'days_shown', v_days));
 end;
 $$;
 revoke all on function api.admin_numbers(int) from public, anon;
