@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { colors } from '@netprophet/tokens';
 import { KNOWN_KINDS, renderDue, type DueEmail } from './index';
-import { dayMonth, euro, planPrice, redeemUrl } from './pro';
+import { dayMonth, euro, fullDate, planPrice, redeemUrl } from './pro';
 
 // 24/11/2026 15:00 in Athens (13:00 UTC)
 const ENDS = '2026-11-24T13:00:00+00:00';
@@ -70,6 +70,23 @@ describe('the Pro emails', () => {
     expect(m.text).toContain('Η δωρεάν εβδομάδα τελειώνει στις 24/11. Μετά 49,99€ τον πρώτο χρόνο, 69,99€ από εκεί και πέρα.');
     expect(m.text).toContain('Άνοιξε τις ειδοποιήσεις');
     expect(m.text).toContain('12 ερωτήσεις');
+  });
+
+  it('pro_welcome given from the admin: the gift and its end date, no store or price', () => {
+    const m = renderDue({ ...base, payload: { given: true, ends_at: '2027-11-25T10:00:00+00:00' } })!;
+    expect(m.subject).toBe('Έχεις Pro, δώρο από εμάς!');
+    expect(m.html).toContain('Καλωσήρθες στο Pro!');
+    expect(m.text).toContain('Σου ανοίξαμε το Pro δώρο.');
+    expect(m.text).toContain('Το Pro σου ισχύει μέχρι τις 25 Νοεμβρίου 2027. Μετά γυρνάς στο δωρεάν, χωρίς καμία χρέωση.');
+    expect(m.text).not.toMatch(/€|δωρεάν εβδομάδα/);
+    const en = renderDue({ ...base, lang: 'en', payload: { given: true, ends_at: '2027-11-25T10:00:00+00:00' } })!;
+    expect(en.subject).toBe('You’ve got Pro, on us!');
+    expect(en.text).toContain('Your Pro runs until 25 November 2027.');
+  });
+
+  it('writes a full date', () => {
+    expect(fullDate('2027-05-03T10:00:00Z')).toBe('3 Μαΐου 2027');
+    expect(fullDate('2027-12-31T23:30:00Z', 'en')).toBe('1 January 2028');
   });
 
   it('pro_welcome: no free week line for a paid start', () => {
