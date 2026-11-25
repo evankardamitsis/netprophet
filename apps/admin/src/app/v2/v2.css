@@ -169,3 +169,13 @@
 .np-key { display: inline-flex; align-items: center; gap: 6px; }
 .np-key i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
 .np-key b { margin-left: 10px; font-weight: 700; }
+
+/* Numbers: the path from download to coming back */
+.np-funnel { gap: 10px; }
+.np-funnel-row { display: grid; grid-template-columns: minmax(120px, 200px) 1fr 56px 44px; align-items: center; gap: 12px; }
+.np-funnel-label { min-width: 0; }
+.np-funnel-track { height: 10px; border-radius: 5px; background: var(--np-mist); overflow: hidden; }
+.np-funnel-fill { display: block; height: 100%; background: var(--np-ink); border-radius: 5px; transition: width 700ms var(--np-ease); }
+.np-funnel-n { text-align: right; font-variant-numeric: tabular-nums; }
+.np-funnel-pct { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .np-funnel-row { grid-template-columns: 1fr 48px 40px; } .np-funnel-track { grid-column: 1 / -1; order: 4; } }
