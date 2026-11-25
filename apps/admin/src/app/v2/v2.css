@@ -182,7 +182,8 @@
 
 /* Users: search with filters, sortable headers, a person's story */
 .np-users-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.np-users-tools > :first-child { flex: 1 1 280px; min-width: 0; }
+.np-users-tools > .v2-search { flex: 1 1 280px; min-width: 0; width: auto; max-width: none; }
+.np-users-tools > .v2-select { flex: 0 0 auto; width: auto; min-width: 160px; }
 .np-sort { all: unset; cursor: pointer; font: inherit; color: inherit; border-radius: 4px; transition: color 150ms var(--np-ease); }
 .np-sort:hover, .np-sort.on { color: var(--np-ink); font-weight: 700; }
 .np-sort:focus-visible { outline: 3px solid var(--np-lime); outline-offset: 2px; }
