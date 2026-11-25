@@ -596,6 +596,10 @@ export type Database = {
         Args: { p_id: string; p: Json };
         Returns: Json;
       };
+      admin_retention: {
+        Args: { p_weeks?: number };
+        Returns: Json;
+      };
       admin_review_claim: {
         Args: { p_user: string; p_approve: boolean };
         Returns: Json;
@@ -684,8 +688,20 @@ export type Database = {
         Args: { p_player_id: string; p: Json };
         Returns: Json;
       };
+      admin_user_refresh: {
+        Args: { p_user: string };
+        Returns: undefined;
+      };
+      admin_user_timeline: {
+        Args: { p_user: string; p_limit?: number };
+        Returns: Json;
+      };
       admin_users: {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
+        Returns: Json;
+      };
+      admin_users_page: {
+        Args: { p_query?: string; p_segment?: string; p_platform?: string; p_lang?: string; p_sort?: string; p_desc?: boolean; p_page?: number; p_size?: number };
         Returns: Json;
       };
       admin_void_match: {

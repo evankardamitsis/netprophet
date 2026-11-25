@@ -1,6 +1,6 @@
 'use server';
 import { createV2ServerClient, getStaff } from '@/lib/v2/server';
-import type { NumbersData } from './Numbers';
+import type { NumbersData, RetentionData } from './Numbers';
 
 type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { message: string } | null }>;
 
@@ -12,4 +12,14 @@ export async function loadNumbers(days: number): Promise<NumbersData> {
   const { data, error } = await (client.rpc.bind(client) as unknown as Rpc)('admin_numbers', { p_days: days });
   if (error) throw new Error(error.message);
   return data as NumbersData;
+}
+
+/** signup weeks and how many still played 1, 2, 4 and 8 weeks later (api.admin_retention, refreshed nightly) */
+export async function loadRetention(): Promise<RetentionData> {
+  const client = await createV2ServerClient();
+  const staff = await getStaff(client);
+  if (!staff || staff.role !== 'admin') throw new Error('forbidden');
+  const { data, error } = await (client.rpc.bind(client) as unknown as Rpc)('admin_retention', { p_weeks: 16 });
+  if (error) throw new Error(error.message);
+  return data as RetentionData;
 }

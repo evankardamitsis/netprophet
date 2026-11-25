@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createV2BrowserClient } from '@/lib/v2/browser';
 import { Banner } from '../feedback';
 import { PageHeader, Section, SkeletonCards, Stats, Table, Tabs } from '../kit';
-import { loadNumbers } from './actions';
+import { loadNumbers, loadRetention } from './actions';
 
 export interface NumbersDay {
   day: string;
@@ -26,6 +26,20 @@ export interface NumbersFunnel {
   voted: number;
   eligible_7d: number;
   returned_7d: number;
+}
+
+export interface RetentionWeek {
+  cohort_week: string;
+  joined: number;
+  w1: number | null;
+  w2: number | null;
+  w4: number | null;
+  w8: number | null;
+}
+
+export interface RetentionData {
+  refreshed_at: string | null;
+  weeks: RetentionWeek[];
 }
 
 export interface NumbersData {
@@ -105,6 +119,71 @@ function DownloadBars({ days }: { days: NumbersDay[] }) {
         <span>{shown.length ? short(shown[shown.length - 1].day) : ''}</span>
       </div>
     </div>
+  );
+}
+
+/** signup weeks, and the share of each that still played 1, 2, 4 and 8 weeks later */
+function Retention() {
+  const [data, setData] = useState<RetentionData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    loadRetention()
+      .then((d) => live && setData(d))
+      .catch((e: Error) => live && setError(e.message));
+    return () => {
+      live = false;
+    };
+  }, []);
+  const cell = (part: number | null, whole: number) => {
+    if (part === null) return <td className="num v2-muted">–</td>;
+    const v = whole ? part / whole : 0;
+    return (
+      <td className={`np-ret-cell${v > 0.5 ? ' dark' : ''}`} style={{ ['--v' as string]: v }} title={`${part} of ${whole}`}>
+        {pct(part, whole)}
+      </td>
+    );
+  };
+  return (
+    <Section title="Do they stay?" aside={<span className="v2-muted">Refreshed every night</span>}>
+      {error ? <Banner tone="problem" title="Couldn’t load retention" detail={error} /> : null}
+      {!data && !error ? <SkeletonCards count={1} /> : null}
+      {data && data.weeks.length === 0 ? <p className="v2-muted">No signup weeks yet.</p> : null}
+      {data && data.weeks.length ? (
+        <div className="v2-table-wrap">
+          <div className="v2-table-scroll">
+            <table className="v2-table np-ret">
+              <thead>
+                <tr>
+                  <th>Joined the week of</th>
+                  <th className="num">Joined</th>
+                  <th className="num">Week 1</th>
+                  <th className="num">Week 2</th>
+                  <th className="num">Week 4</th>
+                  <th className="num">Week 8</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.weeks.map((w) => (
+                  <tr key={w.cohort_week}>
+                    <td>{short(w.cohort_week)}</td>
+                    <td className="num">{n(w.joined)}</td>
+                    {cell(w.w1, w.joined)}
+                    {cell(w.w2, w.joined)}
+                    {cell(w.w4, w.joined)}
+                    {cell(w.w8, w.joined)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+      <p className="v2-muted">
+        Accounts made in the app, grouped by the week they joined. Each week shows the share that voted or played the quiz that week after joining; a dash
+        means that week has not come for everyone yet. Accounts brought over from the old app are left out.
+      </p>
+    </Section>
   );
 }
 
@@ -229,6 +308,8 @@ export function Numbers() {
               </p>
             </Section>
           ) : null}
+
+          <Retention />
 
           <Section title="Day by day" aside={<Tabs value={range} onChange={setRange} items={RANGES} />}>
             <DownloadBars days={data.days} />
