@@ -26,7 +26,19 @@ export function dayMonth(iso: string, lang: EmailLang = 'el'): string {
   return lang === 'en' ? `${Number(get('day'))} ${get('month')}` : `${Number(get('day'))}/${Number(get('month'))}`;
 }
 
+const EL_MONTHS = ['Ιανουαρίου', 'Φεβρουαρίου', 'Μαρτίου', 'Απριλίου', 'Μαΐου', 'Ιουνίου', 'Ιουλίου', 'Αυγούστου', 'Σεπτεμβρίου', 'Οκτωβρίου', 'Νοεμβρίου', 'Δεκεμβρίου'];
+
+/** «25 Νοεμβρίου 2027» / «25 November 2027», in Athens time */
+export function fullDate(iso: string, lang: EmailLang = 'el'): string {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', day: 'numeric', month: 'long', year: 'numeric' }).formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+  const month = lang === 'en' ? get('month') : EL_MONTHS[Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', month: 'numeric' }).format(new Date(iso))) - 1];
+  return `${Number(get('day'))} ${month} ${get('year')}`;
+}
+
 interface ProPayload {
+  /** Pro given from the admin (api.admin_grant_pro), not bought: no store, no price, ends_at is the end of the gift */
+  given?: boolean;
   product_id?: string;
   price?: number;
   renews?: number | null;
@@ -145,6 +157,7 @@ function offer(lang: EmailLang): string {
 export function proWelcomeEmail(e: DueEmail): Mail {
   const lang = langOf(e);
   const p = pay(e);
+  if (p.given) return proGivenEmail(e);
   const ends = p.trial ? date(p.ends_at, lang) : null;
   const price = planPrice(p, lang);
   const c = t(
@@ -203,6 +216,75 @@ export function proWelcomeEmail(e: DueEmail): Mail {
       '',
       `${c.button}: ${OPEN_URL}`,
       ...(c.trialLine ? ['', c.trialLine] : []),
+    ],
+    why: c.why,
+  });
+}
+
+/**
+ * the welcome for Pro given from the admin (founder, 25 Nov 2026): the same email as the paid welcome, with the gift
+ * and its end date instead of a store and a price; queued under the same once-per-account key, so nobody gets both
+ */
+function proGivenEmail(e: DueEmail): Mail {
+  const lang = langOf(e);
+  const p = pay(e);
+  const until = typeof p.ends_at === 'string' && !Number.isNaN(Date.parse(p.ends_at)) ? fullDate(p.ends_at, lang) : null;
+  const c = t(
+    e,
+    {
+      checks: [
+        'Η σεζόν σου μήνα με μήνα, με την πορεία σου στην Κατάταξη.',
+        'Υπενθύμιση πριν από κάθε ματς σου.',
+        'Μια κάρτα για κάθε νίκη, έτοιμη να τη μοιραστείς.',
+      ],
+      tipLead: 'Άνοιξε τις ειδοποιήσεις',
+      tip: 'του NetProphet στο κινητό σου, αλλιώς οι ειδοποιήσεις του Pro δεν θα σου φτάσουν.',
+      untilLine: until ? `Το Pro σου ισχύει μέχρι τις ${until}. Μετά γυρνάς στο δωρεάν, χωρίς καμία χρέωση.` : null,
+      subject: 'Έχεις Pro, δώρο από εμάς!',
+      preheader: 'Ο βοηθός της σεζόν σου ξεκίνησε, χωρίς χρέωση.',
+      title: 'Καλωσήρθες στο Pro!',
+      sub: 'Σου ανοίξαμε το Pro δώρο. Μάθε τα πάντα για τους αντιπάλους και τα στατιστικά σου.',
+      button: 'Άνοιξε το Pro',
+      why: 'Πήρες αυτό το email επειδή η ομάδα του NetProphet σου άνοιξε το Pro.',
+    },
+    {
+      checks: [
+        'Your season month by month, with your path on the Ladder.',
+        'A reminder before every match you play.',
+        'A card for every win, ready to share.',
+      ],
+      tipLead: 'Turn on notifications',
+      tip: 'for NetProphet on your phone, or the Pro alerts won’t reach you.',
+      untilLine: until ? `Your Pro runs until ${until}. After that you go back to the free app, nothing to pay.` : null,
+      subject: 'You’ve got Pro, on us!',
+      preheader: 'Your season assistant is on, free of charge.',
+      title: 'Welcome to Pro!',
+      sub: 'We’ve opened Pro for you as a gift. Get to know your opponents and your own stats inside out.',
+      button: 'Open Pro',
+      why: 'You got this email because the NetProphet team opened Pro for you.',
+    },
+  );
+  const feats = PRO_FEATURES[lang];
+  return build(e, {
+    subject: c.subject,
+    preheader: c.preheader,
+    hero: { kicker: 'PRO', title: c.title, sub: c.sub },
+    body: [
+      features(feats),
+      block.checks(c.checks.map(esc)),
+      block.tip(`<strong>${c.tipLead}</strong> ${esc(c.tip)}`),
+      block.button(OPEN_URL, c.button),
+      c.untilLine ? block.note(esc(c.untilLine)) : '',
+    ].filter(Boolean),
+    text: [
+      ...feats.map(([a, b]) => `+ ${a}: ${b}`),
+      '',
+      ...c.checks.map((x) => `✓ ${x}`),
+      '',
+      `${c.tipLead} ${c.tip}`,
+      '',
+      `${c.button}: ${OPEN_URL}`,
+      ...(c.untilLine ? ['', c.untilLine] : []),
     ],
     why: c.why,
   });
