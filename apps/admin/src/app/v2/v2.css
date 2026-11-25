@@ -179,3 +179,19 @@
 .np-funnel-n { text-align: right; font-variant-numeric: tabular-nums; }
 .np-funnel-pct { text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) { .np-funnel-row { grid-template-columns: 1fr 48px 40px; } .np-funnel-track { grid-column: 1 / -1; order: 4; } }
+
+/* Users: search with filters, sortable headers, a person's story */
+.np-users-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.np-users-tools > :first-child { flex: 1 1 280px; min-width: 0; }
+.np-sort { all: unset; cursor: pointer; font: inherit; color: inherit; border-radius: 4px; transition: color 150ms var(--np-ease); }
+.np-sort:hover, .np-sort.on { color: var(--np-ink); font-weight: 700; }
+.np-sort:focus-visible { outline: 3px solid var(--np-lime); outline-offset: 2px; }
+.np-timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--np-mist); display: grid; gap: 8px; }
+.np-timeline li { display: grid; grid-template-columns: 120px 1fr; gap: 12px; position: relative; }
+.np-timeline li::before { content: ''; position: absolute; left: -19px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--np-inkSoft); }
+.np-timeline li.np-tl-pro::before, .np-timeline li.np-tl-purchase::before { background: var(--np-ink); }
+@media (max-width: 560px) { .np-timeline li { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Numbers: retention, a darker cell for more who stayed */
+.np-ret td.np-ret-cell { text-align: right; font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--np-ink) calc(var(--v) * 55%), transparent); }
+.np-ret td.np-ret-cell.dark { color: var(--np-paper); }
