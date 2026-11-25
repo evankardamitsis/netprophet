@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createV2BrowserClient } from '@/lib/v2/browser';
 import { Banner } from '../feedback';
 import { PageHeader, Section, SkeletonCards, Stats, Table, Tabs } from '../kit';
 import { loadNumbers } from './actions';
@@ -17,11 +18,23 @@ export interface NumbersDay {
   opened_30d: number | null;
 }
 
+export interface NumbersFunnel {
+  since: string;
+  downloads: number;
+  accounts: number;
+  onboarded: number;
+  voted: number;
+  eligible_7d: number;
+  returned_7d: number;
+}
+
 export interface NumbersData {
   today: string;
+  refreshed_at: string | null;
   store: { apple: number; google: number; apple_7d: number; google_7d: number; apple_through: string | null; google_through: string | null; fetched_at: string | null };
-  accounts: { total: number; new_1d: number; new_7d: number; new_30d: number; opened_1d: number; opened_7d: number; opened_30d: number };
+  accounts: { total: number; new_1d: number; new_7d: number; new_30d: number; opened_15m: number; opened_1d: number; opened_7d: number; opened_30d: number };
   pro: { total: number; paid: number; trial: number; given: number };
+  funnel: NumbersFunnel;
   days: NumbersDay[];
 }
 
@@ -34,6 +47,37 @@ const RANGES = [
 /** «23 Nov» */
 const short = (iso: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'short' }).format(new Date(`${iso}T00:00:00Z`));
 const n = (v: number | null | undefined) => (v === null || v === undefined ? '–' : v.toLocaleString('en-GB'));
+/** «40%», or a dash when there is nothing to divide by */
+const pct = (part: number | null | undefined, whole: number | null | undefined) =>
+  part === null || part === undefined || !whole ? '–' : `${Math.round((100 * part) / whole)}%`;
+/** «14:30» Athens time */
+const clock = (iso: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+
+/** the path from a download to coming back, each step with its share of the step before */
+function Funnel({ f, googleIn }: { f: NumbersFunnel; googleIn: boolean }) {
+  const steps = [
+    { label: googleIn ? 'Downloads' : 'App Store downloads', value: f.downloads, of: null as number | null },
+    { label: 'Accounts', value: f.accounts, of: googleIn ? f.downloads : null },
+    { label: 'Finished onboarding', value: f.onboarded, of: f.accounts },
+    { label: 'Voted at least once', value: f.voted, of: f.onboarded },
+    { label: 'Came back within 7 days', value: f.returned_7d, of: f.eligible_7d },
+  ];
+  const top = Math.max(1, ...steps.map((s) => s.value));
+  return (
+    <div className="v2-card np-funnel">
+      {steps.map((s) => (
+        <div key={s.label} className="np-funnel-row">
+          <span className="np-funnel-label">{s.label}</span>
+          <span className="np-funnel-track">
+            <span className="np-funnel-fill" style={{ width: `${(100 * s.value) / top}%` }} />
+          </span>
+          <b className="np-funnel-n">{n(s.value)}</b>
+          <span className="np-funnel-pct v2-muted">{s.of === null ? '' : pct(s.value, s.of)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** downloads a day, App Store and Play stacked, oldest on the left */
 function DownloadBars({ days }: { days: NumbersDay[] }) {
@@ -74,32 +118,62 @@ export function Numbers() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let live = true;
-    setLoading(true);
-    loadNumbers(Number(range))
+  const rangeRef = useRef(range);
+  rangeRef.current = range;
+
+  const reload = useCallback((quiet: boolean) => {
+    const asked = rangeRef.current;
+    if (!quiet) setLoading(true);
+    loadNumbers(Number(asked))
       .then((d) => {
-        if (!live) return;
+        if (rangeRef.current !== asked) return;
         setData(d);
         setError(null);
       })
-      .catch((e: Error) => live && setError(e.message))
-      .finally(() => live && setLoading(false));
-    return () => {
-      live = false;
+      .catch((e: Error) => rangeRef.current === asked && setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => reload(false), [range, reload]);
+
+  // no polling: the database refreshes its summaries every 15 minutes and Realtime tells this page when they changed;
+  // coming back to the tab reloads once in case a change arrived while the connection slept
+  useEffect(() => {
+    const client = createV2BrowserClient();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const soon = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => reload(true), 400);
     };
-  }, [range]);
+    const channel = client.channel('admin-numbers-now');
+    void client.auth.getSession().then(({ data: auth }) => {
+      if (auth.session) void client.realtime.setAuth(auth.session.access_token);
+      channel.on('postgres_changes', { event: '*', schema: 'core', table: 'numbers_now' }, soon).subscribe();
+    });
+    const onShow = () => document.visibilityState === 'visible' && soon();
+    document.addEventListener('visibilitychange', onShow);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onShow);
+      void client.removeChannel(channel);
+    };
+  }, [reload]);
 
   const s = data?.store;
   const a = data?.accounts;
   const p = data?.pro;
+  const f = data?.funnel;
   const through = [s?.apple_through ? `App Store to ${short(s.apple_through)}` : null, s?.google_through ? `Google Play to ${short(s.google_through)}` : null]
     .filter(Boolean)
     .join(', ');
 
   return (
     <>
-      <PageHeader title="Numbers" intent="How many people get the app, open it and play. The stores report once a day, a day behind." />
+      <PageHeader
+        title="Numbers"
+        intent="How many people get the app, open it and play. Updates by itself every 15 minutes; the stores report once a day, a day behind."
+      />
+      {data?.refreshed_at ? <p className="v2-muted">Last change {clock(data.refreshed_at)}</p> : null}
       {error ? <Banner tone="problem" title="Couldn’t load the numbers" detail={error} /> : null}
       {!data && loading ? <SkeletonCards count={4} /> : null}
       {s && a && p && data ? (
@@ -123,9 +197,11 @@ export function Numbers() {
               items={[
                 { label: 'Accounts', value: n(a.total), ink: true },
                 { label: 'New in 7 days', value: n(a.new_7d) },
+                { label: 'Active in the last 15 minutes', value: n(a.opened_15m) },
                 { label: 'Opened today', value: n(a.opened_1d) },
                 { label: 'Opened in 7 days', value: n(a.opened_7d) },
                 { label: 'Opened in 30 days', value: n(a.opened_30d) },
+                { label: 'Daily of monthly', value: pct(a.opened_1d, a.opened_30d) },
               ]}
             />
             <p className="v2-muted">Opened means the app checked in on a device or refreshed a sign-in in that time.</p>
@@ -138,9 +214,21 @@ export function Numbers() {
                 { label: 'Paying', value: n(p.paid) },
                 { label: 'On the free week', value: n(p.trial) },
                 { label: 'Given', value: n(p.given) },
+                { label: 'Accounts paying', value: pct(p.paid, a.total) },
               ]}
             />
           </Section>
+
+          {f && f.since ? (
+            <Section title="From download to coming back" aside={<span className="v2-muted">Accounts made since {short(f.since)}</span>}>
+              <Funnel f={f} googleIn={Boolean(s.google_through)} />
+              <p className="v2-muted">
+                Accounts made in the app since the stores’ numbers start; accounts brought over from the old app are left out. Came back means voted or
+                played the quiz on a later day within a week of joining, counted for the {n(f.eligible_7d)} who joined at least a week ago.
+                {s.google_through ? '' : ' Downloads are App Store only until Google Play arrives.'}
+              </p>
+            </Section>
+          ) : null}
 
           <Section title="Day by day" aside={<Tabs value={range} onChange={setRange} items={RANGES} />}>
             <DownloadBars days={data.days} />
