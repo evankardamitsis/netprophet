@@ -360,6 +360,10 @@ export type Database = {
       };
     };
     Functions: {
+      admin_activity_snapshot: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_apply_names: {
         Args: { p_player_ids?: string[]; p_confidence?: string };
         Returns: Json;
@@ -536,6 +540,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_numbers: {
+        Args: { p_days?: number };
+        Returns: Json;
+      };
       admin_offer_codes_import: {
         Args: { p_codes: string[]; p_expires: string; p_offer?: string };
         Returns: Json;
@@ -647,6 +655,10 @@ export type Database = {
       admin_staff_by_email: {
         Args: { p_email: string };
         Returns: Json;
+      };
+      admin_store_record: {
+        Args: { p_rows: Json };
+        Returns: number;
       };
       admin_team: {
         Args: Record<PropertyKey, never>;

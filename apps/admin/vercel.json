@@ -16,6 +16,10 @@
     {
       "path": "/api/cron/v2-emails",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/v2-numbers",
+      "schedule": "0 15 * * *"
     }
   ]
 }
